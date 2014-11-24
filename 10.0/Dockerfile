@@ -14,11 +14,6 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
 	&& chmod +x /usr/local/bin/gosu \
 	&& apt-get purge -y --auto-remove curl
 
-# make the "en_US.UTF-8" locale so mariadb will be utf-8 enabled by default
-RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
-	&& localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
-ENV LANG en_US.utf8
-
 RUN apt-key adv --keyserver pgp.mit.edu --recv-keys 199369E5404BD5FC7D2FE43BCBCB082A1BB943DB
 
 ENV MARIADB_MAJOR 10.0
