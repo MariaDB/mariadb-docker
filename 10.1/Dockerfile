@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
 RUN apt-key adv --keyserver pgp.mit.edu --recv-keys 199369E5404BD5FC7D2FE43BCBCB082A1BB943DB
 
 ENV MARIADB_MAJOR 10.1
-ENV MARIADB_VERSION 10.1.1+maria-1~wheezy
+ENV MARIADB_VERSION 10.1.2+maria-1~wheezy
 
 RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian wheezy main" > /etc/apt/sources.list.d/mariadb.list
 
@@ -31,7 +31,7 @@ RUN apt-get update \
 
 VOLUME /var/lib/mysql
 
-COPY ./docker-entrypoint.sh /
+COPY docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

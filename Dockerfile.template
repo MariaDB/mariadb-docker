@@ -31,7 +31,7 @@ RUN apt-get update \
 
 VOLUME /var/lib/mysql
 
-COPY ./docker-entrypoint.sh /
+COPY docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
