@@ -10,7 +10,7 @@ if [ "$1" = 'mysqld' ]; then
 	DATADIR="$("$@" --verbose --help 2>/dev/null | awk '$1 == "datadir" { print $2; exit }')"
 	if [[ -n $(df -T |grep ${DATADIR::-1} |grep zfs) ]]; then
 		echo "Found ZFS on "${DATADIR::-1}" removing AIO and O_DIRECT modes for InnoDB"
-		cat >> /etc/mysql/conf.d/zfs.cnf <<-EOF
+		cat > /etc/mysql/conf.d/zfs.cnf <<-EOF
 			[mysqld]
 			innodb_doublewrite = false
 			innodb_use_native_aio = false
