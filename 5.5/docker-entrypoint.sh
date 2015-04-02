@@ -8,7 +8,15 @@ fi
 if [ "$1" = 'mysqld' ]; then
 	# read DATADIR from the MySQL config
 	DATADIR="$("$@" --verbose --help 2>/dev/null | awk '$1 == "datadir" { print $2; exit }')"
-	
+	if [[ -n $(df -T |grep ${DATADIR::-1} |grep zfs) ]]; then
+		echo "Found ZFS on "${DATADIR::-1}" removing AIO and O_DIRECT modes for InnoDB"
+		cat > /etc/mysql/conf.d/zfs.cnf <<-EOF
+			[mysqld]
+			innodb_doublewrite = false
+			innodb_use_native_aio = false
+			innodb_flush_method=fsync
+		EOF
+	fi
 	if [ ! -d "$DATADIR/mysql" ]; then
 		if [ -z "$MYSQL_ROOT_PASSWORD" -a -z "$MYSQL_ALLOW_EMPTY_PASSWORD" ]; then
 			echo >&2 'error: database is uninitialized and MYSQL_ROOT_PASSWORD not set'
