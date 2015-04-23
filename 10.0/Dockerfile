@@ -4,7 +4,7 @@ FROM debian:wheezy
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
 
-RUN apt-key adv --keyserver pool.sks-keyservers.net --recv-keys 199369E5404BD5FC7D2FE43BCBCB082A1BB943DB
+RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 199369E5404BD5FC7D2FE43BCBCB082A1BB943DB
 
 ENV MARIADB_MAJOR 10.0
 ENV MARIADB_VERSION 10.0.17+maria-1~wheezy
