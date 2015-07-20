@@ -18,7 +18,11 @@ RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian wheez
 # add repository pinning to make sure dependencies from this MariaDB repo are preferred over Debian dependencies
 #  libmariadbclient18 : Depends: libmysqlclient18 (= 5.5.42+maria-1~wheezy) but 5.5.43-0+deb7u1 is to be installed
 
-RUN apt-get update \
+RUN { \
+		echo mariadb-server-$MARIADB_MAJOR mysql-server/root_password password 'unused'; \
+		echo mariadb-server-$MARIADB_MAJOR mysql-server/root_password_again password 'unused'; \
+	} | debconf-set-selections \
+	&& apt-get update \
 	&& apt-get install -y \
 		mariadb-server=$MARIADB_VERSION \
 	&& rm -rf /var/lib/apt/lists/* \
