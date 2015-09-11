@@ -24,7 +24,7 @@ if [ "$1" = 'mysqld' ]; then
 		mysql_install_db --user=mysql --datadir="$DATADIR" --rpm
 		echo 'Finished mysql_install_db'
 
-		mysqld --user=mysql --datadir="$DATADIR" --skip-networking &
+		"$@" --user=mysql --datadir="$DATADIR" --skip-networking &
 		pid="$!"
 
 		mysql=( mysql --protocol=socket -uroot )
