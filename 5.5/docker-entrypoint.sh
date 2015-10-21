@@ -20,11 +20,11 @@ if [ "$1" = 'mysqld' ]; then
 		mkdir -p "$DATADIR"
 		chown -R mysql:mysql "$DATADIR"
 
-		echo 'Running mysql_install_db'
+		echo 'Initializing database'
 		mysql_install_db --user=mysql --datadir="$DATADIR" --rpm
-		echo 'Finished mysql_install_db'
+		echo 'Database initialized'
 
-		"$@" --user=mysql --datadir="$DATADIR" --skip-networking &
+		"$@" --skip-networking &
 		pid="$!"
 
 		mysql=( mysql --protocol=socket -uroot )
@@ -68,10 +68,10 @@ if [ "$1" = 'mysqld' ]; then
 		fi
 
 		if [ "$MYSQL_USER" -a "$MYSQL_PASSWORD" ]; then
-			echo "CREATE USER '"$MYSQL_USER"'@'%' IDENTIFIED BY '"$MYSQL_PASSWORD"' ;" | "${mysql[@]}"
+			echo "CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' ;" | "${mysql[@]}"
 
 			if [ "$MYSQL_DATABASE" ]; then
-				echo "GRANT ALL ON \`"$MYSQL_DATABASE"\`.* TO '"$MYSQL_USER"'@'%' ;" | "${mysql[@]}"
+				echo "GRANT ALL ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%' ;" | "${mysql[@]}"
 			fi
 
 			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
