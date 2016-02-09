@@ -67,7 +67,11 @@ if [ "$1" = 'mysqld' ]; then
 		fi
 
 		if [ "$MYSQL_DATABASE" ]; then
-			echo "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` ;" | "${mysql[@]}"
+			if [ "$MYSQL_COLLATE" ]; then
+				echo "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` COLLATE '$MYSQL_COLLATE' ;" | "${mysql[@]}"
+			else
+				echo "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` ;" | "${mysql[@]}"
+			fi
 			mysql+=( "$MYSQL_DATABASE" )
 		fi
 
