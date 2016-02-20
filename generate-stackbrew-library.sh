@@ -11,8 +11,10 @@ cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
 versions=( */ )
 versions=( "${versions[@]%/}" )
-IFS=$'\n'; versions=( $(echo "${versions[*]}" | sort -rV) ); unset IFS
 url='git://github.com/docker-library/mariadb'
+
+# sort version numbers with highest first
+IFS=$'\n'; versions=( $(echo "${versions[*]}" | sort -rV) ); unset IFS
 
 echo '# maintainer: InfoSiftr <github@infosiftr.com> (@infosiftr)'
 
