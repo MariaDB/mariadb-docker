@@ -31,7 +31,7 @@ RUN { \
 	} | debconf-set-selections \
 	&& apt-get update \
 	&& apt-get install -y \
-		mariadb-server=$MARIADB_VERSION \
+		mariadb-server=$MARIADB_VERSION percona-xtrabackup socat \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& rm -rf /var/lib/mysql \
 	&& mkdir /var/lib/mysql
@@ -48,5 +48,5 @@ COPY docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-EXPOSE 3306
+EXPOSE 3306 4444 4567 4567/udp 4568
 CMD ["mysqld"]

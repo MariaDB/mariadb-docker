@@ -10,6 +10,30 @@ if [ "$1" = 'mysqld' ]; then
 	# Get config
 	DATADIR="$("$@" --verbose --help --log-bin-index=`mktemp -u` 2>/dev/null | awk '$1 == "datadir" { print $2; exit }')"
 
+	rm -f /etc/mysql/conf.d/galera-tmp.cnf
+	if [ "$MARIADB_MAJOR" = "10.1" ] && [ -n "$WSREP_CLUSTER_ADDRESS" ]; then
+		export MYSQL_INITDB_SKIP_TZINFO="yes"
+		export MYSQL_ALLOW_EMPTY_PASSWORD="yes"
+
+		cat <<- EOF > /etc/mysql/conf.d/galera-tmp.cnf
+		[mysqld]
+		binlog_format="ROW"
+		wsrep_on="ON"
+		innodb_autoinc_lock_mode="2"
+		wsrep_log_conflicts="${WSREP_LOG_CONFLICTS-OFF}"
+		wsrep_provider="${WSREP_PROVIDER-/usr/lib/libgalera_smm.so}"
+		wsrep_provider_options="${WSREP_PROVIDER_OPTIONS}"
+		wsrep_cluster_address="${WSREP_CLUSTER_ADDRESS}"
+		wsrep_cluster_name="${WSREP_MYSQL_CLUSTER_NAME-my_wsrep_cluster}"
+		wsrep_sst_auth="${WSREP_SST_AUTH}"
+		wsrep_sst_method="${WSREP_SST_METHOD-rsync}"
+		EOF
+		if [ -n "$WSREP_NODE_ADDRESS" ]; then
+			echo wsrep_node_address="${WSREP_NODE_ADDRESS}" >> /etc/mysql/conf.d/galera-tmp.cnf
+		fi
+
+	fi
+
 	if [ ! -d "$DATADIR/mysql" ]; then
 		if [ -z "$MYSQL_ROOT_PASSWORD" -a -z "$MYSQL_ALLOW_EMPTY_PASSWORD" -a -z "$MYSQL_RANDOM_ROOT_PASSWORD" ]; then
 			echo >&2 'error: database is uninitialized and password option is not specified '
@@ -24,7 +48,7 @@ if [ "$1" = 'mysqld' ]; then
 		mysql_install_db --user=mysql --datadir="$DATADIR" --rpm
 		echo 'Database initialized'
 
-		"$@" --skip-networking &
+		"$@" --skip-networking --wsrep_cluster_address=${WSREP_CLUSTER_ADDRESS+gcomm://} &
 		pid="$!"
 
 		mysql=( mysql --protocol=socket -uroot )
