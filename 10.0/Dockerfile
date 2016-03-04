@@ -9,7 +9,18 @@ RUN apt-get update && apt-get install -y pwgen && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /docker-entrypoint-initdb.d
 
-RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 199369E5404BD5FC7D2FE43BCBCB082A1BB943DB
+RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 199369E5404BD5FC7D2FE43BCBCB082A1BB943DB \
+	&& apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 430BDF5C56E7C94E848EE60C1C4CBDCDCD2EFD2A
+
+RUN echo "deb http://repo.percona.com/apt jessie main" > /etc/apt/sources.list.d/percona.list \
+	&& { \
+		echo 'Package: *'; \
+		echo 'Pin: release o=Percona Development Team'; \
+		echo 'Pin-Priority: 998'; \
+	} > /etc/apt/preferences.d/percona \
+	&& apt-get update \
+	&& apt-get install -y percona-xtrabackup socat \
+	&& rm -rf /var/lib/apt/lists/*
 
 ENV MARIADB_MAJOR 10.0
 ENV MARIADB_VERSION 10.0.24+maria-1~jessie
