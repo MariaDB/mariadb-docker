@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 declare -A suites=(
 	[5.5]='wheezy'
@@ -14,7 +14,7 @@ if [ ${#versions[@]} -eq 0 ]; then
 fi
 versions=( "${versions[@]%/}" )
 
-
+travisEnv=
 for version in "${versions[@]}"; do
 	suite="${suites[$version]:-$defaultSuite}"
 	fullVersion="$(curl -sSL "http://ftp.osuosl.org/pub/mariadb/repo/$version/debian/dists/$suite/main/binary-amd64/Packages" |tac|tac| grep -m1 -A10 "^Package: mariadb-server\$" | grep -m1 '^Version: ' | cut -d' ' -f2)"
@@ -31,4 +31,9 @@ for version in "${versions[@]}"; do
 			s/%%MARIADB_VERSION%%/'"$fullVersion"'/g;
 		' Dockerfile.template > "$version/Dockerfile"
 	)
+	
+	travisEnv='\n  - VERSION='"$version$travisEnv"
 done
+
+travis="$(awk -v 'RS=\n\n' '$1 == "env:" { $0 = "env:'"$travisEnv"'" } { printf "%s%s", $0, RS }' .travis.yml)"
+echo "$travis" > .travis.yml
