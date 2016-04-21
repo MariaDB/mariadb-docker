@@ -41,6 +41,7 @@ RUN { \
 		echo mariadb-server-$MARIADB_MAJOR mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections \
 	&& apt-get update \
+	&& apt-get upgrade -y \
 	&& apt-get install -y \
 		mariadb-server=$MARIADB_VERSION \
 	&& rm -rf /var/lib/apt/lists/* \
