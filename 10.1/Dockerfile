@@ -9,6 +9,10 @@ RUN apt-get update && apt-get install -y pwgen && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /docker-entrypoint-initdb.d
 
+# Key fingerprint = 1993 69E5 404B D5FC 7D2F  E43B CBCB 082A 1BB9 43DB
+# MariaDB Package Signing Key <package-signing-key@mariadb.org>
+# Key fingerprint = 430B DF5C 56E7 C94E 848E  E60C 1C4C BDCD CD2E FD2A
+# Percona MySQL Development Team <mysql-dev@percona.com>
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 199369E5404BD5FC7D2FE43BCBCB082A1BB943DB \
 	&& apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 430BDF5C56E7C94E848EE60C1C4CBDCDCD2EFD2A
 
@@ -17,10 +21,7 @@ RUN echo "deb http://repo.percona.com/apt jessie main" > /etc/apt/sources.list.d
 		echo 'Package: *'; \
 		echo 'Pin: release o=Percona Development Team'; \
 		echo 'Pin-Priority: 998'; \
-	} > /etc/apt/preferences.d/percona \
-	&& apt-get update \
-	&& apt-get install -y percona-xtrabackup socat \
-	&& rm -rf /var/lib/apt/lists/*
+	} > /etc/apt/preferences.d/percona
 
 ENV MARIADB_MAJOR 10.1
 ENV MARIADB_VERSION 10.1.13+maria-1~jessie
@@ -43,6 +44,9 @@ RUN { \
 	&& apt-get update \
 	&& apt-get install -y \
 		mariadb-server=$MARIADB_VERSION \
+# percona-xtrabackup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
+		percona-xtrabackup \
+		socat \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& rm -rf /var/lib/mysql \
 	&& mkdir /var/lib/mysql
