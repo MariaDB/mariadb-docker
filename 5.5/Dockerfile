@@ -23,7 +23,7 @@ RUN echo "deb http://repo.percona.com/apt wheezy main" > /etc/apt/sources.list.d
 	&& rm -rf /var/lib/apt/lists/*
 
 ENV MARIADB_MAJOR 5.5
-ENV MARIADB_VERSION 5.5.48+maria-1~wheezy
+ENV MARIADB_VERSION 5.5.49+maria-1~wheezy
 
 RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian wheezy main" > /etc/apt/sources.list.d/mariadb.list \
 	&& { \
