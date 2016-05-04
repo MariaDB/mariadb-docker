@@ -1,8 +1,10 @@
 # vim:set ft=dockerfile:
 FROM debian:jessie
+ARG uid=999
+ARG gid=999
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
-RUN groupadd -r mysql && useradd -r -g mysql mysql
+RUN groupadd -r mysql --gid=${gid} && useradd -r -g mysql --uid=${uid} mysql
 
 # install "pwgen" for randomizing passwords
 RUN apt-get update && apt-get install -y pwgen && rm -rf /var/lib/apt/lists/*
