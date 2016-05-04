@@ -32,7 +32,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		chown -R mysql:mysql "$DATADIR"
 
 		echo 'Initializing database'
-		mysql_install_db --user=mysql --datadir="$DATADIR" --rpm
+		mysql_install_db --user=mysql --datadir="$DATADIR" --rpm --skip-log-bin
 		echo 'Database initialized'
 
 		"$@" --skip-networking &
