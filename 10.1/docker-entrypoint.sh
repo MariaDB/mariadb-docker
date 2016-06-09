@@ -89,7 +89,8 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		fi
 
 		if [ "$MYSQL_DATABASE" ]; then
-			for db2create in $MYSQL_DATABASE; do
+			IFS=, read -a MYSQL_DATABASE <<< "$MYSQL_DATABASE"
+			for db2create in "${MYSQL_DATABASE[@]}"; do
 				echo "CREATE DATABASE IF NOT EXISTS \`$db2create\` ;" | "${mysql[@]}"
 			done
 		fi
@@ -98,7 +99,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			echo "CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' ;" | "${mysql[@]}"
 
 			if [ "$MYSQL_DATABASE" ]; then
-				for db2create in $MYSQL_DATABASE; do
+				for db2create in "${MYSQL_DATABASE[@]}"; do
 					echo "GRANT ALL ON \`$db2create\`.* TO '$MYSQL_USER'@'%' ;" | "${mysql[@]}"
 				done
 			fi
@@ -106,7 +107,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
 		fi
 
-		[ "$MYSQL_DATABASE" ] && mysql+=( "${MYSQL_DATABASE%% *}" ) # get first db name
+		[ "$MYSQL_DATABASE" ] && mysql+=( "${MYSQL_DATABASE[0]}" ) # get first db name
 
 		echo
 		for f in /docker-entrypoint-initdb.d/*; do
