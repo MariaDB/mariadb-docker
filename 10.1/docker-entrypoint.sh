@@ -107,7 +107,8 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
 		fi
 
-		[ "$MYSQL_DATABASE" ] && mysql+=( "${MYSQL_DATABASE[0]}" ) # get first db name
+		# get first db name
+		[ "$MYSQL_DATABASE" ] && mysql+=( "${MYSQL_DATABASE[0]}" )
 
 		echo
 		for f in /docker-entrypoint-initdb.d/*; do
