@@ -23,7 +23,7 @@ RUN mkdir /docker-entrypoint-initdb.d
 # install "pwgen" for randomizing passwords
 # install "apt-transport-https" for Percona's repo (switched to https-only)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-		apt-transport-https \
+		apt-transport-https ca-certificates \
 		pwgen \
 	&& rm -rf /var/lib/apt/lists/*
 
