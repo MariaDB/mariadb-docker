@@ -21,7 +21,11 @@ RUN set -x \
 RUN mkdir /docker-entrypoint-initdb.d
 
 # install "pwgen" for randomizing passwords
-RUN apt-get update && apt-get install -y apt-transport-https pwgen && rm -rf /var/lib/apt/lists/*
+# install "apt-transport-https" for Percona's repo (switched to https-only)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		apt-transport-https \
+		pwgen \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Key fingerprint = 1993 69E5 404B D5FC 7D2F  E43B CBCB 082A 1BB9 43DB
 # MariaDB Package Signing Key <package-signing-key@mariadb.org>
