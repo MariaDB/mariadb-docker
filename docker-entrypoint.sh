@@ -106,7 +106,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		echo
 		for f in /docker-entrypoint-initdb.d/*; do
 			if [ ! -f "$f" ]; then
-		        	echo "$0: ignoring is not a file $f"; echo
+		        	echo "$0: ignoring $f (not a file)"; echo
 		        	continue
 		    	fi
 			case "$f" in
