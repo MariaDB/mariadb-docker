@@ -3,6 +3,8 @@ services: docker
 
 env:
   - VERSION=5.5
+  - VERSION=10.3
+  - VERSION=10.2
   - VERSION=10.1
   - VERSION=10.0
 
