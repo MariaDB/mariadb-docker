@@ -119,8 +119,8 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			SET @@SESSION.SQL_LOG_BIN=0;
 
 			DELETE FROM mysql.user ;
-			CREATE USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' ;
-			GRANT ALL ON *.* TO 'root'@'localhost' WITH GRANT OPTION ;
+			CREATE USER 'root'@'127.0.0.1' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' ;
+			GRANT ALL ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION ;
 			DROP DATABASE IF EXISTS test ;
 			FLUSH PRIVILEGES ;
 		EOSQL
@@ -129,7 +129,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
       		if [ ! -z "$APP_HOST" ]; then
                         APPHOST='%'
                 elif [ "$APP_HOST" == 'localhost' || "$APP_HOST" == '127.0.0.1' ]; then
-                        APPHOST='localhost'
+                        APPHOST='127.0.0.1'
                 else
                         APPHOST=$APP_HOST
                 fi
