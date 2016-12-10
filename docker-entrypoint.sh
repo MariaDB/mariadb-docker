@@ -87,10 +87,10 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		mysql_install_db --datadir="$DATADIR" --rpm
 		echo 'Database initialized'
 
-		"$@" --skip-networking &
+		"$@" --skip-networking --socket=/var/run/mysqld/mysqld.sock &
 		pid="$!"
 
-		mysql=( mysql --protocol=socket -uroot )
+		mysql=( mysql --protocol=socket -uroot -hlocalhost --socket=/var/run/mysqld/mysqld.sock )
 
 		for i in {30..0}; do
 			if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then
