@@ -58,7 +58,7 @@ RUN echo "deb https://repo.percona.com/apt jessie main" > /etc/apt/sources.list.
 	} > /etc/apt/preferences.d/percona
 
 ENV MARIADB_MAJOR 10.0
-ENV MARIADB_VERSION 10.0.29+maria-1~jessie
+ENV MARIADB_VERSION 10.0.30+maria-1~jessie
 
 RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian jessie main" > /etc/apt/sources.list.d/mariadb.list \
 	&& { \
