@@ -119,11 +119,21 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			SET @@SESSION.SQL_LOG_BIN=0;
 
 			DELETE FROM mysql.user ;
-			CREATE USER 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' ;
-			GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION ;
+			CREATE USER 'root'@'127.0.0.1' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' ;
+			GRANT ALL ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION ;
 			DROP DATABASE IF EXISTS test ;
 			FLUSH PRIVILEGES ;
 		EOSQL
+		
+		file_env 'APP_HOST'
+      		if [ ! -z "$APP_HOST" ]; then
+                        APPHOST='%'
+                elif [ "$APP_HOST" == 'localhost' || "$APP_HOST" == '127.0.0.1' ]; then
+                        APPHOST='127.0.0.1'
+                else
+                        APPHOST=$APP_HOST
+                fi
+
 
 		if [ ! -z "$MYSQL_ROOT_PASSWORD" ]; then
 			mysql+=( -p"${MYSQL_ROOT_PASSWORD}" )
@@ -138,10 +148,10 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		file_env 'MYSQL_USER'
 		file_env 'MYSQL_PASSWORD'
 		if [ "$MYSQL_USER" -a "$MYSQL_PASSWORD" ]; then
-			echo "CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' ;" | "${mysql[@]}"
+			echo "CREATE USER '$MYSQL_USER'@'$APP_HOST' IDENTIFIED BY '$MYSQL_PASSWORD' ;" | "${mysql[@]}"
 
 			if [ "$MYSQL_DATABASE" ]; then
-				echo "GRANT ALL ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%' ;" | "${mysql[@]}"
+				echo "GRANT ALL ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'$APP_HOST' ;" | "${mysql[@]}"
 			fi
 
 			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
