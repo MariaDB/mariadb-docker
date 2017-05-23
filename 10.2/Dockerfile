@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM debian:jessie
+FROM debian:stretch
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
@@ -50,7 +50,7 @@ RUN set -ex; \
 	rm -r "$GNUPGHOME"; \
 	apt-key list
 
-RUN echo "deb https://repo.percona.com/apt jessie main" > /etc/apt/sources.list.d/percona.list \
+RUN echo "deb https://repo.percona.com/apt stretch main" > /etc/apt/sources.list.d/percona.list \
 	&& { \
 		echo 'Package: *'; \
 		echo 'Pin: release o=Percona Development Team'; \
@@ -58,9 +58,9 @@ RUN echo "deb https://repo.percona.com/apt jessie main" > /etc/apt/sources.list.
 	} > /etc/apt/preferences.d/percona
 
 ENV MARIADB_MAJOR 10.2
-ENV MARIADB_VERSION 10.2.6+maria~jessie
+ENV MARIADB_VERSION 10.2.6+maria~stretch
 
-RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian jessie main" > /etc/apt/sources.list.d/mariadb.list \
+RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian stretch main" > /etc/apt/sources.list.d/mariadb.list \
 	&& { \
 		echo 'Package: *'; \
 		echo 'Pin: release o=MariaDB'; \

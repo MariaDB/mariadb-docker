@@ -3,8 +3,10 @@ set -eo pipefail
 
 declare -A suites=(
 	[5.5]='wheezy'
+	[10.0]='jessie'
+	[10.1]='jessie'
 )
-defaultSuite='jessie'
+defaultSuite='stretch'
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
