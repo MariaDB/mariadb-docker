@@ -72,6 +72,14 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" -a "$(id -u)" = '0' ]; then
 fi
 
 if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
+	if [ ! -z "$MYSQL_CHARACTER_SET" ]; then
+		set -- "$@" --character-set-server="$MYSQL_CHARACTER_SET"
+	fi
+
+	if [ ! -z "$MYSQL_COLLATION" ]; then
+		set -- "$@" --collation-server="$MYSQL_COLLATION"
+	fi
+
 	# still need to check config, container may have started with --user
 	_check_config "$@"
 	# Get config
@@ -96,6 +104,10 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		pid="$!"
 
 		mysql=( mysql --protocol=socket -uroot -hlocalhost --socket="${SOCKET}" )
+
+		if [ ! -z "$MYSQL_CHARACTER_SET" ]; then
+			mysql+=( --default-character-set="$MYSQL_CHARACTER_SET" )
+		fi
 
 		for i in {30..0}; do
 			if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then
