@@ -1,13 +1,13 @@
 # vim:set ft=dockerfile:
-FROM debian:jessie
+FROM debian:stretch
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
 
 # add gosu for easy step-down from root
-ENV GOSU_VERSION 1.7
+ENV GOSU_VERSION 1.10
 RUN set -x \
-	&& apt-get update && apt-get install -y --no-install-recommends ca-certificates wget && rm -rf /var/lib/apt/lists/* \
+	&& apt-get update && apt-get install -y --no-install-recommends ca-certificates wget gnupg dirmngr gnupg-agent && rm -rf /var/lib/apt/lists/* \
 	&& wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
 	&& wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
 	&& export GNUPGHOME="$(mktemp -d)" \
@@ -50,7 +50,7 @@ RUN set -ex; \
 	rm -r "$GNUPGHOME"; \
 	apt-key list
 
-RUN echo "deb https://repo.percona.com/apt jessie main" > /etc/apt/sources.list.d/percona.list \
+RUN echo "deb https://repo.percona.com/apt stretch main" > /etc/apt/sources.list.d/percona.list \
 	&& { \
 		echo 'Package: *'; \
 		echo 'Pin: release o=Percona Development Team'; \
@@ -58,9 +58,9 @@ RUN echo "deb https://repo.percona.com/apt jessie main" > /etc/apt/sources.list.
 	} > /etc/apt/preferences.d/percona
 
 ENV MARIADB_MAJOR 10.3
-ENV MARIADB_VERSION 10.3.0+maria~jessie
+ENV MARIADB_VERSION 10.3.0+maria~stretch
 
-RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian jessie main" > /etc/apt/sources.list.d/mariadb.list \
+RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian stretch main" > /etc/apt/sources.list.d/mariadb.list \
 	&& { \
 		echo 'Package: *'; \
 		echo 'Pin: release o=MariaDB'; \
@@ -78,6 +78,16 @@ RUN { \
 	&& apt-get update \
 	&& apt-get install -y \
 		mariadb-server=$MARIADB_VERSION \
+		mariadb-plugin-cassandra=$MARIADB_VERSION \
+		mariadb-plugin-connect=$MARIADB_VERSION \
+		mariadb-plugin-cracklib-password-check=$MARIADB_VERSION \
+		mariadb-plugin-gssapi-client=$MARIADB_VERSION \
+		mariadb-plugin-gssapi-server=$MARIADB_VERSION \
+		mariadb-plugin-mroonga=$MARIADB_VERSION \
+		mariadb-plugin-oqgraph=$MARIADB_VERSION \
+		mariadb-plugin-rocksdb=$MARIADB_VERSION \
+		mariadb-plugin-spider=$MARIADB_VERSION \
+		mariadb-plugin-tokudb=$MARIADB_VERSION \
 # percona-xtrabackup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
 		percona-xtrabackup \
 		socat \
