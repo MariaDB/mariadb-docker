@@ -1,10 +1,16 @@
 #!/bin/bash
 set -eo pipefail
 
+defaultSuite='jessie'
 declare -A suites=(
 	[5.5]='wheezy'
 )
-defaultSuite='jessie'
+defaultXtrabackup='percona-xtrabackup-24'
+declare -A xtrabackups=(
+	[5.5]='percona-xtrabackup'
+	[10.0]='percona-xtrabackup'
+	[10.1]='percona-xtrabackup'
+)
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
@@ -29,11 +35,13 @@ for version in "${versions[@]}"; do
 	(
 		set -x
 		cp docker-entrypoint.sh "$version/"
-		sed '
-			s/%%SUITE%%/'"$suite"'/g;
-			s/%%MARIADB_MAJOR%%/'"$version"'/g;
-			s/%%MARIADB_VERSION%%/'"$fullVersion"'/g;
-		' Dockerfile.template > "$version/Dockerfile"
+		sed \
+			-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
+			-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
+			-e 's!%%SUITE%%!'"$suite"'!g' \
+			-e 's!%%XTRABACKUP%%!'"${xtrabackups[$version]:-$defaultXtrabackup}"'!g' \
+			Dockerfile.template \
+			> "$version/Dockerfile"
 	)
 	
 	travisEnv='\n  - VERSION='"$version$travisEnv"
