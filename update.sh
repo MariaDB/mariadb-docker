@@ -12,6 +12,12 @@ declare -A xtrabackups=(
 	[10.1]='percona-xtrabackup'
 )
 
+defaultTokudbPlugin=''
+declare -A tokudbPlugins=(
+	[10.2]='mariadb-plugin-tokudb'
+	[10.3]='mariadb-plugin-tokudb'
+)
+
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
 versions=( "$@" )
@@ -40,6 +46,7 @@ for version in "${versions[@]}"; do
 			-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
 			-e 's!%%SUITE%%!'"$suite"'!g' \
 			-e 's!%%XTRABACKUP%%!'"${xtrabackups[$version]:-$defaultXtrabackup}"'!g' \
+			-e 's!%%TOKUDBPLUGIN%%!'"${tokudbPlugins[$version]:-$defaultTokudbPlugin}"'!g' \
 			Dockerfile.template \
 			> "$version/Dockerfile"
 	)

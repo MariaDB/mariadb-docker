@@ -81,6 +81,7 @@ RUN { \
 		"mariadb-server=$MARIADB_VERSION" \
 # percona-xtrabackup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
 		percona-xtrabackup-24 \
+		mariadb-plugin-tokudb \
 		socat \
 	&& rm -rf /var/lib/apt/lists/* \
 # comment out any "user" entires in the MySQL config ("docker-entrypoint.sh" or "--user" will handle user switching)
