@@ -156,7 +156,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 
 		file_env 'MYSQL_USER'
 		file_env 'MYSQL_PASSWORD'
-		if [ "$MYSQL_USER" -a "$MYSQL_PASSWORD" ]; then
+		if [ "$MYSQL_USER" ]; then
 			echo "CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' ;" | "${mysql[@]}"
 
 			if [ "$MYSQL_DATABASE" ]; then
@@ -165,7 +165,6 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 
 			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
 		fi
-
 		echo
 		for f in /docker-entrypoint-initdb.d/*; do
 			case "$f" in
