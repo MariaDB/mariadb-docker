@@ -89,12 +89,14 @@ RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian jessi
 RUN { \
 		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password password 'unused'; \
 		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password_again password 'unused'; \
-	} | debconf-set-selections \
-	&& apt-get update \
+	} | debconf-set-selections; \
+	arch="$(dpkg --print-architecture)"; \
+# percona-xtrabackup(amd64/i386 only) is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
+	if [ "$arch" = "amd64" ] || [ "$arch" = "i386" ]; then XTRABACKUP=percona-xtrabackup ; else XTRABACKUP= ; fi ; \
+	apt-get update \
 	&& apt-get install -y \
 		"mariadb-server=$MARIADB_VERSION" \
-# percona-xtrabackup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
-		percona-xtrabackup \
+		"${XTRABACKUP}" \
 		socat \
 	&& rm -rf /var/lib/apt/lists/* \
 # comment out any "user" entires in the MySQL config ("docker-entrypoint.sh" or "--user" will handle user switching)
