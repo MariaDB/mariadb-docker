@@ -1,15 +1,16 @@
 #!/bin/bash
 set -eo pipefail
 
-defaultSuite='jessie'
+defaultSuite='stretch'
 declare -A suites=(
 	[5.5]='wheezy'
+	[10.0]='jessie'
 )
-defaultXtrabackup='percona-xtrabackup-24'
-declare -A xtrabackups=(
-	[5.5]='percona-xtrabackup'
-	[10.0]='percona-xtrabackup'
-	[10.1]='percona-xtrabackup'
+# https://jira.mariadb.org/browse/MDEV-15869
+defaultMariabackup='libaio1 libjemalloc1 libssl1.0.2 procps socat mariadb-backup-'
+declare -A mariabackups=(
+	[5.5]=''
+	[10.0]=''
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -39,7 +40,7 @@ for version in "${versions[@]}"; do
 			-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
 			-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
 			-e 's!%%SUITE%%!'"$suite"'!g' \
-			-e 's!%%XTRABACKUP%%!'"${xtrabackups[$version]:-$defaultXtrabackup}"'!g' \
+			-e 's!%%MARIABACKUP%%!'"${mariabackups[$version]-$defaultMariabackup$version=$fullVersion}"'!g' \
 			Dockerfile.template \
 			> "$version/Dockerfile"
 	)
