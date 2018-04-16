@@ -55,7 +55,7 @@ join() {
 for version in "${versions[@]}"; do
 	commit="$(dirCommit "$version")"
 
-	fullVersion="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "ENV" && $2 == "MARIADB_VERSION" { gsub(/[+].*$/, "", $3); print $3; exit }')"
+	fullVersion="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "ENV" && $2 == "MARIADB_VERSION" { gsub(/^([0-9]+:)|[+].*$/, "", $3); print $3; exit }')"
 
 	versionAliases=( $fullVersion )
 	if [ "$version" != "$fullVersion" ]; then
