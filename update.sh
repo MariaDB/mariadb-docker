@@ -1,13 +1,12 @@
 #!/bin/bash
 set -eo pipefail
 
-defaultSuite='jessie'
+defaultSuite='stretch'
 declare -A suites=(
-	[5.5]='wheezy'
+	[10.0]='jessie'
 )
 defaultXtrabackup='percona-xtrabackup-24'
 declare -A xtrabackups=(
-	[5.5]='percona-xtrabackup'
 	[10.0]='percona-xtrabackup'
 	[10.1]='percona-xtrabackup'
 )
