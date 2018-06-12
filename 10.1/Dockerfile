@@ -1,15 +1,24 @@
 # vim:set ft=dockerfile:
-FROM debian:jessie
+FROM debian:stretch-slim
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
+
+# install "pwgen" for randomizing passwords
+# install "apt-transport-https" for Percona's repo (switched to https-only)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		apt-transport-https \
+		ca-certificates \
+		dirmngr \
+		gnupg \
+		pwgen \
+	&& rm -rf /var/lib/apt/lists/*
 
 # add gosu for easy step-down from root
 ENV GOSU_VERSION 1.10
 RUN set -ex; \
 	\
 	fetchDeps=' \
-		ca-certificates \
 		wget \
 	'; \
 	apt-get update; \
@@ -30,21 +39,21 @@ RUN set -ex; \
 # verify that the binary works
 	gosu nobody true; \
 	\
-	apt-get purge -y --auto-remove $fetchDeps
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $fetchDeps; \
+	rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /docker-entrypoint-initdb.d
-
-# install "pwgen" for randomizing passwords
-# install "apt-transport-https" for Percona's repo (switched to https-only)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-		apt-transport-https ca-certificates \
-		pwgen \
-	&& rm -rf /var/lib/apt/lists/*
 
 ENV GPG_KEYS \
 # Key fingerprint = 1993 69E5 404B D5FC 7D2F  E43B CBCB 082A 1BB9 43DB
 # MariaDB Package Signing Key <package-signing-key@mariadb.org>
+# The old key is for MariaDB 10.0
 	199369E5404BD5FC7D2FE43BCBCB082A1BB943DB \
+# pub   4096R/C74CD1D8 2016-03-30
+#       Key fingerprint = 177F 4010 FE56 CA33 3630  0305 F165 6F24 C74C D1D8
+# uid                  MariaDB Signing Key <signing-key@mariadb.org>
+# sub   4096R/DE8F6914 2016-03-30
+	177F4010FE56CA3336300305F1656F24C74CD1D8 \
 # pub   1024D/CD2EFD2A 2009-12-15
 #       Key fingerprint = 430B DF5C 56E7 C94E 848E  E60C 1C4C BDCD CD2E FD2A
 # uid                  Percona MySQL Development Team <mysql-dev@percona.com>
@@ -65,7 +74,7 @@ RUN set -ex; \
 	apt-key list
 
 # add Percona's repo for xtrabackup (which is useful for Galera)
-RUN echo "deb https://repo.percona.com/apt jessie main" > /etc/apt/sources.list.d/percona.list \
+RUN echo "deb https://repo.percona.com/apt stretch main" > /etc/apt/sources.list.d/percona.list \
 	&& { \
 		echo 'Package: *'; \
 		echo 'Pin: release o=Percona Development Team'; \
@@ -73,9 +82,9 @@ RUN echo "deb https://repo.percona.com/apt jessie main" > /etc/apt/sources.list.
 	} > /etc/apt/preferences.d/percona
 
 ENV MARIADB_MAJOR 10.1
-ENV MARIADB_VERSION 10.1.33+maria-1~jessie
+ENV MARIADB_VERSION 10.1.33+maria-1~stretch
 
-RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian jessie main" > /etc/apt/sources.list.d/mariadb.list \
+RUN echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/debian stretch main" > /etc/apt/sources.list.d/mariadb.list \
 	&& { \
 		echo 'Package: *'; \
 		echo 'Pin: release o=MariaDB'; \
