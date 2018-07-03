@@ -184,6 +184,41 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		echo
 		echo 'MySQL init process done. Ready for start up.'
 		echo
+		
+	else
+		echo 'updating database'
+
+		chown -R mysql:mysql "$DATADIR"
+
+		SOCKET="$(_get_config 'socket' "$@")"
+		"$@" --user=mysql --skip-networking --socket="${SOCKET}" &
+		pid="$!"
+		echo "MySQL process pid: $pid"
+
+		mysql=( mysql -uroot -p${MYSQL_ROOT_PASSWORD} -hlocalhost --protocol=socket --socket="${SOCKET}" )
+
+		for i in {30..0}; do
+			if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then
+				break
+			fi
+			echo 'MySQL init process in progress...'
+			sleep 1
+		done
+		if [ "$i" = 0 ]; then
+			echo >&2 'MySQL init process failed.'
+			exit 1
+		fi
+
+		mysql_upgrade -uroot -p${MYSQL_ROOT_PASSWORD} -hlocalhost --protocol=socket --socket="${SOCKET}"
+
+		if ! kill -s TERM "$pid" || ! wait "$pid"; then
+		   	echo >&2 'MySQL update process failed.'
+		    	exit 1
+		fi
+
+		echo
+		echo 'MySQL update process done. Ready for start up.'
+		echo
 	fi
 fi
 
