@@ -63,6 +63,14 @@ for version in "${versions[@]}"; do
 	fi
 	versionAliases+=( ${aliases[$version]:-} )
 
+	from="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "FROM" { print $2; exit }')"
+	distro="${from%%:*}" # "debian", "ubuntu"
+	suite="${from#$distro:}" # "jessie-slim", "xenial"
+	suite="${suite%-slim}" # "jessie", "xenial"
+
+	variantAliases=( "${versionAliases[@]/%/-$suite}" )
+	versionAliases=( "${variantAliases[@]//latest-/}" "${versionAliases[@]}" )
+
 	echo
 	cat <<-EOE
 		Tags: $(join ', ' "${versionAliases[@]}")
