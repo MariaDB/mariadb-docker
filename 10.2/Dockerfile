@@ -86,15 +86,6 @@ RUN set -ex; \
 	rm -r "$GNUPGHOME"; \
 	apt-key list
 
-# add Percona's repo for xtrabackup (which is useful for Galera)
-RUN set -e; \
-	echo "deb https://repo.percona.com/apt bionic main" > /etc/apt/sources.list.d/percona.list; \
-	{ \
-		echo 'Package: *'; \
-		echo 'Pin: release o=Percona Development Team'; \
-		echo 'Pin-Priority: 998'; \
-	} > /etc/apt/preferences.d/percona
-
 ENV MARIADB_MAJOR 10.2
 ENV MARIADB_VERSION 1:10.2.16+maria~bionic
 
@@ -115,11 +106,12 @@ RUN set -ex; \
 		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password password 'unused'; \
 		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections; \
+	XTRABACKUP='mariadb-backup-10.2'; \
 	apt-get update; \
 	apt-get install -y \
 		"mariadb-server=$MARIADB_VERSION" \
 # percona-xtrabackup/mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
-		mariadb-backup-10.2 \
+		$XTRABACKUP \
 		socat \
 	; \
 	rm -rf /var/lib/apt/lists/*; \

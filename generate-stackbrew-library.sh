@@ -9,6 +9,8 @@ declare -A aliases=(
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
+source '.architectures-lib'
+
 versions=( */ )
 versions=( "${versions[@]%/}" )
 
@@ -74,6 +76,7 @@ for version in "${versions[@]}"; do
 	echo
 	cat <<-EOE
 		Tags: $(join ', ' "${versionAliases[@]}")
+		Architectures: $(join ', ' $(versionArches $version))
 		GitCommit: $commit
 		Directory: $version
 	EOE
