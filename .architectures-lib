@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
 
-_awkArch() {
-	local version="$1"; shift
-	local awkExpr="$1"; shift
-	awk "$@" "/^#|^\$/ { next } $awkExpr" "$version/release-architectures"
-}
-
 hasBashbrewArch() {
 	local version="$1"; shift
 	local bashbrewArch="$1"; shift
-	_awkArch "$version" 'BEGIN { exitCode = 1 } $1 == bashbrewArch { exitCode = 0 } END { exit exitCode }' -v bashbrewArch="$bashbrewArch"
+	local arches="$(grep 'bashbrew-architectures:' "$version/Dockerfile" | cut -d':' -f2)"
+	[[ " $arches " == *" $bashbrewArch "* ]]
 }
 
 _generateParentRepoToArches() {

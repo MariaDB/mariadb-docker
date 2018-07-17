@@ -50,13 +50,12 @@ for version in "${versions[@]}"; do
 		continue
 	fi
 
-	echo '# bashbrew-arches' > "$version/release-architectures"
+	arches=
 	for arch in "${!dpkArchToBashbrew[@]}"; do
 		if ver="$(getRemoteVersion "$version" "$suite" "$arch")" && [ -n "$ver" ]; then
-			echo "${dpkArchToBashbrew[$arch]}" >> "$version/release-architectures"
+			arches="$arches ${dpkArchToBashbrew[$arch]}"
 		fi
 	done
-
 
 	backup="${xtrabackups[$version]:-$defaultXtrabackup}"
 
@@ -79,6 +78,7 @@ for version in "${versions[@]}"; do
 			-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
 			-e 's!%%SUITE%%!'"$suite"'!g' \
 			-e 's!%%XTRABACKUP%%!'"$backup"'!g' \
+			-e 's!%%ARCHES%%!'"$arches"'!g' \
 			"$version/Dockerfile"
 	)
 	

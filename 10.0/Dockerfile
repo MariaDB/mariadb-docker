@@ -88,6 +88,7 @@ RUN set -ex; \
 	rm -r "$GNUPGHOME"; \
 	apt-key list
 
+# bashbrew-architectures: ppc64le i386 amd64 arm64v8
 ENV MARIADB_MAJOR 10.0
 ENV MARIADB_VERSION 10.0.35+maria-1~xenial
 
