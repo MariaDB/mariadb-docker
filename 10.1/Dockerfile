@@ -37,7 +37,7 @@ RUN set -ex; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
-	{ command -v gpgconf > /dev/null && gpgconf --kill all || :; }; \
+	command -v gpgconf > /dev/null && gpgconf --kill all || :; \
 	rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc; \
 	\
 	chmod +x /usr/local/bin/gosu; \
@@ -84,11 +84,11 @@ RUN set -ex; \
 		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done; \
 	gpg --export $GPG_KEYS > /etc/apt/trusted.gpg.d/mariadb.gpg; \
-	{ command -v gpgconf > /dev/null && gpgconf --kill all || :; }; \
+	command -v gpgconf > /dev/null && gpgconf --kill all || :; \
 	rm -r "$GNUPGHOME"; \
 	apt-key list
 
-# bashbrew-architectures: ppc64le amd64 arm64v8
+# bashbrew-architectures: amd64 arm64v8 ppc64le
 ENV MARIADB_MAJOR 10.1
 ENV MARIADB_VERSION 1:10.1.34+maria-1~bionic
 
@@ -109,12 +109,12 @@ RUN set -ex; \
 		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password password 'unused'; \
 		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections; \
-	XTRABACKUP='mariadb-backup-10.1'; \
+	backupPackage='mariadb-backup-10.1'; \
 	apt-get update; \
 	apt-get install -y \
 		"mariadb-server=$MARIADB_VERSION" \
 # percona-xtrabackup/mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
-		$XTRABACKUP \
+		$backupPackage \
 		socat \
 	; \
 	rm -rf /var/lib/apt/lists/*; \

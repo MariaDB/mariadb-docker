@@ -11,7 +11,7 @@ declare -A xtrabackups=(
 	[5.5]='percona-xtrabackup'
 	[10.0]='percona-xtrabackup'
 )
-declare -A dpkArchToBashbrew=(
+declare -A dpkgArchToBashbrew=(
 	[amd64]='amd64'
 	[armel]='arm32v5'
 	[armhf]='arm32v7'
@@ -51,9 +51,10 @@ for version in "${versions[@]}"; do
 	fi
 
 	arches=
-	for arch in "${!dpkArchToBashbrew[@]}"; do
+	sortedArches="$(echo "${!dpkgArchToBashbrew[@]}" | xargs -n1 | sort | xargs)"
+	for arch in $sortedArches; do
 		if ver="$(getRemoteVersion "$version" "$suite" "$arch")" && [ -n "$ver" ]; then
-			arches="$arches ${dpkArchToBashbrew[$arch]}"
+			arches="$arches ${dpkgArchToBashbrew[$arch]}"
 		fi
 	done
 
@@ -63,7 +64,7 @@ for version in "${versions[@]}"; do
 	if [ "$backup" == 'percona-xtrabackup' ]; then
 		gawk -i inplace '
 		{ print }
-		/%%XTRABACKUP%%/ && c == 0 { c = 1; system("cat Dockerfile-percona-block") }
+		/%%BACKUP_PACKAGE%%/ && c == 0 { c = 1; system("cat Dockerfile-percona-block") }
 		' "$version/Dockerfile"
 	elif [ "$backup" == 'mariadb-backup' ] && [[ "$version" < 10.3 ]]; then
 		# 10.1 and 10.2 have mariadb major version in the package name
@@ -77,7 +78,7 @@ for version in "${versions[@]}"; do
 			-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
 			-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
 			-e 's!%%SUITE%%!'"$suite"'!g' \
-			-e 's!%%XTRABACKUP%%!'"$backup"'!g' \
+			-e 's!%%BACKUP_PACKAGE%%!'"$backup"'!g' \
 			-e 's!%%ARCHES%%!'"$arches"'!g' \
 			"$version/Dockerfile"
 	)
