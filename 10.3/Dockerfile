@@ -1,6 +1,5 @@
 # vim:set ft=dockerfile:
 FROM debian:stretch-slim
-ENV DEBIAN_VERSION stretch
 ENV MARIADB_MAJOR 10.3
 ENV MARIADB_VERSION 1:10.3.8+maria~stretch
 
@@ -28,7 +27,7 @@ RUN set -ex; \
 # Add the MariaDB repository, per https://downloads.mariadb.org/mariadb/repositories/
 # Note: We can't do this before the packages above is installed, because we need gpg.
 RUN apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8
-RUN add-apt-repository 'deb [arch=amd64] http://mirrors.dotsrc.org/mariadb/repo/10.3/debian $DEBIAN_VERSION main'
+RUN add-apt-repository 'deb [arch=amd64] http://mirrors.dotsrc.org/mariadb/repo/10.3/debian stretch main'
 
 RUN { \
 		echo 'Package: *'; \
