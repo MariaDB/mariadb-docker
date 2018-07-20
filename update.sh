@@ -1,16 +1,37 @@
 #!/bin/bash
 set -eo pipefail
 
-defaultSuite='jessie'
+defaultSuite='bionic'
 declare -A suites=(
-	[5.5]='wheezy'
+	[5.5]='trusty'
+	[10.0]='xenial'
 )
-defaultXtrabackup='percona-xtrabackup-24'
+defaultXtrabackup='mariadb-backup'
 declare -A xtrabackups=(
 	[5.5]='percona-xtrabackup'
 	[10.0]='percona-xtrabackup'
-	[10.1]='percona-xtrabackup'
 )
+declare -A dpkgArchToBashbrew=(
+	[amd64]='amd64'
+	[armel]='arm32v5'
+	[armhf]='arm32v7'
+	[arm64]='arm64v8'
+	[i386]='i386'
+	[ppc64el]='ppc64le'
+	[s390x]='s390x'
+)
+
+getRemoteVersion() {
+	local version="$1"; shift # 10.3
+	local suite="$1"; shift # bionic
+	local dpkgArch="$1" shift # arm64
+
+	echo "$(
+		curl -fsSL "http://ftp.osuosl.org/pub/mariadb/repo/$version/ubuntu/dists/$suite/main/binary-$dpkgArch/Packages" 2>/dev/null  \
+			| tac|tac \
+			| awk -F ': ' '$1 == "Package" { pkg = $2; next } $1 == "Version" && pkg == "mariadb-server" { print $2; exit }'
+	)"
+}
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
@@ -23,25 +44,43 @@ versions=( "${versions[@]%/}" )
 travisEnv=
 for version in "${versions[@]}"; do
 	suite="${suites[$version]:-$defaultSuite}"
-	fullVersion="$(
-		curl -fsSL "http://ftp.osuosl.org/pub/mariadb/repo/$version/debian/dists/$suite/main/binary-amd64/Packages" \
-			| tac|tac \
-			| awk -F ': ' '$1 == "Package" { pkg = $2; next } $1 == "Version" && pkg == "mariadb-server" { print $2; exit }'
-	)"
+	fullVersion="$(getRemoteVersion "$version" "$suite" 'amd64')"
 	if [ -z "$fullVersion" ]; then
 		echo >&2 "warning: cannot find $version in $suite"
 		continue
 	fi
+
+	arches=
+	sortedArches="$(echo "${!dpkgArchToBashbrew[@]}" | xargs -n1 | sort | xargs)"
+	for arch in $sortedArches; do
+		if ver="$(getRemoteVersion "$version" "$suite" "$arch")" && [ -n "$ver" ]; then
+			arches="$arches ${dpkgArchToBashbrew[$arch]}"
+		fi
+	done
+
+	backup="${xtrabackups[$version]:-$defaultXtrabackup}"
+
+	cp Dockerfile.template "$version/Dockerfile"
+	if [ "$backup" == 'percona-xtrabackup' ]; then
+		gawk -i inplace '
+		{ print }
+		/%%BACKUP_PACKAGE%%/ && c == 0 { c = 1; system("cat Dockerfile-percona-block") }
+		' "$version/Dockerfile"
+	elif [ "$backup" == 'mariadb-backup' ] && [[ "$version" < 10.3 ]]; then
+		# 10.1 and 10.2 have mariadb major version in the package name
+		backup="$backup-$version"
+	fi
+
 	(
 		set -x
 		cp docker-entrypoint.sh "$version/"
-		sed \
+		sed -i \
 			-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
 			-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
 			-e 's!%%SUITE%%!'"$suite"'!g' \
-			-e 's!%%XTRABACKUP%%!'"${xtrabackups[$version]:-$defaultXtrabackup}"'!g' \
-			Dockerfile.template \
-			> "$version/Dockerfile"
+			-e 's!%%BACKUP_PACKAGE%%!'"$backup"'!g' \
+			-e 's!%%ARCHES%%!'"$arches"'!g' \
+			"$version/Dockerfile"
 	)
 	
 	travisEnv='\n  - VERSION='"$version$travisEnv"
