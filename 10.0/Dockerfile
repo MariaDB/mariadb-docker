@@ -122,7 +122,7 @@ RUN set -ex; \
 	dpkgArch="$(dpkg --print-architecture)"; \
 	if [[ "$backupPackage" == percona* ]]; then \
 		case "${dpkgArch##*-}" in \
-			amd64|i396) ;; \
+			amd64|i386) ;; \
 			*) backupPackage= ;; \
 		esac; \
 	fi; \
