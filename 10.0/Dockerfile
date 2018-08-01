@@ -90,7 +90,7 @@ RUN set -ex; \
 
 # bashbrew-architectures: amd64 arm64v8 i386 ppc64le
 ENV MARIADB_MAJOR 10.0
-ENV MARIADB_VERSION 10.0.35+maria-1~xenial
+ENV MARIADB_VERSION 10.0.36+maria-1~xenial
 
 RUN set -e;\
 	echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu xenial main" > /etc/apt/sources.list.d/mariadb.list; \
