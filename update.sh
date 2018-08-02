@@ -29,7 +29,7 @@ getRemoteVersion() {
 	echo "$(
 		curl -fsSL "http://ftp.osuosl.org/pub/mariadb/repo/$version/ubuntu/dists/$suite/main/binary-$dpkgArch/Packages" 2>/dev/null  \
 			| tac|tac \
-			| awk -F ': ' '$1 == "Package" { pkg = $2; next } $1 == "Version" && pkg == "mariadb-server" { print $2; exit }'
+			| awk -F ': ' '$1 == "Package" { pkg = $2; next } $1 == "Version" && pkg == "mariadb-server-'"$version"'" { print $2; exit }'
 	)"
 }
 
@@ -61,7 +61,7 @@ for version in "${versions[@]}"; do
 	backup="${xtrabackups[$version]:-$defaultXtrabackup}"
 
 	cp Dockerfile.template "$version/Dockerfile"
-	if [ "$backup" == 'percona-xtrabackup' ]; then
+	if [ "$backup" = 'percona-xtrabackup' ]; then
 		gawk -i inplace '
 		{ print }
 		/%%BACKUP_PACKAGE%%/ && c == 0 { c = 1; system("cat Dockerfile-percona-block") }
