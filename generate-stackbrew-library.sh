@@ -2,6 +2,7 @@
 set -eu
 
 declare -A aliases=(
+	# https://github.com/docker-library/mariadb/pull/83 ("alpha", "beta", "rc" tag discussion)
 	[10.3]='10 latest'
 	[5.5]='5'
 )
