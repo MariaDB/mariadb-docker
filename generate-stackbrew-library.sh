@@ -2,10 +2,12 @@
 set -eu
 
 declare -A aliases=(
-	# https://github.com/docker-library/mariadb/pull/83 ("alpha", "beta", "rc" tag discussion)
-	[10.3]='10 latest'
-	[5.5]='5'
+	#[10.3]='10 latest'
+	#[5.5]='5'
 )
+
+# "latest", "10", "5", etc aliases are auto-detected in the loop below
+declare -A latest=()
 
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -65,6 +67,16 @@ for version in "${versions[@]}"; do
 		versionAliases+=( $version )
 	fi
 	versionAliases+=( ${aliases[$version]:-} )
+
+	releaseStatus="$(grep -m1 'release-status:' "$version/Dockerfile" | cut -d':' -f2)"
+	if [ "$releaseStatus" = 'Stable' ]; then
+		for tryAlias in "${version%%.*}" latest; do
+			if [ -z "${latest[$tryAlias]:-}" ]; then
+				latest[$tryAlias]="$version"
+				versionAliases+=( "$tryAlias" )
+			fi
+		done
+	fi
 
 	from="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "FROM" { print $2; exit }')"
 	distro="${from%%:*}" # "debian", "ubuntu"

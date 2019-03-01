@@ -50,6 +50,25 @@ for version in "${versions[@]}"; do
 		continue
 	fi
 
+	mariaVersion="${fullVersion##*:}"
+	mariaVersion="${mariaVersion%%[-+~]*}"
+
+	# "Alpha", "Beta", "Gamma", "RC", "Stable", etc.
+	releaseStatus="$(
+		wget -qO- 'https://downloads.mariadb.org/mariadb/+releases/' \
+			| xargs -d '\n' \
+			| grep -oP '<tr>.+?</tr>' \
+			| grep -P '>\Q'"$mariaVersion"'\E<' \
+			| grep -oP '<td>[^0-9][^<]*</td>' \
+			| sed -r 's!^.*<td>([^0-9][^<]*)</td>.*$!\1!'
+	)"
+	case "$releaseStatus" in
+		Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
+		*) echo >&2 "error: unexpected 'release status' value for $mariaVersion: $releaseStatus"; exit 1 ;;
+	esac
+
+	echo "$version: $mariaVersion ($releaseStatus)"
+
 	arches=
 	sortedArches="$(echo "${!dpkgArchToBashbrew[@]}" | xargs -n1 | sort | xargs)"
 	for arch in $sortedArches; do
@@ -71,18 +90,16 @@ for version in "${versions[@]}"; do
 		backup="$backup-$version"
 	fi
 
-	(
-		set -x
-		cp docker-entrypoint.sh "$version/"
-		sed -i \
-			-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
-			-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
-			-e 's!%%SUITE%%!'"$suite"'!g' \
-			-e 's!%%BACKUP_PACKAGE%%!'"$backup"'!g' \
-			-e 's!%%ARCHES%%!'"$arches"'!g' \
-			"$version/Dockerfile"
-	)
-	
+	cp docker-entrypoint.sh "$version/"
+	sed -i \
+		-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
+		-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
+		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
+		-e 's!%%SUITE%%!'"$suite"'!g' \
+		-e 's!%%BACKUP_PACKAGE%%!'"$backup"'!g' \
+		-e 's!%%ARCHES%%!'"$arches"'!g' \
+		"$version/Dockerfile"
+
 	travisEnv='\n  - VERSION='"$version$travisEnv"
 done
 
