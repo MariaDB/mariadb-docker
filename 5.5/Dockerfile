@@ -91,6 +91,8 @@ RUN set -ex; \
 # bashbrew-architectures: amd64 i386 ppc64le
 ENV MARIADB_MAJOR 5.5
 ENV MARIADB_VERSION 5.5.63+maria-1~trusty
+# release-status:Stable
+# (https://downloads.mariadb.org/mariadb/+releases/)
 
 RUN set -e;\
 	echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu trusty main" > /etc/apt/sources.list.d/mariadb.list; \

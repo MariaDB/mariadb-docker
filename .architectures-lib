@@ -3,7 +3,7 @@
 hasBashbrewArch() {
 	local version="$1"; shift
 	local bashbrewArch="$1"; shift
-	local arches="$(grep 'bashbrew-architectures:' "$version/Dockerfile" | cut -d':' -f2)"
+	local arches="$(grep -m1 'bashbrew-architectures:' "$version/Dockerfile" | cut -d':' -f2)"
 	[[ " $arches " == *" $bashbrewArch "* ]]
 }
 

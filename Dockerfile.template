@@ -91,6 +91,8 @@ RUN set -ex; \
 # bashbrew-architectures:%%ARCHES%%
 ENV MARIADB_MAJOR %%MARIADB_MAJOR%%
 ENV MARIADB_VERSION %%MARIADB_VERSION%%
+# release-status:%%MARIADB_RELEASE_STATUS%%
+# (https://downloads.mariadb.org/mariadb/+releases/)
 
 RUN set -e;\
 	echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu %%SUITE%% main" > /etc/apt/sources.list.d/mariadb.list; \
