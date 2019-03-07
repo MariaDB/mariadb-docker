@@ -76,6 +76,13 @@ for version in "${versions[@]}"; do
 				versionAliases+=( "$tryAlias" )
 			fi
 		done
+	else
+		for tryAlias in "${releaseStatus,,}"; do
+			if [ -z "${latest[$tryAlias]:-}" ]; then
+				latest[$tryAlias]="$version"
+				versionAliases+=( "$tryAlias" )
+			fi
+		done
 	fi
 
 	from="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "FROM" { print $2; exit }')"
