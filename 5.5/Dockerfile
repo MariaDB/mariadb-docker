@@ -90,7 +90,7 @@ RUN set -ex; \
 
 # bashbrew-architectures: amd64 i386 ppc64le
 ENV MARIADB_MAJOR 5.5
-ENV MARIADB_VERSION 5.5.63+maria-1~trusty
+ENV MARIADB_VERSION 5.5.64+maria-1~trusty
 # release-status:Stable
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
