@@ -64,6 +64,40 @@ _get_config() {
 	# match "datadir      /some/path with/spaces in/it here" but not "--xyz=abc\n     datadir (xyz)"
 }
 
+# Take MYSQL_CONFIG__[SECTION]__[OPTION] from environment and write configuration file.
+_generate_config_from_env() {
+    CONFIGFILE=/etc/mysql/conf.d/generated_config_from_env.cnf
+
+    # We only wanna generate configuration on the first execution.
+    if [ ! -f ${CONFIGFILE} ]; then
+	# Create an associative array for holding config
+	declare -A MYSQL_CONFIG
+
+	while read LINE; do
+	    SECTION=$(echo ${LINE} | cut -d "_" -f1)
+	    CONFIG=$(echo ${LINE} | cut -d "_" -f3-)
+
+	    # Bash doesn't support multidimentional arrays, so we just append to the previous string in the associative array.
+	    MYSQL_CONFIG[${SECTION}]+="${CONFIG}~" # It's very unlikely to see this delimiter in mysql config (has to be a 7 bit ascii char).
+	done < <(env | grep ^MYSQL_CONFIG__ | cut -d"_" -f4- | sort)
+
+	# Generate config from our config array
+	for KEY in "${!MYSQL_CONFIG[@]}"; do
+	    echo "[${KEY}]"
+	    OIFS=$IFS
+	    IFS='~' # Previously selected delimiter for our list
+	    for CONFIG in ${MYSQL_CONFIG[${KEY}]}; do
+		echo "${CONFIG}"
+	    done
+	    IFS=${OIFS}
+	    echo
+	done > ${CONFIGFILE}
+    fi
+}
+
+# Generate config from env variables - we need to do this before possible change of user
+_generate_config_from_env
+
 # allow the container to be started with `--user`
 if [ "$1" = 'mysqld' -a -z "$wantHelp" -a "$(id -u)" = '0' ]; then
 	_check_config "$@"
