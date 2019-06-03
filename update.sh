@@ -4,12 +4,10 @@ set -eo pipefail
 defaultSuite='bionic'
 declare -A suites=(
 	[5.5]='trusty'
-	[10.0]='xenial'
 )
 defaultXtrabackup='mariadb-backup'
 declare -A xtrabackups=(
 	[5.5]='percona-xtrabackup'
-	[10.0]='percona-xtrabackup'
 )
 declare -A dpkgArchToBashbrew=(
 	[amd64]='amd64'
