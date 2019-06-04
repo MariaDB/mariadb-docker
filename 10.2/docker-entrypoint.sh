@@ -174,6 +174,14 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			fi
 		fi
 
+		file_env 'MYSQL_WSREP_USER'
+		file_env 'MYSQL_WSREP_PASSWORD'
+
+		if [ "$MYSQL_WSREP_USER" -a "$MYSQL_WSREP_PASSWORD" ]; then
+			echo "CREATE USER '$MYSQL_WSREP_USER'@'%' IDENTIFIED BY '$MYSQL_WSREP_PASSWORD' ;" | "${mysql[@]}"
+			echo "GRANT REPLICATION SLAVE ON *.* TO '$MYSQL_WSREP_USER'@'%' ;" | "${mysql[@]}"
+		fi
+
 		echo
 		for f in /docker-entrypoint-initdb.d/*; do
 			case "$f" in
