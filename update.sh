@@ -1,13 +1,9 @@
-#!/bin/bash
-set -eo pipefail
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
 defaultSuite='bionic'
 declare -A suites=(
-	[5.5]='trusty'
-)
-defaultXtrabackup='mariadb-backup'
-declare -A xtrabackups=(
-	[5.5]='percona-xtrabackup'
+	#[5.5]='trusty'
 )
 declare -A dpkgArchToBashbrew=(
 	[amd64]='amd64'
@@ -75,15 +71,10 @@ for version in "${versions[@]}"; do
 		fi
 	done
 
-	backup="${xtrabackups[$version]:-$defaultXtrabackup}"
-
 	cp Dockerfile.template "$version/Dockerfile"
-	if [ "$backup" = 'percona-xtrabackup' ]; then
-		gawk -i inplace '
-		{ print }
-		/%%BACKUP_PACKAGE%%/ && c == 0 { c = 1; system("cat Dockerfile-percona-block") }
-		' "$version/Dockerfile"
-	elif [ "$backup" == 'mariadb-backup' ] && [[ "$version" < 10.3 ]]; then
+
+	backup='mariadb-backup'
+	if [[ "$version" < 10.3 ]]; then
 		# 10.1 and 10.2 have mariadb major version in the package name
 		backup="$backup-$version"
 	fi
