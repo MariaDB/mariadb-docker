@@ -13,7 +13,7 @@ RUN set -ex; \
 # Ubuntu includes "gnupg" (not "gnupg2", but still 2.x), but not dirmngr, and gnupg 2.x requires dirmngr
 # so, if we're not running gnupg 1.x, explicitly install dirmngr too
 	if ! gpg --version | grep -q '^gpg (GnuPG) 1\.'; then \
-		 apt-get install -y --no-install-recommends dirmngr; \
+		apt-get install -y --no-install-recommends dirmngr; \
 	fi; \
 	rm -rf /var/lib/apt/lists/*
 
@@ -35,7 +35,7 @@ RUN set -ex; \
 	\
 # verify the signature
 	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
+	gpg --batch --keyserver keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
 	command -v gpgconf > /dev/null && gpgconf --kill all || :; \
 	rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc; \
