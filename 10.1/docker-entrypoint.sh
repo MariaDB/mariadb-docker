@@ -102,7 +102,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		echo 'Database initialized'
 
 		SOCKET="$(_get_config 'socket' "$@")"
-		"$@" --skip-networking --socket="${SOCKET}" &
+		"$@" --skip-networking --socket="${SOCKET}" --wsrep_on=OFF &
 		pid="$!"
 
 		mysql=( mysql --protocol=socket -uroot -hlocalhost --socket="${SOCKET}" )
