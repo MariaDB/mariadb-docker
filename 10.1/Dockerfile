@@ -48,14 +48,15 @@ RUN set -ex; \
 
 RUN mkdir /docker-entrypoint-initdb.d
 
-# install "apt-transport-https" for Percona's repo (switched to https-only)
 # install "pwgen" for randomizing passwords
 # install "tzdata" for /usr/share/zoneinfo/
-RUN apt-get update && apt-get install -y --no-install-recommends \
-		apt-transport-https ca-certificates \
+RUN set -ex; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
 		pwgen \
 		tzdata \
-	&& rm -rf /var/lib/apt/lists/*
+	; \
+	rm -rf /var/lib/apt/lists/*
 
 ENV GPG_KEYS \
 # pub   rsa4096 2016-03-30 [SC]
