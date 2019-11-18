@@ -288,7 +288,7 @@ _main() {
 
 	# skip setup if they aren't running mysqld or want an option that stops mysqld
 	if [ "$1" = 'mysqld' ] && ! _mysql_want_help "$@"; then
-		mysql_note "Entrypoint script for MySQL Server ${MYSQL_VERSION} started."
+		mysql_note "Entrypoint script for MySQL Server ${MARIADB_VERSION} started."
 
 		mysql_check_config "$@"
 		# Load various environment variables
