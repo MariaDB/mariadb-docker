@@ -89,6 +89,11 @@ for version in "${versions[@]}"; do
 		-e 's!%%ARCHES%%!'"$arches"'!g' \
 		"$version/Dockerfile"
 
+	case "$version" in
+		10.1 | 10.2 | 10.3 | 10.4) ;;
+		*) sed -i '/backwards compat/d' "$version/Dockerfile" ;;
+	esac
+
 	travisEnv='\n  - VERSION='"$version$travisEnv"
 done
 
