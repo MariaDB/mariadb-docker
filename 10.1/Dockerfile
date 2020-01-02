@@ -53,6 +53,7 @@ RUN mkdir /docker-entrypoint-initdb.d
 RUN set -ex; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
+		ca-certificates \
 		pwgen \
 		tzdata \
 	; \
@@ -81,7 +82,7 @@ ENV MARIADB_VERSION 1:10.1.43+maria-1~bionic
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
 RUN set -e;\
-	echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu bionic main" > /etc/apt/sources.list.d/mariadb.list; \
+	echo "deb https://downloads.mariadb.com/MariaDB/mariadb-$MARIADB_MAJOR/repo/ubuntu bionic main" > /etc/apt/sources.list.d/mariadb.list; \
 	{ \
 		echo 'Package: *'; \
 		echo 'Pin: release o=MariaDB'; \
