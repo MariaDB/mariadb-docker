@@ -150,12 +150,10 @@ docker_create_db_directories() {
 # initializes the database directory
 docker_init_database_dir() {
 	mysql_note "Initializing database files"
-	installArgs=( --datadir="$DATADIR" --rpm )
-	if { mysql_install_db --help || :; } | grep -q -- '--auth-root-authentication-method'; then
-		# beginning in 10.4.3, install_db uses "socket" which only allows system user root to connect, switch back to "normal" to allow mysql root without a password
-		# see https://github.com/MariaDB/server/commit/b9f3f06857ac6f9105dc65caae19782f09b47fb3
-		# (this flag doesn't exist in 10.0 and below)
-		installArgs+=( --auth-root-authentication-method=normal )
+	installArgs=( --datadir="$DATADIR" --rpm --auth-root-authentication-method=normal )
+	if { mysql_install_db --help || :; } | grep -q -- '--skip-test-db'; then
+                # 10.3+
+		installArgs+=( --skip-test-db )
 	fi
 	# "Other options are passed to mysqld." (so we pass all "mysqld" arguments directly here)
 	mysql_install_db "${installArgs[@]}" "${@:2}"
