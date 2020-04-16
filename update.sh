@@ -18,7 +18,7 @@ declare -A dpkgArchToBashbrew=(
 getRemoteVersion() {
 	local version="$1"; shift # 10.3
 	local suite="$1"; shift # bionic
-	local dpkgArch="$1" shift # arm64
+	local dpkgArch="$1"; shift # arm64
 
 	echo "$(
 		curl -fsSL "https://ftp.osuosl.org/pub/mariadb/repo/$version/ubuntu/dists/$suite/main/binary-$dpkgArch/Packages" 2>/dev/null  \
