@@ -35,7 +35,6 @@ if [ ${#versions[@]} -eq 0 ]; then
 fi
 versions=( "${versions[@]%/}" )
 
-travisEnv=
 for version in "${versions[@]}"; do
 	suite="${suites[$version]:-$defaultSuite}"
 	fullVersion="$(getRemoteVersion "$version" "$suite" 'amd64')"
@@ -93,9 +92,4 @@ for version in "${versions[@]}"; do
 		10.1 | 10.2 | 10.3 | 10.4) ;;
 		*) sed -i '/backwards compat/d' "$version/Dockerfile" ;;
 	esac
-
-	travisEnv='\n  - VERSION='"$version$travisEnv"
 done
-
-travis="$(awk -v 'RS=\n\n' '$1 == "env:" { $0 = "env:'"$travisEnv"'" } { printf "%s%s", $0, RS }' .travis.yml)"
-echo "$travis" > .travis.yml
