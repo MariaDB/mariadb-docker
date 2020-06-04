@@ -265,6 +265,13 @@ docker_setup_db() {
 	fi
 }
 
+mysql_set_config() {
+	if [ -n "${MYSQL_BIND_ADDRESS:-}" ]; then
+		sed -i "s|#bind-address=0.0.0.0|bin-address=${MYSQL_BIND_ADDRESS}|g" \
+		    "/etc/mysql/my.cnf"
+	fi
+}
+
 _mysql_passfile() {
 	# echo the password to the "file" the client uses
 	# the client command will use process substitution to create a file on the fly
@@ -300,6 +307,8 @@ _main() {
 	# skip setup if they aren't running mysqld or want an option that stops mysqld
 	if [ "$1" = 'mysqld' ] && ! _mysql_want_help "$@"; then
 		mysql_note "Entrypoint script for MySQL Server ${MARIADB_VERSION} started."
+		
+		mysql_set_config
 
 		mysql_check_config "$@"
 		# Load various environment variables
