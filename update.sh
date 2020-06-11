@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-defaultSuite='bionic'
+defaultSuite='focal'
 declare -A suites=(
-	#[5.5]='trusty'
+	[10.1]='bionic'
+	[10.2]='bionic'
 )
 declare -A dpkgArchToBashbrew=(
 	[amd64]='amd64'
@@ -16,8 +17,8 @@ declare -A dpkgArchToBashbrew=(
 )
 
 getRemoteVersion() {
-	local version="$1"; shift # 10.3
-	local suite="$1"; shift # bionic
+	local version="$1"; shift # 10.4
+	local suite="$1"; shift # focal
 	local dpkgArch="$1"; shift # arm64
 
 	echo "$(
