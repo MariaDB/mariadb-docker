@@ -152,7 +152,7 @@ docker_init_database_dir() {
 	mysql_note "Initializing database files"
 	installArgs=( --datadir="$DATADIR" --rpm --auth-root-authentication-method=normal )
 	if { mysql_install_db --help || :; } | grep -q -- '--skip-test-db'; then
-                # 10.3+
+		# 10.3+
 		installArgs+=( --skip-test-db )
 	fi
 	# "Other options are passed to mysqld." (so we pass all "mysqld" arguments directly here)
