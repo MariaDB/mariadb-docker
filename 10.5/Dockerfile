@@ -72,7 +72,7 @@ RUN set -ex; \
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le
 ENV MARIADB_MAJOR 10.5
-ENV MARIADB_VERSION 1:10.5.7+maria~focal
+ENV MARIADB_VERSION 1:10.5.8+maria~focal
 # release-status:Stable
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
