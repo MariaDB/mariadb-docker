@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 defaultSuite='focal'
+minVersionAlpine='10.3'
 declare -A suites=(
 	[10.1]='bionic'
 	[10.2]='bionic'
@@ -93,4 +94,14 @@ for version in "${versions[@]}"; do
 		10.1 | 10.2 | 10.3 | 10.4) ;;
 		*) sed -i '/backwards compat/d' "$version/Dockerfile" ;;
 	esac
+
+	if [[ "$minVersionAlpine" < "$version" ]]; then
+		cp Dockerfile-alpine.template "$version/alpine/Dockerfile"
+		cp docker-entrypoint.sh "$version/alpine/"
+		sed -i \
+			-e 's!%%MARIADB_VERSION%%!'"$mariaVersion"'!g' \
+			-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
+			"$version/alpine/Dockerfile"
+		sed -i -e 's/gosu/su-exec/g' "$version/alpine/docker-entrypoint.sh"
+	fi
 done
