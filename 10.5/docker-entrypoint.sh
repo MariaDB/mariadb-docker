@@ -143,12 +143,14 @@ docker_verify_minimum_env() {
 # also ensures permission for user mysql of run as root
 docker_create_db_directories() {
 	local user; user="$(id -u)"
-
+	local args="$@"
+	
 	# TODO other directories that are used by default? like /var/lib/mysql-files
 	# see https://github.com/docker-library/mysql/issues/562
 	mkdir -p "$DATADIR"
 
-	if [ "$user" = "0" ]; then
+	# chown fails in secure environments where container root only has as much privilege with files as the running user (eg: HPC singularity)
+	if [ "$user" = "0" ] && ! [[ "$args" == *"--user=root"* ]] ; then
 		# this will cause less disk access than `chown -R`
 		find "$DATADIR" \! -user mysql -exec chown mysql '{}' +
 	fi
@@ -320,10 +322,11 @@ _main() {
 		mysql_check_config "$@"
 		# Load various environment variables
 		docker_setup_env "$@"
-		docker_create_db_directories
+		docker_create_db_directories "$@"
 
-		# If container is started as root user, restart as dedicated mysql user
-		if [ "$(id -u)" = "0" ]; then
+		local args="$@"
+		# If container is started as root user without explicit intention, restart as dedicated mysql user
+		if [ "$(id -u)" = "0" ] && ! [[ "$args" == *"--user=root"* ]] ; then
 			mysql_note "Switching to dedicated user 'mysql'"
 			exec gosu mysql "$BASH_SOURCE" "$@"
 		fi
