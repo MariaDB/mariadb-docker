@@ -43,11 +43,11 @@ dirCommit() {
 }
 
 cat <<-EOH
-# this file is generated via https://github.com/docker-library/mariadb/blob/$(fileCommit "$self")/$self
+# this file is generated via https://github.com/MariaDB/mariadb-docker/blob/$(fileCommit "$self")/$self
 
-Maintainers: Tianon Gravi <admwiggin@gmail.com> (@tianon),
-             Joseph Ferguson <yosifkit@gmail.com> (@yosifkit)
-GitRepo: https://github.com/docker-library/mariadb.git
+Maintainers: Daniel Black <daniel@mariadb.org> (@grooverdan),
+             Daniel Bartholomew <dbart@mariadb.com> (@dbart)
+GitRepo: https://github.com/MariaDB/mariadb-docker.git
 EOH
 
 # prints "$2$1$3$1...$N"
