@@ -39,6 +39,18 @@ file_env() {
 	unset "$fileVar"
 }
 
+# set MARIADB_xyz from MYSQL_xyz when MARIADB_xyz is unset
+# and make them the same value (so user scripts can use either)
+_mariadb_file_env() {
+	local var="$1"; shift
+	local maria="MARIADB_${var#MYSQL_}"
+	file_env "$var" "$@"
+	file_env "$maria" "${!var}"
+	if [ "${!maria:-}" ]; then
+		export "$var"="${!maria}"
+	fi
+}
+
 # check to see if this file is being run or sourced from another script
 _is_sourced() {
 	# https://unix.stackexchange.com/a/215279
@@ -175,12 +187,19 @@ docker_setup_env() {
 	DATADIR="$(mysql_get_config 'datadir' "$@")"
 	SOCKET="$(mysql_get_config 'socket' "$@")"
 
+
 	# Initialize values that might be stored in a file
-	file_env 'MYSQL_ROOT_HOST' '%'
-	file_env 'MYSQL_DATABASE'
-	file_env 'MYSQL_USER'
-	file_env 'MYSQL_PASSWORD'
-	file_env 'MYSQL_ROOT_PASSWORD'
+	_mariadb_file_env 'MYSQL_ROOT_HOST' '%'
+	_mariadb_file_env 'MYSQL_DATABASE'
+	_mariadb_file_env 'MYSQL_USER'
+	_mariadb_file_env 'MYSQL_PASSWORD'
+	_mariadb_file_env 'MYSQL_ROOT_PASSWORD'
+
+	# set MARIADB_ from MYSQL_ when it is unset and then make them the same value
+	: "${MARIADB_ALLOW_EMPTY_PASSWORD:=${MYSQL_ALLOW_EMPTY_PASSWORD:-}}"
+	export MYSQL_ALLOW_EMPTY_PASSWORD="$MARIADB_ALLOW_EMPTY_PASSWORD" MARIADB_ALLOW_EMPTY_PASSWORD
+	: "${MARIADB_RANDOM_ROOT_PASSWORD:=${MYSQL_RANDOM_ROOT_PASSWORD:-}}"
+	export MYSQL_RANDOM_ROOT_PASSWORD="$MARIADB_RANDOM_ROOT_PASSWORD" MARIADB_RANDOM_ROOT_PASSWORD
 
 	declare -g DATABASE_ALREADY_EXISTS
 	if [ -d "$DATADIR/mysql" ]; then
