@@ -146,8 +146,8 @@ docker_temp_server_stop() {
 
 # Verify that the minimally required password settings are set for new databases.
 docker_verify_minimum_env() {
-	if [ -z "$MARIADB_ROOT_PASSWORD" -a -z "$MARIADB_ALLOW_EMPTY_PASSWORD" -a -z "$MARIADB_RANDOM_ROOT_PASSWORD" ]; then
-		mysql_error $'Database is uninitialized and password option is not specified\n\tYou need to specify one of MARIADB_ROOT_PASSWORD, MARIADB_ALLOW_EMPTY_PASSWORD and MARIADB_RANDOM_ROOT_PASSWORD'
+	if [ -z "$MARIADB_ROOT_PASSWORD" -a -z "$MARIADB_ALLOW_EMPTY_ROOT_PASSWORD" -a -z "$MARIADB_RANDOM_ROOT_PASSWORD" ]; then
+		mysql_error $'Database is uninitialized and password option is not specified\n\tYou need to specify one of MARIADB_ROOT_PASSWORD, MARIADB_ALLOW_EMPTY_ROOT_PASSWORD and MARIADB_RANDOM_ROOT_PASSWORD'
 	fi
 }
 
@@ -196,8 +196,8 @@ docker_setup_env() {
 	_mariadb_file_env 'MYSQL_ROOT_PASSWORD'
 
 	# set MARIADB_ from MYSQL_ when it is unset and then make them the same value
-	: "${MARIADB_ALLOW_EMPTY_PASSWORD:=${MYSQL_ALLOW_EMPTY_PASSWORD:-}}"
-	export MYSQL_ALLOW_EMPTY_PASSWORD="$MARIADB_ALLOW_EMPTY_PASSWORD" MARIADB_ALLOW_EMPTY_PASSWORD
+	: "${MARIADB_ALLOW_EMPTY_ROOT_PASSWORD:=${MYSQL_ALLOW_EMPTY_PASSWORD:-}}"
+	export MYSQL_ALLOW_EMPTY_PASSWORD="$MARIADB_ALLOW_EMPTY_ROOT_PASSWORD" MARIADB_ALLOW_EMPTY_ROOT_PASSWORD
 	: "${MARIADB_RANDOM_ROOT_PASSWORD:=${MYSQL_RANDOM_ROOT_PASSWORD:-}}"
 	export MYSQL_RANDOM_ROOT_PASSWORD="$MARIADB_RANDOM_ROOT_PASSWORD" MARIADB_RANDOM_ROOT_PASSWORD
 	: "${MARIADB_INITDB_SKIP_TZINFO:=${MYSQL_INITDB_SKIP_TZINFO:-}}"
