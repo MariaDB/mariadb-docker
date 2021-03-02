@@ -17,12 +17,12 @@
 #
 # Some tests require SQL privileges.
 #
-# TEST                      GRANTS REQUIRED
+# TEST                      MINIMUM GRANTS REQUIRED
 # connect                   none*
 # innodb_initialized        USAGE
 # innodb_buffer_pool_loaded USAGE
 # galera_online             USAGE
-# replication               SUPER or REPLICATION_CLIENT or REPLICA MONITOR (10.5+)
+# replication               REPLICATION_CLIENT (<10.5)or REPLICA MONITOR (10.5+)
 # mariadbupgrade            none, however unix user permissions on datadir
 #
 # The SQL user used is the default for the mariadb client. This can be the unix user
@@ -201,11 +201,13 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
+# Marks the end of mariadb -> mariadb name changes in 10.6+
+#ENDOFSUBSTITIONS
 # Global variables used by tests
 declare -A repl
 declare -A def
 nodefaults=
-datadir=/var/lib/mariadb
+datadir=/var/lib/mysql
 
 _repl_param_check()
 {
@@ -233,12 +235,10 @@ _repl_param_check()
 }
 
 _test_exists() {
-    declare -F "$1"
+    declare -F "$1" > /dev/null
     return $?
 }
 
-# Marks the end of mariadb -> mariadb name changes in 10.6+
-#ENDOFSUBSTITUTIONS
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--su=*)
@@ -246,9 +246,16 @@ while [ $# -gt 0 ]; do
 			shift
 			exec gosu "${u}" "${BASH_SOURCE[0]}" "$@"
 			;;
-		--su-mariadb)
+		--su)
 			shift
-			exec gosu mariadb "${BASH_SOURCE[0]}" "$@"
+			u=$1
+			shift
+			exec gosu "$u" "${BASH_SOURCE[0]}" "$@"
+			;;
+		--su-mariadb) ;& # compatible with prev mistake
+		--su-mysql)
+			shift
+			exec gosu mysql "${BASH_SOURCE[0]}" "$@"
 			;;
 		--replication_*=*)
 			# Change the n to what is between _ and = and make lower case
@@ -276,6 +283,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--datadir=*)
 			datadir=${1#*=}
+			;;
+		--datadir)
+			shift
+			datadir=${1}
 			;;
 		--no-defaults)
 			unset def
@@ -310,12 +321,13 @@ while [ $# -gt 0 ]; do
 	esac
 	if [ -n "$test" ]; then
 		if ! _test_exists "$test" ; then
-			echo "healthcheck unknown test '$test'" >&2
+			echo "healthcheck unknown option or test '$test'" >&2
 			exit 1
 		elif ! "$test"; then
 			echo "healthcheck $test failed" >&2
 			exit 1
 		fi
+		test=
 	fi
 	shift
 done

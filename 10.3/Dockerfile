@@ -81,7 +81,7 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 ARG MARIADB_VERSION=1:10.3.34+maria~focal
 ENV MARIADB_VERSION $MARIADB_VERSION
 # release-status:Stable
-# (https://downloads.mariadb.org/mariadb/+releases/)
+# (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
 ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.3.34/repo/ubuntu/ focal main"
@@ -135,8 +135,7 @@ VOLUME /var/lib/mysql
 
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 3306
-CMD ["mysqld"]
+CMD ["mariadbd"]

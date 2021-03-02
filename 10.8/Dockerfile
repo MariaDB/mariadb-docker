@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM ubuntu:focal
+FROM ubuntu:jammy
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
@@ -78,13 +78,13 @@ RUN set -ex; \
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
 ARG MARIADB_MAJOR=10.8
 ENV MARIADB_MAJOR $MARIADB_MAJOR
-ARG MARIADB_VERSION=1:10.8.2+maria~focal
+ARG MARIADB_VERSION=1:10.8.2+maria~jammy
 ENV MARIADB_VERSION $MARIADB_VERSION
 # release-status:RC
-# (https://downloads.mariadb.org/mariadb/+releases/)
+# (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.8.2/repo/ubuntu/ focal main"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.8.2/repo/ubuntu/ jammy main"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
