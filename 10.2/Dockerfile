@@ -15,6 +15,8 @@ RUN set -ex; \
 # so, if we're not running gnupg 1.x, explicitly install dirmngr too
 		apt-get install -y --no-install-recommends dirmngr; \
 	fi; \
+        mkdir ~/.gnupg; \
+        echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf; \
 	rm -rf /var/lib/apt/lists/*
 
 # add gosu for easy step-down from root
