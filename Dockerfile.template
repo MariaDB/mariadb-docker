@@ -2,6 +2,9 @@
 FROM ubuntu:%%SUITE%%
 
 ARG SETUP_SCRIPT=https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
+ARG CLEAR_REPOSITORY
+ARG REPOSITORY
+ARG REPOSITORY_KEY
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
@@ -63,11 +66,20 @@ ENV MARIADB_VERSION %%MARIADB_VERSION%%
 # release-status:%%MARIADB_RELEASE_STATUS%%
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
+COPY scripts/setup-custom-repository.sh /tmp/setup-custom-repository.sh
 
-RUN curl -L ${SETUP_SCRIPT} > /tmp/es_repo_setup && chmod +x /tmp/es_repo_setup && \
-    /tmp/es_repo_setup --apply --verbose --skip-maxscale \
-    --mariadb-server-version=${MARIADB_MAJOR} && rm -fv /tmp/es_repo_setup
+RUN if [ -z "${REPOSITORY}" ]; then \
+        curl -L ${SETUP_SCRIPT} > /tmp/es_repo_setup && chmod +x /tmp/es_repo_setup && \
+        /tmp/es_repo_setup --apply --verbose --skip-maxscale \
+        --mariadb-server-version=${MARIADB_MAJOR} && rm -fv /tmp/es_repo_setup; \
+    else \
+        chmod +x /tmp/setup-custom-repository.sh && \
+        /tmp/setup-custom-repository.sh --repository ${REPOSITORY} --repository-key ${REPOSITORY_KEY}; \
+    fi
 
+RUN if [ "${CLEAR_REPOSITORY}" = "true" ]; then \
+        /etc/apt/sources.list.d/mariadb.list; \
+    fi    
 
 # the "/var/lib/mysql" stuff here is because the mysql-server postinst doesn't have an explicit way to disable the mysql_install_db codepath besides having a database already "configured" (ie, stuff in /var/lib/mysql/mysql)
 # also, we set debconf keys to make APT a little quieter
