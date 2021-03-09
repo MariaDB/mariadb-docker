@@ -66,7 +66,7 @@ ENV MARIADB_VERSION %%MARIADB_VERSION%%
 # release-status:%%MARIADB_RELEASE_STATUS%%
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
-COPY scripts/setup-custom-repository.sh /tmp/setup-custom-repository.sh
+COPY setup-custom-repository.sh /tmp/setup-custom-repository.sh
 
 RUN if [ -z "${REPOSITORY}" ]; then \
         curl -L ${SETUP_SCRIPT} > /tmp/es_repo_setup && chmod +x /tmp/es_repo_setup && \
