@@ -10,6 +10,7 @@ RUN groupadd -r mysql && useradd -r -g mysql mysql
 # https://bugs.debian.org/830696 (apt uses gpgv by default in newer releases, rather than gpg)
 RUN set -ex; \
 	apt-get update; \
+	apt-get install -y --no-install-recommends curl; \
 	if ! which gpg; then \
 		apt-get install -y --no-install-recommends gnupg; \
 	fi; \
