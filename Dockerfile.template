@@ -2,7 +2,6 @@
 FROM ubuntu:%%SUITE%%
 
 ARG SETUP_SCRIPT=https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
-ARG CLEAR_REPOSITORY
 ARG REPOSITORY
 ARG REPOSITORY_KEY
 
@@ -77,9 +76,6 @@ RUN if [ -z "${REPOSITORY}" ]; then \
         /tmp/setup-custom-repository.sh --repository ${REPOSITORY} --repository-key ${REPOSITORY_KEY}; \
     fi
 
-RUN if [ "${CLEAR_REPOSITORY}" = "true" ]; then \
-        /etc/apt/sources.list.d/mariadb.list; \
-    fi    
 
 # the "/var/lib/mysql" stuff here is because the mysql-server postinst doesn't have an explicit way to disable the mysql_install_db codepath besides having a database already "configured" (ie, stuff in /var/lib/mysql/mysql)
 # also, we set debconf keys to make APT a little quieter
@@ -108,6 +104,11 @@ RUN set -ex; \
 		| xargs -rt -0 sed -Ei 's/^(bind-address|log|user\s)/#&/'; \
 # don't reverse lookup hostnames, they are usually another container
 	echo '[mysqld]\nskip-host-cache\nskip-name-resolve' > /etc/mysql/conf.d/docker.cnf
+
+# remove custom repository config because it can contain credentials to access CI repo	
+RUN if [ ! -z "${REPOSITORY}" = "true" ]; then \
+        rm /etc/apt/sources.list.d/mariadb.list; \
+    fi    	
 
 VOLUME /var/lib/mysql
 
