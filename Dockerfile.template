@@ -1,7 +1,6 @@
 # vim:set ft=dockerfile:
 FROM ubuntu:%%SUITE%%
 
-ARG SETUP_SCRIPT=https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
 ARG REPOSITORY
 ARG REPOSITORY_KEY
 
@@ -68,7 +67,7 @@ ENV MARIADB_VERSION %%MARIADB_VERSION%%
 COPY setup-custom-repository.sh /tmp/setup-custom-repository.sh
 
 RUN if [ -z "${REPOSITORY}" ]; then \
-        curl -L ${SETUP_SCRIPT} > /tmp/es_repo_setup && chmod +x /tmp/es_repo_setup && \
+        curl -L https://downloads.mariadb.com/MariaDB/mariadb_repo_setup > /tmp/es_repo_setup && chmod +x /tmp/es_repo_setup && \
         /tmp/es_repo_setup --apply --verbose --skip-maxscale \
         --mariadb-server-version=${MARIADB_MAJOR} && rm -fv /tmp/es_repo_setup; \
     else \
@@ -105,10 +104,10 @@ RUN set -ex; \
 # don't reverse lookup hostnames, they are usually another container
 	echo '[mysqld]\nskip-host-cache\nskip-name-resolve' > /etc/mysql/conf.d/docker.cnf
 
-# remove custom repository config because it can contain credentials to access CI repo	
-RUN if [ ! -z "${REPOSITORY}" = "true" ]; then \
+# remove custom repository config because it can contain credentials to access CI repo
+RUN if [ ! -z "${REPOSITORY}" ]; then \
         rm /etc/apt/sources.list.d/mariadb.list; \
-    fi    	
+    fi
 
 VOLUME /var/lib/mysql
 
