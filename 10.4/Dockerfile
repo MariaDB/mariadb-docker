@@ -21,9 +21,10 @@ RUN set -ex; \
 # https://github.com/tianon/gosu/releases
 ENV GOSU_VERSION 1.12
 RUN set -eux; \
-	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
-	apt-get install -y --no-install-recommends ca-certificates wget; \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates apt-transport-https; \
+	savedAptMark="$(apt-mark showmanual)"; \
+	apt-get install -y --no-install-recommends wget; \
 	rm -rf /var/lib/apt/lists/*; \
 	dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')"; \
 	wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch"; \
@@ -47,7 +48,7 @@ RUN mkdir /docker-entrypoint-initdb.d
 # install "xz-utils" for .sql.xz docker-entrypoint-initdb.d files
 RUN set -ex; \
 	apt-get update; \
-	apt-get install -y --no-install-recommends \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 		pwgen \
 		tzdata \
 		xz-utils \
@@ -77,7 +78,7 @@ ENV MARIADB_VERSION 1:10.4.18+maria~focal
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
 RUN set -e;\
-	echo "deb http://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu focal main" > /etc/apt/sources.list.d/mariadb.list; \
+	echo "deb https://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu focal main" > /etc/apt/sources.list.d/mariadb.list; \
 	{ \
 		echo 'Package: *'; \
 		echo 'Pin: release o=MariaDB'; \
