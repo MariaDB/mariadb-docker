@@ -22,7 +22,7 @@ RUN set -ex; \
 ENV GOSU_VERSION 1.12
 RUN set -eux; \
 	apt-get update; \
-	apt-get install -y --no-install-recommends ca-certificates apt-transport-https; \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates apt-transport-https; \
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get install -y --no-install-recommends wget; \
 	rm -rf /var/lib/apt/lists/*; \
@@ -48,7 +48,7 @@ RUN mkdir /docker-entrypoint-initdb.d
 # install "xz-utils" for .sql.xz docker-entrypoint-initdb.d files
 RUN set -ex; \
 	apt-get update; \
-	apt-get install -y --no-install-recommends \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 		pwgen \
 		tzdata \
 		xz-utils \
