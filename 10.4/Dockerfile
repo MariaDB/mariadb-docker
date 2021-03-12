@@ -65,24 +65,42 @@ ENV GPG_KEYS \
 # uid           [ unknown] MariaDB Signing Key <signing-key@mariadb.org>
 # sub   rsa4096 2016-03-30 [E]
 	177F4010FE56CA3336300305F1656F24C74CD1D8
+
+# Allowing overriding of REPOSITORY_KEY is a URL
+# to the key for REPOSITORY later
+ARG REPOSITORY_KEY=
+
 RUN set -ex; \
-	export GNUPGHOME="$(mktemp -d)"; \
-	for key in $GPG_KEYS; do \
-		gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
-	done; \
-	gpg --batch --export $GPG_KEYS > /etc/apt/trusted.gpg.d/mariadb.gpg; \
-	command -v gpgconf > /dev/null && gpgconf --kill all || :; \
-	rm -r "$GNUPGHOME"; \
+	if [ -n "${REPOSITORY_KEY}" ]; then \
+		wget "${REPOSITORY_KEY}" -O /etc/apt/trusted.gpg.d/mariadb.gpg; \
+	else \
+		export GNUPGHOME="$(mktemp -d)"; \
+		for key in $GPG_KEYS; do \
+			gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
+		done; \
+		gpg --batch --export $GPG_KEYS > /etc/apt/trusted.gpg.d/mariadb.gpg; \
+		command -v gpgconf > /dev/null && gpgconf --kill all || :; \
+		rm -r "$GNUPGHOME"; \
+	fi; \
 	apt-key list
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le
-ENV MARIADB_MAJOR 10.4
-ENV MARIADB_VERSION 1:10.4.19+maria~focal
+ARG MARIADB_MAJOR=10.4
+ARG MARIADB_VERSION=1:10.4.19+maria~focal
 # release-status:Stable
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
+# Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
+ARG REPOSITORY=
+
 RUN set -e;\
-	echo "deb https://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu focal main" > /etc/apt/sources.list.d/mariadb.list; \
+	{ \
+		if [ -n "${REPOSITORY}" ]; then \
+			echo "deb ${REPOSITORY}"; \
+		else \
+			echo "deb https://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu focal main"; \
+		fi ; \
+	}  > /etc/apt/sources.list.d/mariadb.list; \
 	{ \
 		echo 'Package: *'; \
 		echo 'Pin: release o=MariaDB'; \
