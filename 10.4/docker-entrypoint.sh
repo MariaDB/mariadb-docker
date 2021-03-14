@@ -252,7 +252,7 @@ docker_setup_db() {
 	fi
 	# Generate random root password
 	if [ -n "$MARIADB_RANDOM_ROOT_PASSWORD" ]; then
-		export MARIADB_ROOT_PASSWORD="$(pwgen -1 32)"
+		export MARIADB_ROOT_PASSWORD="$(pwgen --numerals --capitalize --symbols --remove-chars="'\\" -1 32)"
 		export MYSQL_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD
 		mysql_note "GENERATED ROOT PASSWORD: $MARIADB_ROOT_PASSWORD"
 	fi
