@@ -114,7 +114,7 @@ mysql_get_config() {
 	# match "datadir      /some/path with/spaces in/it here" but not "--xyz=abc\n     datadir (xyz)"
 }
 
-# Do a temporary startup of the MySQL server, for init purposes
+# Do a temporary startup of the MariaDB server, for init purposes
 docker_temp_server_start() {
 	"$@" --skip-networking --socket="${SOCKET}" &
 	mysql_note "Waiting for server startup"
@@ -337,7 +337,7 @@ _main() {
 
 	# skip setup if they aren't running mysqld or want an option that stops mysqld
 	if [ "$1" = 'mysqld' ] && ! _mysql_want_help "$@"; then
-		mysql_note "Entrypoint script for MySQL Server ${MARIADB_VERSION} started."
+		mysql_note "Entrypoint script for MariaDB Server ${MARIADB_VERSION} started."
 
 		mysql_check_config "$@"
 		# Load various environment variables
@@ -371,7 +371,7 @@ _main() {
 			mysql_note "Temporary server stopped"
 
 			echo
-			mysql_note "MySQL init process done. Ready for start up."
+			mysql_note "MariaDB init process done. Ready for start up."
 			echo
 		fi
 	fi
