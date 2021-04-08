@@ -1,0 +1,25 @@
+version: '3.1'
+
+services:
+
+  mariadb:
+  
+    container_name: mariadb_10
+    image: mariadb:10
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+    ports:
+      - 3306:3306
+    volumes: 
+        - ./init:/docker-entrypoint-initdb.d
+        - ./mysql_config/etc/mysql/my.cnf
+        - ./mysql_data:/var/lib/mysql
+        
+networks:
+  default:
+    external:
+      name: "apps"
