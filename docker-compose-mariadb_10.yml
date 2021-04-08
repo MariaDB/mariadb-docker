@@ -4,8 +4,8 @@ services:
 
   mariadb:
   
-    container_name: mariadb_10
-    image: mariadb:10
+    container_name: mariadb_10.5
+    image: mariadb:10.5
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: 123456
