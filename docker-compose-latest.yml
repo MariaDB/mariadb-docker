@@ -1,21 +1,29 @@
 version: '3.1'
 
 services:
-
   mariadb:
   
-    container_name: mariadb_latest
-    image: mariadb:latest
+    container_name: mariadb 10.5
+    image: mariadb:10.5
     restart: always
+
     environment:
       MYSQL_ROOT_PASSWORD: 123456
     ports:
       - 3306:3306
     volumes: 
-        - ./mysql_config:/etc/mysql
-        - ./mysql_data:/var/lib/mysql
+        -  mysql_config:/etc/mysql
+        -  /mysql_data:/var/lib/mysql
+
+
+
+volumes:
+    mysql_config:
+      external: false
+    mysql_data:
+      external: false
         
 networks:
-  default:
     external:
       name: "apps"
+      
