@@ -1,21 +1,30 @@
+#mariadb default username：root  password：123456
 version: '3.1'
 
 services:
-
   mariadb:
   
-    container_name: mariadb_10.4
+    container_name: mariadb 10.4
     image: mariadb:10.4
     restart: always
+
     environment:
       MYSQL_ROOT_PASSWORD: 123456
     ports:
       - 3306:3306
     volumes: 
-        - ./mysql_config:/etc/mysql
-        - ./mysql_data:/var/lib/mysql
+        -  mysql_config:/etc/mysql
+        -  /mysql_data:/var/lib/mysql
+
+
+
+volumes:
+    mysql_config:
+      external: false
+    mysql_data:
+      external: false
         
 networks:
-  default:
     external:
       name: "apps"
+      
