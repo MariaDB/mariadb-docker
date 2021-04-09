@@ -24,7 +24,3 @@ volumes:
     mysql_data:
       external: false
         
-networks:
-    external:
-      name: "apps"
-      
