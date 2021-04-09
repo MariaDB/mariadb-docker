@@ -163,6 +163,8 @@ docker_create_db_directories() {
 	if [ "$user" = "0" ]; then
 		# this will cause less disk access than `chown -R`
 		find "$DATADIR" \! -user mysql -exec chown mysql '{}' +
+		# See https://github.com/MariaDB/mariadb-docker/issues/363
+		find "${SOCKET%/*}" -maxdepth 0 \! -user mysql -exec chown mysql '{}' \;
 	fi
 }
 
