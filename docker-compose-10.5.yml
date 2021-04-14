@@ -4,7 +4,7 @@ version: '3.1'
 services:
   mariadb:
   
-    container_name: mariadb10.5
+    container_name: mariadb10.4
     image: mariadb:10.5
     restart: always
 
@@ -14,6 +14,9 @@ services:
       - 3306:3306
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes: 
-     - ./volumes/mysql_config/conf.d:/etc/mysql/conf.d
-     - ./volumes/mysql_data:/var/lib/mysql
-     - ./volumes/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+        - "./volumes/mysql_data:/var/lib/mysql"
+
+
+ networks:
+   default:
+      name: "apps"
