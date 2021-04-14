@@ -1,5 +1,5 @@
 #mariadb default username：root  password：123456
-version: '3.1'
+version: '3.8'
 
 services:
   mariadb:
