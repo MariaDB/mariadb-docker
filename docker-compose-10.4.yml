@@ -17,7 +17,7 @@ services:
         - "./volumes/mysql_data:/var/lib/mysql"
 
 
-networks:
-  default:
+ networks:
+   default:
       name: "apps"
       
