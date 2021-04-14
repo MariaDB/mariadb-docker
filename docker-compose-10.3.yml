@@ -5,7 +5,7 @@ services:
   mariadb:
   
     container_name: mariadb10.3
-    image: mariadb:10.5
+    image: mariadb:10.3
     restart: always
 
     environment:
