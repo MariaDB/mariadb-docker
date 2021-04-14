@@ -1,55 +1,24 @@
 {
-  "name": "onlyoffice",
-  "trademark": "ONLYOFFICE",
-  "compose_file": "docker-compose-production.yml",
+  "name": "mariadb",
+  "trademark": "MariaDB",
+  "compose_file": "docker-compose-10.2.yml",
   "fork_url": "https://github.com/ONLYOFFICE/docker#recommended-system-requirements",
   "requirements":{
     "cpu_arch": "Linux x86-64, ARM 32/64, Windows x86-64, IBM POWER8, x86/i686",
-    "cpu": "2",
-    "memory": "4",
+    "cpu": "1",
+    "memory": "1",
     "disk": "20",
     "swap": "2",
-    "url": "https://github.com/onlyoffice/docker#recommended-system-requirements"
-  },
-
-  "user": {
-    "username": "admin",
-    "password": "123456"
+    "url": "https://mariadb.org/documentation/"
   },
 
   "services":[
     {
-      "name": "onlyoffice-server",
-      "port": "9002",
-      "description_cn": "浏览器访问 ONLYOFFICE",
-      "description_en": "Web-GUI database management tool",
-      "required": "Y"
-    },
-
-    {
-      "name": "phpmyadmin",
-      "port": "9090",
-      "description_cn": "数据库可视化管理工具",
-      "description_en": "Web-GUI database management tool",
+      "name": "mariadb",
+      "port": "3306",
+      "description_cn": "TCP 访问MariaDB数据库",
+      "description_en": "Accessing MySQL database with TCP",
       "required": "Y"
     }
-  ],
-
-  "faqs": [
-    {
-      "question_cn": "问题1",
-      "answer_cn": "答案1",
-      "question_en": "question1",
-      "answer_en": "answer1"
-    },
-
-    {
-      "question_cn": "问题2",
-      "answer_cn": "答案2",
-      "question_en": "question2",
-      "answer_en": "answer2"
-    }
-
   ]
-
 }
