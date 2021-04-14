@@ -1,8 +1,9 @@
+#mariadb default username：root  password：123456
 version: '3.8'
 services:
   mariadb:
-    container_name: mariadb10.5
-    image: mariadb:10.5
+    container_name: mariadb10.4
+    image: mariadb:10.4
     environment:
      - MYSQL_ROOT_PASSWORD=123456
     ports:
