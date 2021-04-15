@@ -15,6 +15,7 @@ For outstanding `mariadb` image PRs, check [PRs with the "library/mariadb" label
 ## FAQ
 
 **How do I reset my password?**
+
 [One useful way](https://github.com/MariaDB/mariadb-docker/issues/365#issuecomment-816367940) to do this is to create an `initfile.sql` file that contains (to cover all bases) something like the following:
 
 ```sql
@@ -31,7 +32,7 @@ GRANT ALL ON databasename.* TO myuser@'%';
 ```
 
 ## Getting Help
-If you need help with MariaDB on Docker, the [Docker and MariaDB](https://mariadb.com/kb/en/docker-and-mariadb/) section of the MariaDB Knowledge Base contains lots of helpful info. The Knowledge Base also has a page where you can ([Ask a Question](https://mariadb.com/kb/en/docker-and-mariadb/ask). Also see the [Getting Help with MariaDB](https://mariadb.com/kb/en/getting-help-with-mariadb/) article.
+If you need help with MariaDB on Docker, the [Docker and MariaDB](https://mariadb.com/kb/en/docker-and-mariadb/) section of the MariaDB Knowledge Base contains lots of helpful info. The Knowledge Base also has a page where you can [Ask a Question](https://mariadb.com/kb/en/docker-and-mariadb/ask). Also see the [Getting Help with MariaDB](https://mariadb.com/kb/en/getting-help-with-mariadb/) article.
 
 On StackExchange, questions tagged with 'mariadb' and 'docker' on the Database Administrators (DBA) StackExchange can be found [here](https://dba.stackexchange.com/questions/tagged/docker+mariadb).
 
