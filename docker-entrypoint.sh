@@ -139,11 +139,9 @@ docker_temp_server_start() {
 # Stop the server. When using a local socket file mysqladmin will block until
 # the shutdown is complete.
 docker_temp_server_stop() {
-	export MYSQL_PWD=$MARIADB_ROOT_PASSWORD
-	if ! mysqladmin shutdown -uroot --socket="${SOCKET}"; then
+	if ! MYSQL_PWD=$MARIADB_ROOT_PASSWORD mysqladmin shutdown -uroot --socket="${SOCKET}"; then
 		mysql_error "Unable to shut down server."
 	fi
-	unset MYSQL_PWD
 }
 
 # Verify that the minimally required password settings are set for new databases.
@@ -273,13 +271,14 @@ docker_setup_db() {
 	fi
 	# Generate random root password
 	if [ -n "$MARIADB_RANDOM_ROOT_PASSWORD" ]; then
-		export MARIADB_ROOT_PASSWORD="$(pwgen --numerals --capitalize --symbols --remove-chars="'\\" -1 32)"
-		export MYSQL_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD
+		MARIADB_ROOT_PASSWORD="$(pwgen --numerals --capitalize --symbols --remove-chars="'\\" -1 32)"
+		export MARIADB_ROOT_PASSWORD MYSQL_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD
 		mysql_note "GENERATED ROOT PASSWORD: $MARIADB_ROOT_PASSWORD"
 	fi
 	# Sets root password and creates root users for non-localhost hosts
 	local rootCreate=
-	local rootPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}" )
+	local rootPasswordEscaped
+	rootPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}" )
 
 	# default root to listen for connections from anywhere
 	if [ -n "$MARIADB_ROOT_HOST" ] && [ "$MARIADB_ROOT_HOST" != 'localhost' ]; then
@@ -321,7 +320,8 @@ docker_setup_db() {
 	if [ -n "$MARIADB_USER" ] && [ -n "$MARIADB_PASSWORD" ]; then
 		mysql_note "Creating user ${MARIADB_USER}"
 		# SQL escape the user password, \ followed by '
-		local userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
+		local userPasswordEscaped
+		userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
 		docker_process_sql --database=mysql --binary-mode <<-EOSQL_USER
 			SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
 			CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';
