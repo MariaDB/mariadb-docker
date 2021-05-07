@@ -29,12 +29,12 @@
 登录 Linux，运行下面的**自动化命令**即可启动安装并显示安装结果。  
 
 ```
-sudo wget -N https://raw.githubusercontent.com/Websoft9/docker-template/main/docker-installer.sh; sudo bash install.sh -r mariadb
+sudo wget -N https://raw.githubusercontent.com/Websoft9/docker-template/main/docker-installer.sh; sudo bash docker-installer.sh -r mariadb
 ```
 
 另外，通过如下命令可以支持打包安装。
 ```
-sudo wget -N https://raw.githubusercontent.com/Websoft9/docker-template/main/docker-installer.sh; sudo bash install.sh -r mariadb -p
+sudo wget -N https://raw.githubusercontent.com/Websoft9/docker-template/main/docker-installer.sh; sudo bash docker-installer.sh -r mariadb -p
 ```
 
 

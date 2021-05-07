@@ -29,7 +29,12 @@ The following are the minimal [recommended requirements](https://mariadb.org/doc
 Use SSH to connect your instance and run the automatic installation script below
 
 ```
-sudo wget -N https://download.websoft9.com/docker/install.sh; sudo bash install.sh -r mariadb
+sudo wget -N https://raw.githubusercontent.com/Websoft9/docker-template/main/docker-installer.sh; sudo bash docker-installer.sh -r mariadb
+```
+
+You can get the install package as following script
+```
+sudo wget -N https://raw.githubusercontent.com/Websoft9/docker-template/main/docker-installer.sh; sudo bash docker-installer.sh -r mariadb -p
 ```
 
 ### Manual Installation
