@@ -58,7 +58,7 @@ We assume that you are already familiar with Docker, and you can modify [docker-
 ```
 git clone --depth=1 https://github.com/Websoft9/docker-mariadb
 cd docker-mariadb
-docker-compose -f docker-compose-10.2.yml up -d
+docker-compose -f docker-compose-10.2.yml  up -d
 ```
 
 ### FAQ
