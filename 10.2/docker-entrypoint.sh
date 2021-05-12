@@ -118,14 +118,14 @@ mysql_get_config() {
 docker_temp_server_start() {
 	"$@" --skip-networking --socket="${SOCKET}" &
 	mysql_note "Waiting for server startup"
+	# only use the root password if the database has already been initializaed
+	# so that it won't try to fill in a password file when it hasn't been set yet
+	extraArgs=()
+	if [ -z "$DATABASE_ALREADY_EXISTS" ]; then
+		extraArgs+=( '--dont-use-mysql-root-password' )
+	fi
 	local i
 	for i in {30..0}; do
-		# only use the root password if the database has already been initializaed
-		# so that it won't try to fill in a password file when it hasn't been set yet
-		extraArgs=()
-		if [ -z "$DATABASE_ALREADY_EXISTS" ]; then
-			extraArgs+=( '--dont-use-mysql-root-password' )
-		fi
 		if docker_process_sql "${extraArgs[@]}" --database=mysql <<<'SELECT 1' &> /dev/null; then
 			break
 		fi
@@ -209,6 +209,15 @@ docker_setup_env() {
 	fi
 }
 
+# Execute the client, use via docker_process_sql to handle root password
+docker_exec_client() {
+	# args sent in can override this db, since they will be later in the command
+	if [ -n "$MYSQL_DATABASE" ]; then
+		set -- --database="$MYSQL_DATABASE" "$@"
+	fi
+	mysql --protocol=socket -uroot -hlocalhost --socket="${SOCKET}" "$@"
+}
+
 # Execute sql script, passed via stdin
 # usage: docker_process_sql [--dont-use-mysql-root-password] [mysql-cli-args]
 #    ie: docker_process_sql --database=mydb <<<'INSERT ...'
@@ -217,24 +226,10 @@ docker_process_sql() {
 	passfileArgs=()
 	if [ '--dont-use-mysql-root-password' = "$1" ]; then
 		shift
-		unset MYSQL_PWD
+		MYSQL_PWD= docker_exec_client "$@"
 	else
-		export MYSQL_PWD=$MARIADB_ROOT_PASSWORD
+		MYSQL_PWD=$MARIADB_ROOT_PASSWORD docker_exec_client "$@"
 	fi
-	local count=5
-	while [ $count -gt 0 ] && [ ! -S "${SOCKET}" ]
-	do
-		count=$(( $count - 1 ))
-		mysql_note "Waiting for MariaDB to start, $count more seconds"
-		sleep 1
-	done
-	# args sent in can override this db, since they will be later in the command
-	if [ -n "$MYSQL_DATABASE" ]; then
-		set -- --database="$MYSQL_DATABASE" "$@"
-	fi
-
-	mysql --protocol=socket -uroot -hlocalhost --socket="${SOCKET}" "$@"
-	unset MYSQL_PWD
 }
 
 # SQL escape the string $1 to be placed in a string literal.
