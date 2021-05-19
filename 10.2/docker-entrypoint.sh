@@ -94,7 +94,6 @@ docker_process_init_files() {
 _verboseHelpArgs=(
 	--verbose --help
 	--log-bin-index="$(mktemp -u)" # https://github.com/docker-library/mysql/issues/136
-	--encrypt-tmp-files=0 # https://github.com/docker-library/mariadb/issues/339
 )
 
 mysql_check_config() {
