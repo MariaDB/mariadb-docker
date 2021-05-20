@@ -46,12 +46,14 @@ RUN mkdir /docker-entrypoint-initdb.d
 # install "pwgen" for randomizing passwords
 # install "tzdata" for /usr/share/zoneinfo/
 # install "xz-utils" for .sql.xz docker-entrypoint-initdb.d files
+# install "zstd" for .sql.zst docker-entrypoint-initdb.d files
 RUN set -ex; \
 	apt-get update; \
 	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 		pwgen \
 		tzdata \
 		xz-utils \
+		zstd \
 	; \
 	rm -rf /var/lib/apt/lists/*
 
