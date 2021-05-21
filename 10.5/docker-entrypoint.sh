@@ -254,11 +254,9 @@ docker_setup_db() {
 				echo "/*!100400 ALTER TABLE $table TRANSACTIONAL=0 */;"
 			done
 
-			# sed on "Local time zone" is for https://bugs.mysql.com/bug.php?id=20545
-			# Offset quoting is because of MDEV-25556 (10.6)
+			# sed is for https://bugs.mysql.com/bug.php?id=20545
 			mysql_tzinfo_to_sql /usr/share/zoneinfo \
-				| sed -e 's/Local time zone must be set--see zic manual page/FCTY/' \
-				      -e 's/Offset/`Offset`/'
+				| sed 's/Local time zone must be set--see zic manual page/FCTY/'
 
 			for table in "${tztables[@]}"; do
 				echo "/*!100400 ALTER TABLE $table TRANSACTIONAL=1 */;"
