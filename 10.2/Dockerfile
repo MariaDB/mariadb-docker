@@ -43,13 +43,16 @@ RUN set -eux; \
 
 RUN mkdir /docker-entrypoint-initdb.d
 
+# install "libjemalloc1/libjemalloc2" as it offers better performance in some cases. Use with LD_PRELOAD
 # install "pwgen" for randomizing passwords
 # install "tzdata" for /usr/share/zoneinfo/
 # install "xz-utils" for .sql.xz docker-entrypoint-initdb.d files
 # install "zstd" for .sql.zst docker-entrypoint-initdb.d files
 RUN set -ex; \
 	apt-get update; \
+	if [ bionic = focal ]; then JEMALLOC=libjemalloc2 ; else JEMALLOC=libjemalloc1 ; fi ; \
 	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+		$JEMALLOC \
 		pwgen \
 		tzdata \
 		xz-utils \
