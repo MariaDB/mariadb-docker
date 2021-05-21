@@ -438,6 +438,62 @@ _check_if_upgrade_is_needed() {
 	return 1
 }
 
+# usage: docker_hostname_match <hostname>
+#    ie: docker_hostname_match node1.cluster.local
+# it returns true if provided hostname match with container hostname. Otherwise it returns false
+docker_hostname_match() {
+	for hostname in $(hostname --all-fqdns) $(hostname --alias); do
+		if [ "$hostname" = "$1" ]; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+# usage: docker_ip_match <ip>
+#    ie: docker_ip_match 192.168.1.13
+# it returns true if provided IP address match with container IP address. Otherwise it returns false
+docker_ip_match() {
+	for ip in $(hostname --all-ip-addresses); do
+		if [ "$ip" = "$1" ]; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+# usage: docker_address_match <ip|hostname>
+#    ie: docker_address_match node1
+# it returns true if provided value match with container IP address or container hostname. Otherwise it returns false
+docker_address_match() {
+	local resolved
+	resolved="$(resolveip --silent "$1" 2>/dev/null)" # it converts hostname to ip or vice versa
+
+	docker_ip_match "$resolved" || docker_ip_match "$1" || docker_hostname_match "$resolved" || docker_hostname_match "$1"
+}
+
+# usage: wsrep_enable_new_cluster <wsrep-cluster-address> [arg [arg [...]]]
+#    ie: wsrep_enable_new_cluster gcomm://node1,node2,node3 "$@"
+# it returns true if we need to set the --wsrep-new-cluster argument for the mariadbd. Otherwise it returns false
+wsrep_enable_new_cluster() {
+	local address="${WSREP_AUTO_BOOTSTRAP_ADDRESS:-$1}"
+	shift
+	local wsrepdir
+	wsrepdir="$(mysql_get_config 'wsrep-data-home-dir' "$@")"
+
+	# it removes URI schemes like gcomm://
+	address="${address#[[:graph:]]*://}"
+	# Removing trailing options after literal "?"
+	address="${address%%\?*}"
+
+	# it replaces commas ',' with spaces ' ' and converts it to array
+	IFS=" ," read -r -a address <<< "$address"
+
+	(( ${#address[@]} )) && [ -z "$WSREP_SKIP_AUTO_BOOTSTRAP" ] && [ ! -s "$wsrepdir/gvwstate.dat" ] && docker_address_match "${address[0]}"
+}
+
 # check arguments for an option that would cause mariadbd to stop
 # return true if there is one
 _mysql_want_help() {
@@ -501,6 +557,26 @@ _main() {
 		#elif mariadb-upgrade --check-if-upgrade-is-needed; then
 		elif _check_if_upgrade_is_needed; then
 			docker_mariadb_upgrade "$@"
+		fi
+
+		# check if Galera replication is enabled from configuration files or command line arguments
+		if [ "$(mysql_get_config wsrep-on "$@")" = "TRUE" ]; then
+			mysql_note "Galera replication is enabled"
+
+			# determine cluster nodes addresses
+			if [ -z "${WSREP_CLUSTER_ADDRESS}" ]; then
+				WSREP_CLUSTER_ADDRESS="$(mysql_get_config wsrep-cluster-address "$@")"
+			else
+				set -- "$@" --wsrep-cluster-address="${WSREP_CLUSTER_ADDRESS}"
+			fi
+
+			mysql_note "Galera cluster addresses ${WSREP_CLUSTER_ADDRESS}"
+
+			# determine if this node is used for cluster bootstrapping. Skip it when cluster was already bootstrapped
+			if wsrep_enable_new_cluster "${WSREP_CLUSTER_ADDRESS}" "$@"; then
+				mysql_note "Enabled Galera cluster bootstrapping for this node"
+				set -- "$@" --wsrep-new-cluster
+			fi
 		fi
 	fi
 	exec "$@"
