@@ -88,6 +88,11 @@ for version in "${versions[@]}"; do
 		-e 's!%%ARCHES%%!'"$arches"'!g' \
 		"$version/Dockerfile"
 
+	if [ "$suite" = bionic ]
+	then
+		sed -i 's/libjemalloc2/libjemalloc1/' "$version/Dockerfile"
+	fi
+
 	case "$version" in
 		10.2 | 10.3 | 10.4) ;;
 		*) sed -i '/backwards compat/d' "$version/Dockerfile" ;;
