@@ -23,7 +23,7 @@ jobs:
         name: Generate Jobs
         run: |
           git clone --depth 1 https://github.com/docker-library/bashbrew.git -b master ~/bashbrew
-          strategy="$(~/bashbrew/scripts/github-actions/generate.sh | jq '.matrix.include[] = [ .matrix.include[] | .runs.test2 = ( .runs.test | gsub(".*run.sh(?<arg>.*)" ; ".test/run.sh \(.arg)") ) ]')"
+          strategy="$(~/bashbrew/scripts/github-actions/generate.sh | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | .runs.mariadbtest = "./.test/run.sh " + $tag)')"
           jq . <<<"$strategy" # sanity check / debugging aid
           echo "::set-output name=strategy::$strategy"
 
@@ -45,6 +45,6 @@ jobs:
       - name: Test ${{ matrix.name }}
         run: ${{ matrix.runs.test }}
       - name: Extra MariaDB Tests ${{ matrix.name }}
-        run: ${{ matrix.runs.test2 }}
+        run: ${{ matrix.runs.mariadbtest }}
       - name: '"docker images"'
         run: ${{ matrix.runs.images }}
