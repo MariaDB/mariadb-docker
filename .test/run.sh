@@ -271,6 +271,24 @@ then
 	echo -e "Test: jemalloc preload\n"
 	runandwait -e LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libjemalloc.so.1 /usr/lib/x86_64-linux-gnu/libjemalloc.so.2" -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
 	docker exec -i $cid gosu mysql /bin/grep 'jemalloc' /proc/1/maps || die "expected to preload jemalloc"
+
+
+	echo -e "Test: default configuration items are present\n"
+	arg_expected=0
+	docker exec -i $cid my_print_defaults --mysqld |
+		{
+		while read line
+		do
+			case $line in
+			--skip-host-cache|--skip-name-resolve)
+				echo $line found
+				(( arg_expected++ )) || : ;;
+			esac
+		done
+		[ $arg_expected -eq 2 ] || die "expected both skip-host-cache and skip-name-resolve"
+	}
+
+
 	killoff
 fi
 
