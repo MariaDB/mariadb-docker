@@ -1,13 +1,15 @@
 #!/bin/bash
 set -eo pipefail
 
+dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+
 image="$1"
 
 killoff()
 {
 	[ -n "$cid" ] && docker kill $cid > /dev/null
 	sleep 2
-	[ -n "$cid" ] && docker rm -vif $cid > /dev/null
+	[ -n "$cid" ] && docker rm -v -f $cid > /dev/null || true
 	cid=""
 }
 
@@ -37,7 +39,7 @@ runandwait()
 	do
 		(( waiting-- ))
 		sleep 1
-		if ! docker exec -ti $cid mysql -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | fgrep "Can't connect" > /dev/null
+		if ! docker exec -i $cid mysql -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | fgrep "Can't connect" > /dev/null
 		then
 			break
 		fi
@@ -50,7 +52,7 @@ runandwait()
 }
 
 mariadbclient() {
-	docker exec -ti \
+	docker exec -i \
 		"$cname" \
 		mysql \
 		--host 127.0.0.1 \
@@ -60,7 +62,7 @@ mariadbclient() {
 }
 
 mariadbclient_unix() {
-	docker exec -ti \
+	docker exec -i \
 		"$cname" \
 		mysql \
 		--silent \
@@ -70,7 +72,7 @@ mariadbclient_unix() {
 echo -e "Test: expect Failure - none of MYSQL_ALLOW_EMPTY_PASSWORD, MYSQL_RANDOM_ROOT_PASSWORD, MYSQL_ROOT_PASSWORD\n"
 
 cname="mariadb-container-fail-to-start-options-$RANDOM-$RANDOM"
-docker run --name "$cname" --rm "$image" && die "$cname should fail with unspecified option"
+docker run --name "$cname" --rm "$image" 2>&1 && die "$cname should fail with unspecified option"
 
 echo -e "Test: MYSQL_ALLOW_EMPTY_PASSWORD Implementation is non-empty value so this should fail\n"
 docker run  --rm  --name "$cname" -e MYSQL_ALLOW_EMPTY_PASSWORD  "$image" || echo 'expected failure of empty MYSQL_ALLOW_EMPTY_PASSWORD'
@@ -81,7 +83,7 @@ runandwait -e MYSQL_ALLOW_EMPTY_PASSWORD=1 "${image}"
 mariadbclient -u root -e 'show databases'
 
 othertables=$(mariadbclient -u root --skip-column-names -Be "select group_concat(SCHEMA_NAME) from information_schema.SCHEMATA where SCHEMA_NAME not in ('mysql', 'information_schema', 'performance_schema', 'sys')")
-[ "${othertables}" != $'NULL\r' ] && die "unexpected table(s) $othertables"
+[ "${othertables}" != 'NULL' ] && die "unexpected table(s) $othertables"
 
 otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'))")
 [ "$otherusers" != '' ] && die "unexpected users $otherusers"
@@ -132,14 +134,14 @@ echo -e "Test: MYSQL_INITDB_SKIP_TZINFO='' should still load timezones\n"
 
 runandwait -e MYSQL_INITDB_SKIP_TZINFO= -e MYSQL_ALLOW_EMPTY_PASSWORD=1 "${image}" 
 tzcount=$(mariadbclient --skip-column-names -B -u root -e "SELECT COUNT(*) FROM mysql.time_zone")
-[ "${tzcount}" = $'0\r' ] && die "should exist timezones"
+[ "${tzcount}" = '0' ] && die "should exist timezones"
 killoff
 
 echo -e "Test: MYSQL_INITDB_SKIP_TZINFO=1 should not load timezones\n"
 
 runandwait -e MYSQL_INITDB_SKIP_TZINFO=1 -e MYSQL_ALLOW_EMPTY_PASSWORD=1 "${image}" 
 tzcount=$(mariadbclient --skip-column-names -B -u root -e "SELECT COUNT(*) FROM mysql.time_zone")
-[ "${tzcount}" = $'0\r' ] || die "timezones shouldn't be loaded - found ${tzcount}"
+[ "${tzcount}" = '0' ] || die "timezones shouldn't be loaded - found ${tzcount}"
 killoff
 
 echo -e "Test: Secrets _FILE vars shoud be same as env directly\n"
@@ -162,7 +164,7 @@ runandwait \
 	"${image}" 
 
 host=$(mariadbclient_unix --skip-column-names -B -u root -pbob -e 'select host from mysql.user where user="root" and host="pluto"' titan)
-[ "${host}" != $'pluto\r' ] && die 'root@pluto not created'
+[ "${host}" != 'pluto' ] && die 'root@pluto not created'
 creation=$(mariadbclient --skip-column-names -B -u ron -pscappers -P 3306 --protocol tcp titan -e "CREATE TABLE landing(i INT)")
 [ "${creation}" = '' ] || die 'creation error'
 killoff
@@ -172,7 +174,7 @@ echo -e "Test: docker-entrypoint-initdb.d Initialization order is correct and pr
 
 initdb=$(mktemp -d)
 chmod go+rx "${initdb}"
-cp -a initdb.d/* "${initdb}"
+cp -a "$dir"/initdb.d/* "${initdb}"
 gzip "${initdb}"/*gz*
 xz "${initdb}"/*xz*
 zstd "${initdb}"/*zst*
@@ -186,7 +188,7 @@ runandwait \
 	"${image}" 
 
 init_sum=$(mariadbclient --skip-column-names -B -u ron -pscappers -P 3306 -h 127.0.0.1  --protocol tcp titan -e "select sum(i) from t1;")
-[ "${init_sum}" = $'1833\r' ] || (podman logs m_init; die 'initialization order error')
+[ "${init_sum}" = '1833' ] || (podman logs m_init; die 'initialization order error')
 killoff
 rm -rf "${initdb}"
 
@@ -209,7 +211,7 @@ runandwait -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
 mariadbclient -u root -e 'show databases'
 
 othertables=$(mariadbclient -u root --skip-column-names -Be "select group_concat(SCHEMA_NAME) from information_schema.SCHEMATA where SCHEMA_NAME not in ('mysql', 'information_schema', 'performance_schema', 'sys')")
-[ "${othertables}" != $'NULL\r' ] && die "unexpected table(s) $othertables"
+[ "${othertables}" != 'NULL' ] && die "unexpected table(s) $othertables"
 
 otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'))")
 [ "$otherusers" != '' ] && die "unexpected users $otherusers"
@@ -253,14 +255,14 @@ echo -e "Test: MARIADB_INITDB_SKIP_TZINFO=''\n"
 
 runandwait -e MARIADB_INITDB_SKIP_TZINFO= -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
 tzcount=$(mariadbclient --skip-column-names -B -u root -e "SELECT COUNT(*) FROM mysql.time_zone")
-[ "${tzcount}" = $'0\r' ] && die "should exist timezones"
+[ "${tzcount}" = '0' ] && die "should exist timezones"
 killoff
 
 echo -e "Test: MARIADB_INITDB_SKIP_TZINFO=1\n"
 
 runandwait -e MARIADB_INITDB_SKIP_TZINFO=1 -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
 tzcount=$(mariadbclient --skip-column-names -B -u root -e "SELECT COUNT(*) FROM mysql.time_zone")
-[ "${tzcount}" = $'0\r' ] || die "timezones shouldn't be loaded - found ${tzcount}"
+[ "${tzcount}" = '0' ] || die "timezones shouldn't be loaded - found ${tzcount}"
 killoff
 
 # lazy test because ubuntu arch isn't always the same as uname -m
@@ -268,7 +270,7 @@ if [ $(uname -m) = 'x86_64' ]
 then
 	echo -e "Test: jemalloc preload\n"
 	runandwait -e LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libjemalloc.so.1 /usr/lib/x86_64-linux-gnu/libjemalloc.so.2" -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
-	docker exec -ti $cid gosu mysql /bin/grep 'jemalloc' /proc/1/maps || die "expected to preload jemalloc"
+	docker exec -i $cid gosu mysql /bin/grep 'jemalloc' /proc/1/maps || die "expected to preload jemalloc"
 	killoff
 fi
 
