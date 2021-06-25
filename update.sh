@@ -36,6 +36,13 @@ fi
 versions=( "${versions[@]%/}" )
 
 for version in "${versions[@]}"; do
+	if [ ! -d "$version" ]; then
+		# assume full version and trim this to major version
+		ExpectedFullVersion=$version
+		version=${version%.[[:digit:]]*}
+	else
+		ExpectedFullVersion=
+	fi
 	suite="${suites[$version]:-$defaultSuite}"
 	fullVersion="$(getRemoteVersion "$version" "$suite" 'amd64')"
 	if [ -z "$fullVersion" ]; then
@@ -45,6 +52,13 @@ for version in "${versions[@]}"; do
 
 	mariaVersion="${fullVersion##*:}"
 	mariaVersion="${mariaVersion%%[-+~]*}"
+
+	if [ -n "$ExpectedFullVersion" ] && [ "$ExpectedFullVersion" != "$mariaVersion" ]; then
+		echo >&2 "warning: Version $ExpectedFullVersion is not the latest on the mirror, $mariaVersion is (for suite=$suite)"
+		mariaVersion="$ExpectedFullVersion"
+		fullVersion="1:${mariaVersion}+maria~${suite}"
+		echo >&2 "warning: continuing with $fullVersion"
+	fi
 
 	# "Alpha", "Beta", "Gamma", "RC", "Stable", etc.
 	releaseStatus="$(
