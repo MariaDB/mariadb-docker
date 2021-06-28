@@ -125,9 +125,9 @@ killoff
 
 echo -e "Test: complex passwords\n"
 
-runandwait -e MYSQL_USER=bob -e MYSQL_PASSWORD=$' \' ' -e MYSQL_ROOT_PASSWORD=$'\'\\aa-\x00-zz"_%' "${image}"
-mariadbclient_unix --skip-column-names -B -u root -p$'\'\\aa-\x00-zz"_%' -e 'select 1'
-mariadbclient_unix --skip-column-names -B -u bob -p$' \' ' -e 'select 1'
+runandwait -e MYSQL_USER=bob -e MYSQL_PASSWORD=$'\n \' \n' -e MYSQL_ROOT_PASSWORD=$'\n\'\\aa-\x09-zz"_%\n' "${image}"
+mariadbclient_unix --skip-column-names -B -u root -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
+mariadbclient_unix --skip-column-names -B -u bob -p$'\n \' \n' -e 'select 1'
 killoff
 
 echo -e "Test: MYSQL_INITDB_SKIP_TZINFO='' should still load timezones\n"
