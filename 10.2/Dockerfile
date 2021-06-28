@@ -75,7 +75,7 @@ RUN set -ex; \
 	for key in $GPG_KEYS $REPOSITORY_KEY; do \
 		gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
 	done; \
-	gpg --batch --export $GPG_KEYS > /etc/apt/trusted.gpg.d/mariadb.gpg; \
+	gpg --batch --export $GPG_KEYS $REPOSITORY_KEY > /etc/apt/trusted.gpg.d/mariadb.gpg; \
 	command -v gpgconf > /dev/null && gpgconf --kill all || :; \
 	rm -r "$GNUPGHOME"; \
 	apt-key list
