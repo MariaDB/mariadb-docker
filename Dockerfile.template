@@ -77,7 +77,7 @@ RUN set -ex; \
 	done; \
 	gpg --batch --export $GPG_KEYS $REPOSITORY_KEY > /etc/apt/trusted.gpg.d/mariadb.gpg; \
 	command -v gpgconf > /dev/null && gpgconf --kill all || :; \
-	rm -r "$GNUPGHOME"; \
+	rm -fr "$GNUPGHOME"; \
 	apt-key list
 
 # bashbrew-architectures:%%ARCHES%%
