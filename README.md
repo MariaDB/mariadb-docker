@@ -8,35 +8,9 @@ This is the Git repository of the [Docker Library "Official Image"](https://gith
 
 **How do I use this MariaDB image?**
 
-See [the Docker Hub page](https://hub.docker.com/_/mariadb/) for the full README on how to use this Docker image and for information regarding contributing and issues.
+See [the Docker Hub page](https://hub.docker.com/_/mariadb/) for the full README on how to use this container image.
 
-**I see a change merged here that hasn't shown up on Docker Hub yet?**
-
-For more information about the full official images change life-cycle, see [the "An image's source changed in Git, now what?" FAQ entry](https://github.com/docker-library/faq#an-images-source-changed-in-git-now-what).
-
-For outstanding `mariadb` image Pull Requests (PRs), check [PRs with the "library/mariadb" label on the official-images repository](https://github.com/docker-library/official-images/labels/library%2Fmariadb). For the current "source of truth" for [`mariadb`](https://hub.docker.com/_/mariadb/), see [the `library/mariadb` file in the official-images repository](https://github.com/docker-library/official-images/blob/master/library/mariadb).
-
-**Why don't you provide an Alpine based image?**
-
-In order to provide our users with the most stable image possible, we will only create container images from packages from MariaDB directly and not distribution packages. This is partially from the [repeatability criteria](https://github.com/docker-library/official-images#repeatability) of Docker Library, but its mainly due to the stability of the image is dependent on it being tested using [CI](https://buildbot.mariadb.org/) prior to release. As MariaDB doesn't test in an [Alpine Linux](https://alpinelinux.org) environment, against [musl libc](https://musl.libc.org/) on which Alpine is based, and as such we cannot in good conscious deliver an untested implementation. This may change in the future.
-
-There have unexpected behaviours and outright bugs reported against MariaDB for musl based interface difference against architectures that MariaDB simply isn't tested against and nor do the server developers find it easy to test in those environment to diagnose/fix bugs and their fixes. While Alpine Linux is a beautiful Linux distribution, the level of MariaDB testing from this, or any distribution, falls short of what we want to provide our users.
-
-Musl's [key principles](https://musl.libc.org/about.html) favors simplicity and size over performance and there are aspects of MariaDB that are highly dependent on the performance of the libc functions, particularly the ones highly optimized in glibc by architecture developers for optimal performance. A future consideration of musl for container images will require benchmarking to ensure that we are offering our users a non-degraded performance.
-
-[LinuxServer.io](https://fleet.linuxserver.io/image?name=linuxserver/mariadb) offers an Alpine Linux based MariaDB if you still want this, however it is less supported by MariaDB server developers or not supported in this community.
-
-**An Alpine Linux image would be smaller right?**
-
-Yes, by probably less than 100M. MariaDB is a database where a basic data directory exceeds this difference. We aren't going to sacrifice performance and reliability to save a comparatively small amount of storage.
-
-**I'd like the MariaDB on Architecture X?**
-
-To support MariaDB on a new architecture it needs to be tested in CI against this architecture before release. Please search [MariaDB JIRA](https://jira.mariadb.org) and create a Task requesting the architecture or vote/watch an existing issue. The votes/watchers are used to prioritize work. If accepted due to popular demand, the CI against this architecture will result in packages that can used in the container manifest in the same way as the current supported architectures.
-
-But Alpine/Debian/Disto X support this already? Sorry, we aren't going to compromise the quality of this container by providing less tested images on any architecture.
-
-**How do I reset my password?**
+**How do I reset my database password?**
 
 [One useful way](https://github.com/MariaDB/mariadb-docker/issues/365#issuecomment-816367940) to do this is to create an `initfile.sql` file that contains (to cover all bases) something like the following:
 
@@ -52,6 +26,33 @@ SET PASSWORD FOR myuser@'%' = PASSWORD('thisismyuserpassword');
 CREATE DATABASE IF NOT EXISTS databasename;
 GRANT ALL ON databasename.* TO myuser@'%';
 ```
+
+**I see a change merged here that hasn't shown up on Docker Hub yet?**
+
+For more information about the full official images change life-cycle, see [the "An image's source changed in Git, now what?" FAQ entry](https://github.com/docker-library/faq#an-images-source-changed-in-git-now-what).
+
+For outstanding `mariadb` image Pull Requests (PRs), check [PRs with the "library/mariadb" label on the official-images repository](https://github.com/docker-library/official-images/labels/library%2Fmariadb). For the current "source of truth" for [`mariadb`](https://hub.docker.com/_/mariadb/), see [the `library/mariadb` file in the official-images repository](https://github.com/docker-library/official-images/blob/master/library/mariadb).
+
+**Why don't you provide an Alpine based image?**
+
+In order to provide our users with the most stable image possible, we will only create container images from packages from MariaDB directly and not distribution packages. This is partially from the [repeatability criteria](https://github.com/docker-library/official-images#repeatability) of Docker Library, but its mainly due to the stability of the image is dependent on it being tested using [CI](https://buildbot.mariadb.org/) prior to release. As MariaDB doesn't test in an [Alpine Linux](https://alpinelinux.org) environment, or against [musl libc](https://musl.libc.org/) on which Alpine is based, and as such we cannot in good conscious deliver an untested implementation. This may change in the future.
+
+There have unexpected behaviours and outright bugs reported against MariaDB for musl based interface difference against architectures that MariaDB simply isn't tested. MariaDB server developers find hard easy to test against those environments to diagnose/fix bugs and their fixes. While Alpine Linux is a beautiful Linux distribution, the level of MariaDB testing from this, or any distribution, falls short of what we want to provide our users.
+
+Musl's [key principles](https://musl.libc.org/about.html) favors simplicity and size over performance and there are aspects of MariaDB that are highly dependent on the performance of the libc functions, particularly the ones highly optimized in glibc by architecture developers for optimal performance. A future consideration of musl for container images will require benchmarking to ensure that we are offering our users a non-degraded performance.
+
+[LinuxServer.io](https://fleet.linuxserver.io/image?name=linuxserver/mariadb) offers an Alpine Linux based MariaDB if you still want this, however it is less supported by MariaDB server developers or not supported in this community.
+
+**An Alpine Linux image would be smaller right?**
+
+Yes, by probably less than 100M. MariaDB is a database where a basic data directory exceeds this difference. We aren't going to sacrifice performance and reliability to save a comparatively small amount of storage.
+
+**I'd like the MariaDB on Architecture X?**
+
+To support MariaDB on a new architecture it needs to be tested in CI against this architecture before release. Please search [MariaDB JIRA](https://jira.mariadb.org) and create a Task requesting the architecture or vote/watch an existing issue. The votes/watchers numbers on the issues are used to prioritize work. If accepted due to popular demand, the CI against this architecture will result in packages that can used in the container manifest in the same way as the current supported architectures.
+
+But Alpine/Debian/Disto X support this already? Sorry, we aren't going to compromise the quality of this container by providing less tested images on any architecture.
+
 
 ## Getting Help
 
@@ -103,7 +104,7 @@ If you are making multiple independent changes please create separate pull reque
 
 If the changes are a number of distinct steps a commit per logical progression would be appreciated.
 
-It is preferred if you commit the changes to the major version directories generated by `update.sh` in a separate commit. This way if you need to rebase on the latest version this commit can be amended, and the code base is easy to read.
+It is preferred if you commit the changes to the major version directories generated by `update.sh` in a separate commit. This way if you need to rebase on the latest version this commit can be amended, and the code changes are easy to read and review.
 
 ### Bug Fixes
 
@@ -126,7 +127,7 @@ To change the documentation, please contribute a [pull request](https://github.c
 
 [![build status badge](https://img.shields.io/github/workflow/status/MariaDB/mariadb-docker/GitHub%20CI/master?label=GitHub%20CI)](https://github.com/MariaDB/mariadb-docker/actions?query=workflow%3A%22GitHub+CI%22+branch%3Amaster)
 
-| Docker Library Official Images CI Status |
+| Docker Library Official Images CI Status (released changes) |
 |:-:|
 | [![amd64 build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/multiarch/job/amd64/job/mariadb.svg?label=amd64)](https://doi-janky.infosiftr.net/job/multiarch/job/amd64/job/mariadb/) |
 | [![arm64v8 build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/multiarch/job/arm64v8/job/mariadb.svg?label=arm64v8)](https://doi-janky.infosiftr.net/job/multiarch/job/arm64v8/job/mariadb/) |
