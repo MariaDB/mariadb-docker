@@ -59,23 +59,18 @@ RUN set -ex; \
 	; \
 	rm -rf /var/lib/apt/lists/*
 
-ENV GPG_KEYS \
+ARG GPG_KEYS=177F4010FE56CA3336300305F1656F24C74CD1D8
 # pub   rsa4096 2016-03-30 [SC]
 #         177F 4010 FE56 CA33 3630  0305 F165 6F24 C74C D1D8
 # uid           [ unknown] MariaDB Signing Key <signing-key@mariadb.org>
 # sub   rsa4096 2016-03-30 [E]
-	177F4010FE56CA3336300305F1656F24C74CD1D8
-
-# Allowing addition of REPOSITORY_KEY
-# to the key for REPOSITORY later
-ARG REPOSITORY_KEY=
 
 RUN set -ex; \
 	export GNUPGHOME="$(mktemp -d)"; \
-	for key in $GPG_KEYS $REPOSITORY_KEY; do \
+	for key in $GPG_KEYS; do \
 		gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
 	done; \
-	gpg --batch --export $GPG_KEYS $REPOSITORY_KEY > /etc/apt/trusted.gpg.d/mariadb.gpg; \
+	gpg --batch --export $GPG_KEYS > /etc/apt/trusted.gpg.d/mariadb.gpg; \
 	command -v gpgconf > /dev/null && gpgconf --kill all || :; \
 	rm -fr "$GNUPGHOME"; \
 	apt-key list
