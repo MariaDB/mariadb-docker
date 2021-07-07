@@ -105,7 +105,7 @@ pass=${pass#*GENERATED ROOT PASSWORD: }
 mariadbclient -u root -p"${pass}" -e 'select current_user()'
 killoff
 
-echo -e "Test: second instance of MYSQL_RANDOM_ROOT_PASSWORD has a differnet password\n"
+echo -e "Test: second instance of MYSQL_RANDOM_ROOT_PASSWORD has a different password\n"
 
 runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1  "${image}" --plugin-load-add=simple_password_check
 newpass=$(docker logs $cid | grep 'GENERATED ROOT PASSWORD' 2>&1)
