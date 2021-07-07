@@ -77,8 +77,8 @@ RUN set -ex; \
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le
 ARG MARIADB_MAJOR=10.6
-ARG MARIADB_VERSION=1:10.6.2+maria~focal
-# release-status:RC
+ARG MARIADB_VERSION=1:10.6.3+maria~focal
+# release-status:Stable
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
