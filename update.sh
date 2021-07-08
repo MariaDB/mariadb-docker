@@ -47,7 +47,8 @@ for version in "${versions[@]}"; do
 	fullVersion="$(getRemoteVersion "$version" "$suite" 'amd64')"
 	if [ -z "$fullVersion" ]; then
 		echo >&2 "warning: cannot find $version in $suite"
-		continue
+		fullVersion=1:$version+maria~$suite
+		echo >&2 "warning: assuming full version=$fullVersion"
 	fi
 
 	mariaVersion="${fullVersion##*:}"
@@ -67,11 +68,11 @@ for version in "${versions[@]}"; do
 			| grep -oP '<tr>.+?</tr>' \
 			| grep -P '>\Q'"$mariaVersion"'\E<' \
 			| grep -oP '<td>[^0-9][^<]*</td>' \
-			| sed -r 's!^.*<td>([^0-9][^<]*)</td>.*$!\1!'
+			| sed -r 's!^.*<td>([^0-9][^<]*)</td>.*$!\1!' || echo Alpha
 	)"
 	case "$releaseStatus" in
 		Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
-		*) echo >&2 "error: unexpected 'release status' value for $mariaVersion: $releaseStatus"; exit 1 ;;
+		*) echo >&2 "error: unexpected 'release status' value for $mariaVersion: $releaseStatus"; ;;
 	esac
 
 	echo "$version: $mariaVersion ($releaseStatus)"
@@ -83,6 +84,10 @@ for version in "${versions[@]}"; do
 			arches="$arches ${dpkgArchToBashbrew[$arch]}"
 		fi
 	done
+	if [ -z "$arches" ]; then
+		# assume default
+		arches=" amd64 arm64v8 ppc64le"
+	fi
 
 	cp Dockerfile.template "$version/Dockerfile"
 
