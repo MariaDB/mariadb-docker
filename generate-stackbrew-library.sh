@@ -14,6 +14,7 @@ cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
 source '.architectures-lib'
 
+GLOBIGNORE=10.7/:.*/:test/
 versions=( */ )
 versions=( "${versions[@]%/}" )
 
