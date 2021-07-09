@@ -31,6 +31,7 @@ cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
 versions=( "$@" )
 if [ ${#versions[@]} -eq 0 ]; then
+	GLOBIGNORE=.*:tests
 	versions=( */ )
 fi
 versions=( "${versions[@]%/}" )
