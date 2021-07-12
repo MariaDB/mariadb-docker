@@ -237,8 +237,8 @@ docker_process_sql() {
 # SQL escape the string $1 to be placed in a string literal.
 # escape, \ followed by '
 docker_sql_escape_string_literal() {
-	escapedPassword=${1//\\/\\\\}
-	escapedPassword="${escapedPassword//\'/\\\'}"
+	local escaped=${1//\\/\\\\}
+	echo "${escaped//\'/\\\'}"
 }
 
 # Initializes database with timezone info and root password, plus optional extra db/user
@@ -273,8 +273,7 @@ docker_setup_db() {
 	# Sets root password and creates root users for non-localhost hosts
 	local rootCreate=
 	local rootPasswordEscaped
-	docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}"
-	rootPasswordEscaped=$escapedPassword
+	rootPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}" )
 
 	# default root to listen for connections from anywhere
 	if [ -n "$MARIADB_ROOT_HOST" ] && [ "$MARIADB_ROOT_HOST" != 'localhost' ]; then
@@ -317,8 +316,7 @@ docker_setup_db() {
 		mysql_note "Creating user ${MARIADB_USER}"
 		# SQL escape the user password, \ followed by '
 		local userPasswordEscaped
-		docker_sql_escape_string_literal "${MARIADB_PASSWORD}"
-		userPasswordEscaped=$escapedPassword
+		userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
 		docker_process_sql --database=mysql --binary-mode <<-EOSQL_USER
 			SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
 			CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';
