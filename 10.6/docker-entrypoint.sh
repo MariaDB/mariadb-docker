@@ -237,7 +237,9 @@ docker_process_sql() {
 # SQL escape the string $1 to be placed in a string literal.
 # escape, \ followed by '
 docker_sql_escape_string_literal() {
+	local newline=$'\n'
 	local escaped=${1//\\/\\\\}
+	escaped="${escaped//$newline/\\n}"
 	echo "${escaped//\'/\\\'}"
 }
 
