@@ -104,6 +104,7 @@ for version in "${versions[@]}"; do
 	cp docker-entrypoint.sh "$version/"
 	sed -i \
 		-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
+		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
 		-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
 		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
 		-e 's!%%SUITE%%!'"$suite"'!g' \

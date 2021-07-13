@@ -82,16 +82,10 @@ ARG MARIADB_VERSION=1:10.2.39+maria~bionic
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY=
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.2.39/repo/ubuntu/ bionic main"
 
 RUN set -e;\
-	{ \
-		if [ -n "${REPOSITORY}" ]; then \
-			echo "deb ${REPOSITORY}"; \
-		else \
-			echo "deb https://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu bionic main"; \
-		fi ; \
-	}  > /etc/apt/sources.list.d/mariadb.list; \
+	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
 	{ \
 		echo 'Package: *'; \
 		echo 'Pin: release o=MariaDB'; \

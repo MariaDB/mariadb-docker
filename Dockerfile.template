@@ -82,16 +82,10 @@ ARG MARIADB_VERSION=%%MARIADB_VERSION%%
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY=
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-%%MARIADB_VERSION_BASIC%%/repo/ubuntu/ %%SUITE%% main"
 
 RUN set -e;\
-	{ \
-		if [ -n "${REPOSITORY}" ]; then \
-			echo "deb ${REPOSITORY}"; \
-		else \
-			echo "deb https://ftp.osuosl.org/pub/mariadb/repo/$MARIADB_MAJOR/ubuntu %%SUITE%% main"; \
-		fi ; \
-	}  > /etc/apt/sources.list.d/mariadb.list; \
+	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
 	{ \
 		echo 'Package: *'; \
 		echo 'Pin: release o=MariaDB'; \
