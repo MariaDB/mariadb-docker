@@ -20,7 +20,7 @@
 * **CPU**: 1核以上
 * **存储**: 20GB以上
 * **Swap分区**: 2GB以上
-* **带宽**: 100M 以上体验更流畅
+* **带宽**: 100M以上体验更流畅
 
 ## 安装使用
 
@@ -69,7 +69,7 @@ sudo systemctl start docker
 ```
 git clone --depth=1 https://github.com/Websoft9/docker-mariadb
 cd docker-mariadb
-sudo docker-compose -f docker-compose-10.2.yml up -d
+sudo docker-compose -f docker-compose-production.yml --env-file .env_all up -d
 ```
 
 ### 常见问题
@@ -80,7 +80,7 @@ sudo docker-compose -f docker-compose-10.2.yml up -d
 
 #### 端口冲突导致无法启动？
 
-修改 [docker-compose](docker-compose-10.2.yml) 文件中冲突的端口，然后再启动容器
+修改 [docker-compose](docker-compose-production.yml) 文件中冲突的端口，然后再启动容器
 
 
 ### 使用说明
