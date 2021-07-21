@@ -4,11 +4,11 @@ version: '3.8'
 services:
   mariadb:
     container_name: ${APP_CONTAINER_NAME}
-    image: mariadb:${APP_VERSION}
+    image: mariadb:${DB_MARIADB_VERSION}
     environment:
-     - MYSQL_ROOT_PASSWORD=${APP_PASSWORD}
+     - MYSQL_ROOT_PASSWORD=${DB_MARIADB_PASSWORD}
     ports:
-     - ${APP_PORT}:3306
+     - ${DB_MARIADB_PORT}:3306
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     restart: always
     volumes:
@@ -17,4 +17,3 @@ services:
 networks:
   default:
       name: "${APP_NETWORK}"
-
