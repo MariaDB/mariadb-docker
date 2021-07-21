@@ -1,7 +1,9 @@
 {
   "name": "mariadb",
   "trademark": "MariaDB",
-  "compose_file": "docker-compose-10.2.yml",
+  "installpath": "/data/db/mariadb",
+  "compose_file": "docker-compose-production.yml",
+  "env_file": ".env_all",
   "fork_url": "https://github.com/ONLYOFFICE/docker#recommended-system-requirements",
   "requirements":{
     "cpu_arch": "Linux x86-64, ARM 32/64, Windows x86-64, IBM POWER8, x86/i686",
