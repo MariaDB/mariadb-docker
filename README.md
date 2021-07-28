@@ -23,9 +23,18 @@ SET PASSWORD FOR root@'%' = PASSWORD('thisismyrootpassword');
 GRANT ALL ON *.* TO root@'%' WITH GRANT OPTION;
 CREATE USER IF NOT EXISTS myuser@'%' IDENTIFIED BY 'thisismyuserpassword';
 SET PASSWORD FOR myuser@'%' = PASSWORD('thisismyuserpassword');
-CREATE DATABASE IF NOT EXISTS databasename;
-GRANT ALL ON databasename.* TO myuser@'%';
+CREATE DATABASE IF NOT EXISTS mydatabasename;
+GRANT ALL ON mydatabasename.* TO myuser@'%';
 ```
+
+Adjust *myuser* and *mydatabasename* as applicable.
+
+Run with:
+```shell
+[docker|podman] run --volume [path-of-initfile.sql]:/docker-entrypoint-initdb.d --volume [data]:/var/lib/mysql --init-file=/docker-entrypoint-initdb.d/initfile.sql
+```
+
+After this run, the changes are made and future runs can be made as you did them before.
 
 ### I see a change merged here that hasn't shown up on Docker Hub yet?
 
