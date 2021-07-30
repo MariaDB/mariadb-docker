@@ -136,6 +136,8 @@ To change the documentation, please contribute a [pull request](https://github.c
 
 [![build status badge](https://img.shields.io/github/workflow/status/MariaDB/mariadb-docker/GitHub%20CI/master?label=GitHub%20CI)](https://github.com/MariaDB/mariadb-docker/actions?query=workflow%3A%22GitHub+CI%22+branch%3Amaster)
 
+[![Buildbot of latest MariaDB](https://img.shields.io/badge/dynamic/json?label=buildbot CI upstream&query=$.builds[0].state_string&url=https%3A%2F%2Fbuildbot.mariadb.org%2Fapi%2Fv2%2Fbuilders%2Famd64-rhel8-dockerlibrary%2Fbuilds%3Flimit%3D1%26order%3D-number)](https://buildbot.mariadb.org/#/builders/amd64-rhel8-dockerlibrary)
+
 | Docker Library Official Images CI Status (released changes) |
 |:-:|
 | [![amd64 build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/multiarch/job/amd64/job/mariadb.svg?label=amd64)](https://doi-janky.infosiftr.net/job/multiarch/job/amd64/job/mariadb/) |
