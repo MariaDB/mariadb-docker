@@ -42,25 +42,25 @@ For more information about the full official images change life-cycle, see [the 
 
 For outstanding `mariadb` image Pull Requests (PRs), check [PRs with the "library/mariadb" label on the official-images repository](https://github.com/docker-library/official-images/labels/library%2Fmariadb). For the current "source of truth" for [`mariadb`](https://hub.docker.com/_/mariadb/), see [the `library/mariadb` file in the official-images repository](https://github.com/docker-library/official-images/blob/master/library/mariadb).
 
-### Why don't you provide an Alpine based image?
+### Why don't you provide an Alpine-based image?
 
-In order to provide our users with the most stable image possible, we will only create container images from packages from MariaDB directly and not distribution packages. This is partially from the [repeatability criteria](https://github.com/docker-library/official-images#repeatability) of Docker Library, but its mainly due to the stability of the image is dependent on it being tested using [CI](https://buildbot.mariadb.org/) prior to release. As MariaDB doesn't test in an [Alpine Linux](https://alpinelinux.org) environment, or against [musl libc](https://musl.libc.org/) on which Alpine is based, and as such we cannot in good conscience deliver an untested implementation. This may change in the future.
+In order to provide our users with the most stable image possible, we only create container images from packages directly from MariaDB, and not distribution packages. This is partially from the [repeatability criteria](https://github.com/docker-library/official-images#repeatability) of Docker Library, but it's mainly due to the stability of the image being dependent on it being tested using [CI](https://buildbot.mariadb.org/) prior to release. As MariaDB doesn't test in an [Alpine Linux](https://alpinelinux.org) environment, or against [musl libc](https://musl.libc.org/) on which Alpine is based, we cannot in good conscience deliver an untested implementation. This may change in the future.
 
-There have unexpected behaviours and outright bugs reported against MariaDB for musl based interface difference against architectures that MariaDB simply isn't tested. MariaDB server developers find hard easy to test against those environments to diagnose/fix bugs and their fixes. While Alpine Linux is a beautiful Linux distribution, the level of MariaDB testing from this, or any distribution, falls short of what we want to provide our users.
+There have been unexpected behaviours and bugs reported against MariaDB for musl-based interfaces against architectures that MariaDB simply isn't tested on. MariaDB Server developers find it hard to test, diagnose and fix bugs against those environments. While Alpine Linux is a beautiful Linux distribution, the level of MariaDB testing from this, or any distribution, falls short of what we want to provide our users.
 
-Musl's [key principles](https://musl.libc.org/about.html) favors simplicity and size over performance and there are aspects of MariaDB that are highly dependent on the performance of the libc functions, particularly the ones highly optimized in glibc by architecture developers for optimal performance. A future consideration of musl for container images will require benchmarking to ensure that we are offering our users a non-degraded performance.
+Musl's [key principles](https://musl.libc.org/about.html) favor simplicity and size over performance, and there are aspects of MariaDB that are highly dependent on the performance of the libc functions, particularly the ones highly optimized in glibc by architecture developers for optimal performance. A future consideration of musl for container images will require benchmarking to ensure that we are offering our users a non-degraded performance.
 
-[LinuxServer.io](https://fleet.linuxserver.io/image?name=linuxserver/mariadb) offers an Alpine Linux based MariaDB if you still want this, however it is less supported by MariaDB server developers or not supported in this community.
+[LinuxServer.io](https://fleet.linuxserver.io/image?name=linuxserver/mariadb) offers an Alpine Linux-based MariaDB if you still want this. However, it is less supported by MariaDB Server developers or not supported in this community.
 
-### An Alpine Linux image would be smaller right?
+### An Alpine Linux image would be smaller, right?
 
 Yes, by probably less than 100M. MariaDB is a database where a basic data directory exceeds this difference. We aren't going to sacrifice performance and reliability to save a comparatively small amount of storage.
 
 ### I'd like the MariaDB on Architecture X?
 
-To support MariaDB on a new architecture it needs to be tested in CI against this architecture before release. Please search [MariaDB JIRA](https://jira.mariadb.org) and create a Task requesting the architecture or vote/watch an existing issue. The votes/watchers numbers on the issues are used to prioritize work. If accepted due to popular demand, the CI against this architecture will result in packages that can used in the container manifest in the same way as the current supported architectures.
+To support MariaDB on a new architecture, it needs to be tested in CI against this architecture before release. Please search [MariaDB JIRA](https://jira.mariadb.org) and create a Task requesting the architecture or vote/watch on an existing issue. The votes/watcher numbers on the issues are used to prioritize work. If accepted due to popular demand, the CI against this architecture will result in packages that can used in the container manifest in the same way as the current supported architectures.
 
-But Alpine/Debian/Disto X support this already? Sorry, we aren't going to compromise the quality of this container by providing less tested images on any architecture.
+But Alpine/Debian/Disto X supports this already? Sorry, we aren't going to compromise the quality of this container by providing less tested images on any architecture.
 
 
 ## Getting Help
@@ -72,7 +72,7 @@ On StackExchange, questions tagged with 'mariadb' and 'docker' on the Database A
 
 ## Reporting a Bug / Feature Request
 
-If you run into any bugs or have ideas on new features you can file bug reports and feature requests on the [MariaDB JIRA](https://jira.mariadb.org). File them under the "MDEV" project and "Docker" component to make sure it goes to the correct people.
+If you run into any bugs or have ideas on new features you can file bug reports and feature requests on the [MariaDB JIRA](https://jira.mariadb.org) instance. File them under the "MDEV" project and "Docker" component to make sure it goes to the correct people.
 
 ## Contributing a Bug Fix / Feature Request
 
@@ -90,40 +90,40 @@ Changes to the Dockerfile should be done at the top level [Docker.template](http
 
 Please write code in a similar style to what is already there. Use tab indents on the entrypoint script.
 
-`_xxx` functions are intending for internal use and may be changed in the future. If you write a shell function that might be useful to a `/docker-entrypoint-initdb.d` script to use, prefix it with `docker_` and it will be consider a stable script interface.
+`_xxx` functions are intended for internal use and may be changed in the future. If you write a shell function that might be useful to a `/docker-entrypoint-initdb.d` script to use, prefix it with `docker_` and it will be considered a stable script interface.
 
-If you need a change to occur in a specific major version only, change the `update.sh` script to ensure that its `Dockerfile` / `docker-entrypoint.sh` is generates version specific changes.
+If you need a change to occur in a specific major version only, change the `update.sh` script to ensure that its `Dockerfile` / `docker-entrypoint.sh` generates version-specific changes.
 
 ### Testing Changes
 
-To build you can use [docker build](https://docs.docker.com/engine/reference/commandline/build/), [buildah bud](https://buildah.io/), [podman build](http://docs.podman.io/en/latest/markdown/podman-build.1.html) or any other container tool that understands Dockerfiles. The only argument needed is the build directory (10.X).
+To build, you can use [docker build](https://docs.docker.com/engine/reference/commandline/build/), [buildah bud](https://buildah.io/), [podman build](http://docs.podman.io/en/latest/markdown/podman-build.1.html) or any other container tool that understands Dockerfiles. The only argument needed is the build directory (10.X).
 
 Run:
 ```
 .test/run {container hash}
 ```
 
-This will run though all current tests and the new tests you have created. The key aspect is that the script should error returning a non-zero exit code if the test fails.
+This will run through all current tests and the new tests you have created. The key aspect is that the script should error returning a non-zero exit code if the test fails.
 
 ### Git Commits
 
-Commit messages should describe why this change is occurring, what problem is it solving, and if the solution isn't immediately obvious, some rational as to why it was implemented in its current form. 
+Commit messages should describe why this change is occurring, what problem it is solving, and if the solution isn't immediately obvious, some rationale as to why it was implemented in its current form. 
 
 If you are making multiple independent changes please create separate pull requests per change.
 
-If the changes are a number of distinct steps a commit per logical progression would be appreciated.
+If the changes are a number of distinct steps, a commit per logical progression would be appreciated.
 
-It is preferred if you commit the changes to the major version directories generated by `update.sh` in a separate commit. This way if you need to rebase on the latest version this commit can be amended, and the code changes are easy to read and review.
+It is preferred if you commit the changes to the major version directories generated by `update.sh` in a separate commit. This way, if you need to rebase on the latest version, this commit can be amended, and the code changes are easy to read and review.
 
 ### Bug Fixes
 
-Bug fixes are most welcome and should include a full description on the problem being fixed in the commit message.
+Bug fixes are most welcome and should include a full description of the problem being fixed in the commit message.
 
 ### Feature Requests
 
 Before investing too much time in a feature request, please discuss its use on a [JIRA issue](https://jira.mariadb.org), a [github issue](https://github.com/MariaDB/mariadb-docker/issues), or with someone on [Zulip](https://mariadb.zulipchat.com/#narrow/stream/118759-general) (create a New Topic).
 
-After a feature request is written please help get it used by improving the documentation to detail how to use the newly added features.
+After a feature is written, please help get it used by improving the documentation to detail how to use the newly added feature.
 
 ## Improving the Documentation
 
