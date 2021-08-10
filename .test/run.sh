@@ -32,7 +32,7 @@ runandwait()
 	port=$(docker port "$cname" 3306)
 	port=${port#*:}
 
-	waiting=20
+	waiting=10
 	echo "waiting to start..."
 	set +e +o pipefail +x
 	while [ $waiting -gt 0 ]
