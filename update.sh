@@ -121,4 +121,9 @@ for version in "${versions[@]}"; do
 		10.2 | 10.3 | 10.4) ;;
 		*) sed -i '/backwards compat/d' "$version/Dockerfile" ;;
 	esac
+	# Start using the new executable, mariadbd
+	case "$version" in
+		10.2 | 10.3 | 10.4 | 10.5) ;;
+		*) sed -i -e '/^CMD/s/mysqld/mariadbd/' "$version/Dockerfile"
+	esac
 done
