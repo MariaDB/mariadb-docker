@@ -94,9 +94,9 @@ docker run  --rm  --name "$cname" -e MYSQL_ALLOW_EMPTY_PASSWORD  "$image" || ech
 	;&
 	mysql_allow_empty_password_is_clean)
 
-echo -e "Test: MYSQL_ALLOW_EMPTY_PASSWORD and defaults to clean environment\n"
+echo -e "Test: MYSQL_ALLOW_EMPTY_PASSWORD and defaults to clean environment, +default-storage-engine=InnoDB\n"
 
-runandwait -e MYSQL_ALLOW_EMPTY_PASSWORD=1 "${image}"
+runandwait -e MYSQL_ALLOW_EMPTY_PASSWORD=1 "${image}" --default-storage-engine=InnoDB
 mariadbclient -u root -e 'show databases'
 
 othertables=$(mariadbclient -u root --skip-column-names -Be "select group_concat(SCHEMA_NAME) from information_schema.SCHEMATA where SCHEMA_NAME not in ('mysql', 'information_schema', 'performance_schema', 'sys')")
