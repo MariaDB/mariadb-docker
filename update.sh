@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+#
+# Usage ./update.sh [version(multiple)...]
+#
 
 defaultSuite='focal'
 declare -A suites=(
