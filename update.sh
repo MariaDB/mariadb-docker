@@ -40,6 +40,9 @@ fi
 versions=( "${versions[@]%/}" )
 
 for version in "${versions[@]}"; do
+	if [ "$version" == 10.8 ]; then
+		version=10.8.0
+	fi
 	if [ ! -d "$version" ]; then
 		# assume full version and trim this to major version
 		ExpectedFullVersion=$version
