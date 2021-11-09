@@ -86,11 +86,26 @@ for version in "${versions[@]}"; do
 
 	variantAliases=( "${versionAliases[@]/%/-$suite}" )
 	versionAliases=( "${variantAliases[@]//latest-/}" "${versionAliases[@]}" )
+	arches=$(versionArches $version)
+
+	for arch in $arches; do
+		# Debify the arch
+		case $arch in
+		arm64v8)
+			arch=arm64 ;;
+		ppc64le)
+			arch=ppc64el ;;
+		esac
+		if ! curl --fail --silent --head "https://archive.mariadb.org/mariadb-${fullVersion}/repo/ubuntu/dists/${suite}/main/binary-${arch}/" > /dev/null 2>&1 ; then
+			echo "$arch missing for $fullVersion"
+			exit 1
+		fi
+	done
 
 	echo
 	cat <<-EOE
 		Tags: $(join ', ' "${versionAliases[@]}")
-		Architectures: $(join ', ' $(versionArches $version))
+		Architectures: $(join ', ' $arches)
 		GitCommit: $commit
 		Directory: $version
 	EOE
