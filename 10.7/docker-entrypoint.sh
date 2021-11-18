@@ -91,7 +91,7 @@ docker_process_init_files() {
 	done
 }
 
-# arguments necessary to run "mysqld --verbose --help" successfully (used for testing configuration validity and for extracting default/configured values)
+# arguments necessary to run "mariadbd --verbose --help" successfully (used for testing configuration validity and for extracting default/configured values)
 _verboseHelpArgs=(
 	--verbose --help
 	--log-bin-index="$(mktemp -u)" # https://github.com/docker-library/mysql/issues/136
@@ -100,12 +100,12 @@ _verboseHelpArgs=(
 mysql_check_config() {
 	local toRun=( "$@" "${_verboseHelpArgs[@]}" ) errors
 	if ! errors="$("${toRun[@]}" 2>&1 >/dev/null)"; then
-		mysql_error $'mysqld failed while attempting to check config\n\tcommand was: '"${toRun[*]}"$'\n\t'"$errors"
+		mysql_error $'mariadbd failed while attempting to check config\n\tcommand was: '"${toRun[*]}"$'\n\t'"$errors"
 	fi
 }
 
 # Fetch value from server config
-# We use mysqld --verbose --help instead of my_print_defaults because the
+# We use mariadbd --verbose --help instead of my_print_defaults because the
 # latter only show values present in config files, and not server defaults
 mysql_get_config() {
 	local conf="$1"; shift
@@ -176,7 +176,7 @@ docker_init_database_dir() {
 		# 10.3+
 		installArgs+=( --skip-test-db )
 	fi
-	# "Other options are passed to mysqld." (so we pass all "mysqld" arguments directly here)
+	# "Other options are passed to mariadbd." (so we pass all "mysqld" arguments directly here)
 	mysql_install_db "${installArgs[@]}" "${@:2}" --default-time-zone=SYSTEM --enforce-storage-engine=
 	mysql_note "Database files initialized"
 }
@@ -257,7 +257,7 @@ docker_setup_db() {
 			done
 
 			# sed is for https://bugs.mysql.com/bug.php?id=20545
-			mysql_tzinfo_to_sql /usr/share/zoneinfo \
+			mariadb-tzinfo-to-sql /usr/share/zoneinfo \
 				| sed 's/Local time zone must be set--see zic manual page/FCTY/'
 
 			for table in "${tztables[@]}"; do
@@ -331,7 +331,7 @@ docker_setup_db() {
 	fi
 }
 
-# check arguments for an option that would cause mysqld to stop
+# check arguments for an option that would cause mariadbd to stop
 # return true if there is one
 _mysql_want_help() {
 	local arg
@@ -348,10 +348,10 @@ _mysql_want_help() {
 _main() {
 	# if command starts with an option, prepend mysqld
 	if [ "${1:0:1}" = '-' ]; then
-		set -- mysqld "$@"
+		set -- mariadbd "$@"
 	fi
 
-	# skip setup if they aren't running mysqld or want an option that stops mysqld
+	# skip setup if they aren't running mariadbd or want an option that stops mysqld
 	if [ "$1" = 'mariadbd' ] || [ "$1" = 'mysqld' ] && ! _mysql_want_help "$@"; then
 		mysql_note "Entrypoint script for MariaDB Server ${MARIADB_VERSION} started."
 

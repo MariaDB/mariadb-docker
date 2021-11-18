@@ -124,9 +124,16 @@ for version in "${versions[@]}"; do
 		10.2 | 10.3 | 10.4) ;;
 		*) sed -i '/backwards compat/d' "$version/Dockerfile" ;;
 	esac
-	# Start using the new executable, mariadbd
+	# Start using the new executable names
 	case "$version" in
 		10.2 | 10.3 | 10.4 | 10.5) ;;
-		*) sed -i -e '/^CMD/s/mysqld/mariadbd/' "$version/Dockerfile"
+		*)
+			sed -i -e '/^CMD/s/mysqld/mariadbd/' "$version/Dockerfile"
+			sed -i -e 's/mysql_upgrade\([^_]\)/mariadb-upgrade\1/' \
+			       -e 's/mysqldump/mariadb-dump/' \
+			       -e "s/mysqld\\([^']\\)/mariadbd\1/" \
+			       -e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
+			       "$version/docker-entrypoint.sh"
+
 	esac
 done
