@@ -106,6 +106,11 @@ othertables=$(mariadbclient -u root --skip-column-names -Be "select group_concat
 
 otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'))")
 [ "$otherusers" != '' ] && die "unexpected users $otherusers"
+
+	echo "Contents of /var/lib/mysql/mysql_upgrade_info:"
+	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info || die "missing mysql_upgrade_info on install"
+	echo
+
 killoff
 
 	;&
@@ -379,6 +384,71 @@ then
 else
 	echo -e "Test: jemalloc skipped - unknown arch '$architecture'\n"
 fi
+
+	;&
+	mariadbupgrade)
+	docker volume rm m57 || echo "m57 already cleaned"
+	docker volume create m57
+	docker pull docker.io/library/mysql:5.7
+	runandwait -v m57:/var/lib/mysql:Z -e MYSQL_INITDB_SKIP_TZINFO=1 -e MYSQL_ROOT_PASSWORD=bob docker.io/library/mysql:5.7
+	killoff
+
+	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
+	
+	version=$(mariadbclient --skip-column-names -B -u root -pbob -e "SELECT VERSION()")
+
+	docker exec "$cid" ls -la /var/lib/mysql/system_mysql_backup_unknown_version.sql.zst || die "hopeing for backup file"
+
+	echo "Did the upgrade run?"
+	docker logs "$cid" 2>&1 | grep -A 15 'Starting mariadb-upgrade' || die "missing upgrade message"
+	echo
+
+	docker exec "$cid" ls -la /var/lib/mysql/
+
+	echo "Final upgrade info reflects current version?"
+	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info || die "missing mysql_upgrade_info on install"
+	echo
+
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info)
+	# note VERSION() is longer
+	[[ $version =~ ^${upgradeversion} ]] || die "upgrade version didn't match"
+
+	echo "fix version to 5.x"
+	docker exec "$cid" sed -i -e 's/[0-9]*\(.*\)/5\1/' /var/lib/mysql/mysql_upgrade_info
+	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info
+	killoff
+
+	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
+
+	echo "Did the upgrade run?"
+	docker logs "$cid" 2>&1 | grep -A 15 'Starting mariadb-upgrade' || die "missing upgrade from prev"
+	echo
+
+	echo "data dir"
+	docker exec "$cid" ls -la /var/lib/mysql/
+	echo
+
+	echo "Is the right backup file there?"
+	docker exec "$cid" ls -la /var/lib/mysql/system_mysql_backup_5."${upgradeversion#*.}".sql.zst || die "missing backup"
+	echo
+
+	echo "Final upgrade info reflects current version?"
+	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info || die "missing mysql_upgrade_info on install"
+	echo
+
+	echo "Fixing back to 0 minor version"
+	docker exec "$cid" sed -i -e 's/[0-9]*-\(MariaDB\)/0-\1/' /var/lib/mysql/mysql_upgrade_info
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info)
+	killoff
+
+	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
+	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info
+	newupgradeversion=$(docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info)
+	[ "$upgradeversion" = "$newupgradeversion" ] || die "upgrade versions from mysql_upgrade_info should match"
+       	docker logs "$cid" 2>&1 | grep -C 5 'MariaDB upgrade not required' || die 'should not have upgraded'
+
+	killoff
+	docker volume rm m57
 
 # Insert new tests above by copying the comments below
 #	;&
