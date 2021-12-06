@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 if [ $# -eq 0 ]
 then
@@ -15,17 +15,19 @@ architecture=$(docker image inspect --format '{{.Architecture}}' "$image")
 
 killoff()
 {
-	[ -n "$cid" ] && docker kill $cid > /dev/null
+	[ -n "$cid" ] && docker kill "$cid" > /dev/null
 	sleep 2
-	[ -n "$cid" ] && docker rm -v -f $cid > /dev/null || true
+	if [ -n "$cid" ]; then
+	       docker rm -v -f "$cid" > /dev/null || true
+	fi
 	cid=""
 }
 
 die()
 {
-	[ -n "$cid" ] && docker logs $cid
+	[ -n "$cid" ] && docker logs "$cid"
 	killoff
-        echo $@ >&2
+        echo "$@" >&2
         exit 1
 }
 trap "killoff" EXIT
@@ -43,17 +45,17 @@ runandwait()
 	waiting=${DOCKER_LIBRARY_START_TIMEOUT:-10}
 	echo "waiting to start..."
 	set +e +o pipefail +x
-	while [ $waiting -gt 0 ]
+	while [ "$waiting" -gt 0 ]
 	do
 		(( waiting-- ))
 		sleep 1
-		if ! docker exec -i $cid mysql -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | fgrep "Can't connect" > /dev/null
+		if ! docker exec -i "$cid" mysql -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | grep -F "Can't connect" > /dev/null
 		then
 			break
 		fi
         done
 	set -eo pipefail -x
-	if [ $waiting -eq 0 ]
+	if [ "$waiting" -eq 0 ]
 	then
 		die 'timeout'
 	fi
@@ -122,7 +124,7 @@ killoff
 echo -e "Test: MYSQL_RANDOM_ROOT_PASSWORD, needs to satisify minimium complexity of simple-password-check plugin\n"
 
 runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1 "${image}" --plugin-load-add=simple_password_check
-pass=$(docker logs $cid | grep 'GENERATED ROOT PASSWORD' 2>&1)
+pass=$(docker logs "$cid" | grep 'GENERATED ROOT PASSWORD' 2>&1)
 # trim up until passwod
 pass=${pass#*GENERATED ROOT PASSWORD: }
 mariadbclient -u root -p"${pass}" -e 'select current_user()'
@@ -134,7 +136,7 @@ killoff
 echo -e "Test: second instance of MYSQL_RANDOM_ROOT_PASSWORD has a different password\n"
 
 runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1  "${image}" --plugin-load-add=simple_password_check
-newpass=$(docker logs $cid | grep 'GENERATED ROOT PASSWORD' 2>&1)
+newpass=$(docker logs "$cid" | grep 'GENERATED ROOT PASSWORD' 2>&1)
 # trim up until passwod
 newpass=${newpass#*GENERATED ROOT PASSWORD: }
 mariadbclient -u root -p"${newpass}" -e 'select current_user()'
@@ -194,7 +196,7 @@ echo bob > "$secretdir"/pass
 echo pluto > "$secretdir"/host
 echo titan > "$secretdir"/db
 echo ron > "$secretdir"/u
-echo scappers > $secretdir/p
+echo scappers > "$secretdir"/p
 
 runandwait \
        	-v "$secretdir":/run/secrets:Z \
@@ -287,7 +289,7 @@ killoff
 echo -e "Test: MARIADB_RANDOM_ROOT_PASSWORD, needs to satisify minimium complexity of simple-password-check plugin\n"
 
 runandwait -e MARIADB_RANDOM_ROOT_PASSWORD=1 "${image}" --plugin-load-add=simple_password_check
-pass=$(docker logs $cid  2>&1 | grep 'GENERATED ROOT PASSWORD')
+pass=$(docker logs "$cid"  2>&1 | grep 'GENERATED ROOT PASSWORD')
 # trim up until passwod
 pass=${pass#*GENERATED ROOT PASSWORD: }
 mariadbclient -u root -p"${pass}" -e 'select current_user()'
@@ -299,7 +301,7 @@ killoff
 echo -e "Test: second instance of MARIADB_RANDOM_ROOT_PASSWORD has a different password\n"
 
 runandwait -e MARIADB_RANDOM_ROOT_PASSWORD=1 "${image}" --plugin-load-add=simple_password_check
-newpass=$(docker logs $cid  2>&1 | grep 'GENERATED ROOT PASSWORD')
+newpass=$(docker logs "$cid"  2>&1 | grep 'GENERATED ROOT PASSWORD')
 # trim up until passwod
 newpass=${newpass#*GENERATED ROOT PASSWORD: }
 mariadbclient -u root -p"${newpass}" -e 'select current_user()'
@@ -329,17 +331,17 @@ tzcount=$(mariadbclient --skip-column-names -B -u root -e "SELECT COUNT(*) FROM 
 # note uses previous instance
 echo -e "Test: default configuration items are present\n"
 arg_expected=0
-docker exec -i $cid my_print_defaults --mysqld |
+docker exec -i "$cid" my_print_defaults --mysqld |
 	{
-	while read line
+	while read -r line
 	do
 		case $line in
 		--skip-host-cache|--skip-name-resolve)
-			echo $line found
+			echo "$line" found
 			(( arg_expected++ )) || : ;;
 		esac
 	done
-	[ $arg_expected -eq 2 ] || die "expected both skip-host-cache and skip-name-resolve"
+	[ "$arg_expected" -eq 2 ] || die "expected both skip-host-cache and skip-name-resolve"
 }
 killoff
 
@@ -370,7 +372,7 @@ if [ -n "$debarch" ]
 then
 	echo -e "Test: jemalloc preload\n"
 	runandwait -e LD_PRELOAD="/usr/lib/$debarch-linux-gnu/libjemalloc.so.1 /usr/lib/$debarch-linux-gnu/libjemalloc.so.2" -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
-	docker exec -i $cid gosu mysql /bin/grep 'jemalloc' /proc/1/maps || die "expected to preload jemalloc"
+	docker exec -i "$cid" gosu mysql /bin/grep 'jemalloc' /proc/1/maps || die "expected to preload jemalloc"
 
 
 	killoff
