@@ -64,6 +64,8 @@ _is_sourced() {
 # process initializer files, based on file extensions
 docker_process_init_files() {
 	# mysql here for backwards compatibility "${mysql[@]}"
+	# ShellCheck: mysql appears unused. Verify use (or export if used externally)
+	# shellcheck disable=SC2034
 	mysql=( docker_process_sql )
 
 	echo
@@ -78,6 +80,8 @@ docker_process_init_files() {
 					"$f"
 				else
 					mysql_note "$0: sourcing $f"
+					# ShellCheck can't follow non-constant source. Use a directive to specify location.
+					# shellcheck disable=SC1090
 					. "$f"
 				fi
 				;;
@@ -146,7 +150,7 @@ docker_temp_server_stop() {
 
 # Verify that the minimally required password settings are set for new databases.
 docker_verify_minimum_env() {
-	if [ -z "$MARIADB_ROOT_PASSWORD" -a -z "$MARIADB_ALLOW_EMPTY_ROOT_PASSWORD" -a -z "$MARIADB_RANDOM_ROOT_PASSWORD" ]; then
+	if [ -z "$MARIADB_ROOT_PASSWORD" ] && [ -z "$MARIADB_ALLOW_EMPTY_ROOT_PASSWORD" ] && [ -z "$MARIADB_RANDOM_ROOT_PASSWORD" ]; then
 		mysql_error $'Database is uninitialized and password option is not specified\n\tYou need to specify one of MARIADB_ROOT_PASSWORD, MARIADB_ALLOW_EMPTY_ROOT_PASSWORD and MARIADB_RANDOM_ROOT_PASSWORD'
 	fi
 }
@@ -225,10 +229,9 @@ docker_exec_client() {
 #    ie: docker_process_sql --database=mydb <<<'INSERT ...'
 #    ie: docker_process_sql --dont-use-mysql-root-password --database=mydb <my-file.sql
 docker_process_sql() {
-	passfileArgs=()
 	if [ '--dont-use-mysql-root-password' = "$1" ]; then
 		shift
-		MYSQL_PWD= docker_exec_client "$@"
+		MYSQL_PWD='' docker_exec_client "$@"
 	else
 		MYSQL_PWD=$MARIADB_ROOT_PASSWORD docker_exec_client "$@"
 	fi
@@ -363,7 +366,7 @@ _main() {
 		# If container is started as root user, restart as dedicated mysql user
 		if [ "$(id -u)" = "0" ]; then
 			mysql_note "Switching to dedicated user 'mysql'"
-			exec gosu mysql "$BASH_SOURCE" "$@"
+			exec gosu mysql "${BASH_SOURCE[0]}" "$@"
 		fi
 
 		# there's no database, so it needs to be initialized
