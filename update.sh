@@ -23,18 +23,16 @@ getRemoteVersion() {
 	local suite="$1"; shift # focal
 	local dpkgArch="$1"; shift # arm64
 
-	echo "$(
-		curl -fsSL "https://ftp.osuosl.org/pub/mariadb/repo/$version/ubuntu/dists/$suite/main/binary-$dpkgArch/Packages" 2>/dev/null  \
-			| tac|tac \
-			| awk -F ': ' '$1 == "Package" { pkg = $2; next } $1 == "Version" && pkg == "mariadb-server-'"$version"'" { print $2; exit }'
-	)"
+	curl -fsSL "https://ftp.osuosl.org/pub/mariadb/repo/$version/ubuntu/dists/$suite/main/binary-$dpkgArch/Packages" 2>/dev/null  \
+		| tac|tac \
+		| awk -F ': ' '$1 == "Package" { pkg = $2; next } $1 == "Version" && pkg == "mariadb-server-'"$version"'" { print $2; exit }'
 }
 
-cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
+cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 versions=( "$@" )
 if [ ${#versions[@]} -eq 0 ]; then
-	GLOBIGNORE=.*:tests
+	GLOBIGNORE=".*:tests"
 	versions=( */ )
 fi
 versions=( "${versions[@]%/}" )
@@ -99,7 +97,8 @@ for version in "${versions[@]}"; do
 	cp Dockerfile.template "$version/Dockerfile"
 
 	backup='mariadb-backup'
-	if [[ "$version" < 10.3 ]]; then
+	# shellcheck disable=SC2072
+	if [[ "$version" < "10.3" ]]; then
 		# 10.2 has mariadb major version in the package name
 		backup="$backup-$version"
 	fi
