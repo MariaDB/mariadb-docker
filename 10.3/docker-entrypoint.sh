@@ -265,8 +265,19 @@ docker_sql_escape_string_literal() {
 docker_setup_db() {
 	# Load timezone info into database
 	if [ -z "$MARIADB_INITDB_SKIP_TZINFO" ]; then
-		mysql_tzinfo_to_sql --skip-write-binlog /usr/share/zoneinfo \
-			| docker_process_sql --dont-use-mysql-root-password --database=mysql
+		{
+			# MDEV-28189 Replicating the tzinfo is a slow.
+			# Its quicker if replicas just initialize the same way.
+			echo "SELECT @@SQL_LOG_BIN INTO @save_sql_log_bin;
+				SET SESSION SQL_LOG_BIN=0;"
+
+			# --skip-write-binlog here is only if Galera is detected
+			# but usefully outputs LOCK TABLES to improve the IO of
+			# Aria (MDEV-23326).
+			mysql_tzinfo_to_sql --skip-write-binlog /usr/share/zoneinfo \
+
+			echo "SET SESSION SQL_LOG_BIN=@save_sql_log_bin;"
+		} | docker_process_sql --dont-use-mysql-root-password --database=mysql
 		# tell docker_process_sql to not use MYSQL_ROOT_PASSWORD since it is not set yet
 	fi
 	# Generate random root password
