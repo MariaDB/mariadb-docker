@@ -505,6 +505,21 @@ fi
 	cnt=$(mariadbclient --skip-column-names -B -u root -e 'SELECT COUNT(*) FROM information_schema.innodb_tablespaces_encryption')
 	[ "$cnt" -gt 0 ] || die 'Failed to initialize encryption on initialization'
 	killoff
+	;&
+binlog)
+
+	echo -e "Test: Ensure timezoneinfo isn't written to binary log\n"
+
+	runandwait -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}" --log-bin --log-basename=my-mariadb
+	readarray -t vals < <(mariadbclient -u root --batch --skip-column-names -e 'show master status\G')
+	lastfile="${vals[1]}"
+	pos="${vals[2]}"
+	[[ "$lastfile" = my-mariadb-bin.00000[12] ]] || die "too many binlog files"
+	[ "$pos" -lt 500 ] || die 'binary log too big'
+	docker exec "$cid" ls -la /var/lib/mysql/my-mariadb-bin.000001
+	docker exec "$cid" sh -c '[ $(wc -c < /var/lib/mysql/my-mariadb-bin.000001 ) -gt 500 ]' && die 'binary log 1 too big'
+	docker exec "$cid" sh -c "[ \$(wc -c < /var/lib/mysql/$lastfile ) -gt $pos ]" && die 'binary log 2 too big'
+	killoff
 # Insert new tests above by copying the comments below
 #	;&
 #	THE_TEST_NAME)
