@@ -25,7 +25,7 @@ getRemoteVersion() {
 
 	curl -fsSL "https://ftp.osuosl.org/pub/mariadb/repo/$version/ubuntu/dists/$suite/main/binary-$dpkgArch/Packages" 2>/dev/null  \
 		| tac|tac \
-		| awk -F ': ' '$1 == "Package" { pkg = $2; next } $1 == "Version" && pkg == "mariadb-server-'"$version"'" { print $2; exit }'
+		| awk -F ': ' '$1 == "Package" { pkg = $2; next } $1 == "Version" && pkg == "mariadb-server-'"$version"'" { print $2; exit }' || true
 }
 
 cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
