@@ -290,6 +290,7 @@ docker_setup_db() {
 		EOSQL
 	fi
 
+	mysql_note "Securing system users (equivalent to running mysql_secure_installation)"
 	# tell docker_process_sql to not use MARIADB_ROOT_PASSWORD since it is just now being set
 	# --binary-mode to save us from the semi-mad users go out of their way to confuse the encoding.
 	docker_process_sql --dont-use-mysql-root-password --database=mysql --binary-mode <<-EOSQL
