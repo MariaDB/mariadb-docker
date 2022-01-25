@@ -250,23 +250,8 @@ docker_sql_escape_string_literal() {
 docker_setup_db() {
 	# Load timezone info into database
 	if [ -z "$MARIADB_INITDB_SKIP_TZINFO" ]; then
-		{
-			# Aria in 10.4+ is slow due to "transactional" (crash safety)
-			# https://jira.mariadb.org/browse/MDEV-23326
-			# https://github.com/docker-library/mariadb/issues/262
-			local tztables=( time_zone time_zone_leap_second time_zone_name time_zone_transition time_zone_transition_type )
-			for table in "${tztables[@]}"; do
-				echo "/*!100400 ALTER TABLE $table TRANSACTIONAL=0 */;"
-			done
-
-			# sed is for https://bugs.mysql.com/bug.php?id=20545
-			mariadb-tzinfo-to-sql /usr/share/zoneinfo \
-				| sed 's/Local time zone must be set--see zic manual page/FCTY/'
-
-			for table in "${tztables[@]}"; do
-				echo "/*!100400 ALTER TABLE $table TRANSACTIONAL=1 */;"
-			done
-		} | docker_process_sql --dont-use-mysql-root-password --database=mysql
+		mariadb-tzinfo-to-sql --skip-write-binlog /usr/share/zoneinfo \
+			| docker_process_sql --dont-use-mysql-root-password --database=mysql
 		# tell docker_process_sql to not use MYSQL_ROOT_PASSWORD since it is not set yet
 	fi
 	# Generate random root password
