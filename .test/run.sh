@@ -391,7 +391,11 @@ fi
 	docker volume create m57
 	docker pull docker.io/library/mysql:5.7
 	runandwait -v m57:/var/lib/mysql:Z -e MYSQL_INITDB_SKIP_TZINFO=1 -e MYSQL_ROOT_PASSWORD=bob docker.io/library/mysql:5.7
-	killoff
+	# clean shutdown required
+	mariadbclient -u root -pbob -e "SHUTDOWN"
+	while docker exec "$cid" ls -a /proc; do
+		sleep 1
+	done
 
 	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
 	
