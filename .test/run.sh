@@ -392,7 +392,7 @@ fi
 	docker pull docker.io/library/mysql:5.7
 	runandwait -v m57:/var/lib/mysql:Z -e MYSQL_INITDB_SKIP_TZINFO=1 -e MYSQL_ROOT_PASSWORD=bob docker.io/library/mysql:5.7
 	# clean shutdown required
-	mariadbclient -u root -pbob -e "SHUTDOWN"
+	mariadbclient -u root -pbob -e "set global innodb_fast_shutdown=0;SHUTDOWN"
 	while docker exec "$cid" ls -a /proc; do
 		sleep 1
 	done
