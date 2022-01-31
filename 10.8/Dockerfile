@@ -131,6 +131,7 @@ RUN set -ex; \
 
 VOLUME /var/lib/mysql
 
+COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
