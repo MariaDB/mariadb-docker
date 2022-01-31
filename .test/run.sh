@@ -385,7 +385,7 @@ else
 	echo -e "Test: jemalloc skipped - unknown arch '$architecture'\n"
 fi
 
-	;&
+	;;
 	mariadbupgrade)
 	docker volume rm m57 || echo "m57 already cleaned"
 	docker volume create m57
