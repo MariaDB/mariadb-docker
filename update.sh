@@ -103,7 +103,7 @@ for version in "${versions[@]}"; do
 		backup="$backup-$version"
 	fi
 
-	cp docker-entrypoint.sh "$version/"
+	cp docker-entrypoint.sh healthcheck.sh "$version/"
 	sed -i \
 		-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
 		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
@@ -134,6 +134,7 @@ for version in "${versions[@]}"; do
 			       -e "0,/#ENDOFSUBSTITIONS/s/mysqld/mariadbd/" \
 			       -e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
 			       "$version/docker-entrypoint.sh"
+			sed -i -e '0,/#ENDOFSUBSTITIONS/s/\bmysql\b/mariadb/' "$version/healthcheck.sh"
 
 	esac
 done
