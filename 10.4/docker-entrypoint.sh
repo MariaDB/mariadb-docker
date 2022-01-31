@@ -380,8 +380,8 @@ docker_mariadb_upgrade() {
 	# docker_temp_server_stop needs authentication since
 	# upgrade ended in FLUSH PRIVILEGES
 	mysql_note "Stopping temporary server"
-	killall mysqld
-	while killall -0 mysqld ; do sleep 1; done
+	killall "$0"
+	while killall -0 "$0" ; do sleep 1; done
 	mysql_note "Temporary server stopped"
 }
 
