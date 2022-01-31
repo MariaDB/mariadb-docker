@@ -130,7 +130,8 @@ for version in "${versions[@]}"; do
 			sed -i -e '/^CMD/s/mysqld/mariadbd/' "$version/Dockerfile"
 			sed -i -e 's/mysql_upgrade\([^_]\)/mariadb-upgrade\1/' \
 			       -e 's/mysqldump/mariadb-dump/' \
-			       -e "s/mysqld\\([^']\\)/mariadbd\1/" \
+			       -e 's/mysql_install_db/mariadb-install-db/' \
+			       -e "0,/#ENDOFSUBSTITIONS/s/mysqld/mariadbd/" \
 			       -e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
 			       "$version/docker-entrypoint.sh"
 

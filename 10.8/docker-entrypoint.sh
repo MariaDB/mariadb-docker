@@ -188,12 +188,12 @@ _mariadb_fake_upgrade_info() {
 docker_init_database_dir() {
 	mysql_note "Initializing database files"
 	installArgs=( --datadir="$DATADIR" --rpm --auth-root-authentication-method=normal )
-	if { mysql_install_db --help || :; } | grep -q -- '--skip-test-db'; then
+	if { mariadb-install-db --help || :; } | grep -q -- '--skip-test-db'; then
 		# 10.3+
 		installArgs+=( --skip-test-db )
 	fi
 	# "Other options are passed to mariadbd." (so we pass all "mysqld" arguments directly here)
-	mysql_install_db "${installArgs[@]}" "${@:2}" --default-time-zone=SYSTEM --enforce-storage-engine= --skip-log-bin
+	mariadb-install-db "${installArgs[@]}" "${@:2}" --default-time-zone=SYSTEM --enforce-storage-engine= --skip-log-bin
 	_mariadb_fake_upgrade_info
 	mysql_note "Database files initialized"
 }
@@ -380,7 +380,7 @@ docker_mariadb_upgrade() {
 	# docker_temp_server_stop needs authentication since
 	# upgrade ended in FLUSH PRIVILEGES
 	mysql_note "Stopping temporary server"
-	killall mysqld
+	killall mariadbd
 	while killall -0 mariadbd ; do sleep 1; done
 	mysql_note "Temporary server stopped"
 }
@@ -420,12 +420,13 @@ _mysql_want_help() {
 }
 
 _main() {
-	# if command starts with an option, prepend mysqld
+	# if command starts with an option, prepend mariadbd
 	if [ "${1:0:1}" = '-' ]; then
 		set -- mariadbd "$@"
 	fi
 
-	# skip setup if they aren't running mariadbd or want an option that stops mysqld
+	#ENDOFSUBSTITIONS
+	# skip setup if they aren't running mysqld or want an option that stops mysqld
 	if [ "$1" = 'mariadbd' ] || [ "$1" = 'mysqld' ] && ! _mysql_want_help "$@"; then
 		mysql_note "Entrypoint script for MariaDB Server ${MARIADB_VERSION} started."
 
