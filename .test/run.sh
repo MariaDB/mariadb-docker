@@ -193,7 +193,7 @@ killoff
 	;&
 	secrets_via_file)
 
-echo -e "Test: Secrets _FILE vars shoud be same as env directly\n"
+echo -e "Test: Secrets _FILE vars should be same as env directly\n"
 
 secretdir=$(mktemp -d)
 chmod go+rx "${secretdir}"
@@ -385,7 +385,7 @@ else
 	echo -e "Test: jemalloc skipped - unknown arch '$architecture'\n"
 fi
 
-	;;
+	;&
 	mariadbupgrade)
 	docker volume rm m57 || echo "m57 already cleaned"
 	docker volume create m57
@@ -438,6 +438,8 @@ fi
 
 	echo "Final upgrade info reflects current version?"
 	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info || die "missing mysql_upgrade_info on install"
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info)
+	[[ $version =~ ^${upgradeversion} ]] || die "upgrade version didn't match current version"
 	echo
 
 	echo "Fixing back to 0 minor version"

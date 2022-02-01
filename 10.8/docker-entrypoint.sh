@@ -179,7 +179,7 @@ _mariadb_version() {
 }
 
 _mariadb_fake_upgrade_info() {
-	if [ ! -f "${DATADIR}"/mysql/mysql_upgrade_info ]; then
+	if [ ! -f "${DATADIR}"/mysql_upgrade_info ]; then
 		_mariadb_version > "${DATADIR}"/mysql_upgrade_info
 	fi
 }
@@ -367,6 +367,7 @@ docker_mariadb_upgrade() {
 	fi
 	mysql_note "Starting temporary server"
 	docker_temp_server_start "$@" --skip-grant-tables
+	local pid=$!
 	mysql_note "Temporary server started."
 
 	docker_mariadb_backup_system
@@ -380,9 +381,20 @@ docker_mariadb_upgrade() {
 	# docker_temp_server_stop needs authentication since
 	# upgrade ended in FLUSH PRIVILEGES
 	mysql_note "Stopping temporary server"
-	killall "$0"
-	while killall -0 "$0" ; do sleep 1; done
+	kill "$pid"
+	while killall -0 "$pid" ; do
+		sleep 1
+	done > /dev/null
 	mysql_note "Temporary server stopped"
+
+	local aria_control="$DATADIR"/aria_log_control
+	if [ -f "$aria_control" ]; then
+		mysql_note "Ensuring temporary server process really gone by locking $aria_control"
+		until flock --exclusive --wait 2 -n 9 9<"$aria_control"; do
+			mysql_note "Waiting 2 more seconds ..."
+		done
+		sleep 2
+	fi
 }
 
 
