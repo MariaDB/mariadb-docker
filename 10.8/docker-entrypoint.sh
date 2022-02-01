@@ -292,6 +292,31 @@ docker_setup_db() {
 		EOSQL
 	fi
 
+	local mysqlAtLocalhost=
+	local mysqlAtLocalhostGrants=
+	# Install mysql@localhost user
+	if [ -n "$MARIADB_MYSQL_LOCALHOST_USER" ] || [ -n "$MARIADB_MYSQL_LOCALHOST_GRANTS" ]; then
+		local pw=
+		pw="$(pwgen --numerals --capitalize --symbols --remove-chars="'\\" -1 32)"
+		# MDEV-24111 before MariaDB-10.4 cannot create unix_socket user directly auth with simple_password_check
+		# It wasn't until 10.4 that the unix_socket auth was built in to the server.
+		read -r -d '' mysqlAtLocalhost <<-EOSQL || true
+		EXECUTE IMMEDIATE IF(VERSION() RLIKE '^10\.[23]\.',
+			"INSTALL PLUGIN /*M10401 IF NOT EXISTS */ unix_socket SONAME 'auth_socket'",
+			"SELECT 'already there'");
+		CREATE USER mysql@localhost IDENTIFIED BY '$pw';
+		ALTER USER mysql@localhost IDENTIFIED VIA unix_socket;
+		EOSQL
+		if [ -n "$MARIADB_MYSQL_LOCALHOST_GRANTS" ]; then
+			if [[ "$MARIADB_MYSQL_LOCALHOST_GRANTS" = ALL* ]] || \
+			   [[ "$MARIADB_MYSQL_LOCALHOST_GRANTS" = *UPDATE* ]] || \
+			   [[ "$MARIADB_MYSQL_LOCALHOST_GRANTS" = *INSERT* ]]; then
+				mysql_warn "ALL/INSERT/UPDATE privileges ON *.* TO mysql@localhost facilitates privilege escalation, recommending limiting to required privileges"
+			fi
+			mysqlAtLocalhostGrants="GRANT ${MARIADB_MYSQL_LOCALHOST_GRANTS} ON *.* TO mysql@localhost;";
+		fi
+	fi
+
 	mysql_note "Securing system users (equivalent to running mysql_secure_installation)"
 	# tell docker_process_sql to not use MARIADB_ROOT_PASSWORD since it is just now being set
 	# --binary-mode to save us from the semi-mad users go out of their way to confuse the encoding.
@@ -307,6 +332,8 @@ docker_setup_db() {
 
 		SET PASSWORD FOR 'root'@'localhost'=PASSWORD('${rootPasswordEscaped}') ;
 		${rootCreate}
+		${mysqlAtLocalhost}
+		${mysqlAtLocalhostGrants}
 		-- pre-10.3
 		DROP DATABASE IF EXISTS test ;
 	EOSQL
