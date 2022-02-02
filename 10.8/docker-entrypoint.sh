@@ -191,6 +191,9 @@ docker_init_database_dir() {
 	if { mariadb-install-db --help || :; } | grep -q -- '--skip-test-db'; then
 		# 10.3+
 		installArgs+=( --skip-test-db )
+	else
+		# 10.2 only
+		installArgs+=( --skip-auth-anonymous-user )
 	fi
 	# "Other options are passed to mariadbd." (so we pass all "mysqld" arguments directly here)
 	mariadb-install-db "${installArgs[@]}" "${@:2}" --default-time-zone=SYSTEM --enforce-storage-engine= --skip-log-bin
