@@ -298,15 +298,12 @@ docker_setup_db() {
                 -- we need the SQL_MODE NO_BACKSLASH_ESCAPES mode to be clear for the password to be set
 		SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
 
-		DELETE FROM mysql.user WHERE user NOT IN ('mysql.sys', 'mariadb.sys', 'mysqlxsys', 'root') OR host NOT IN ('localhost') ;
-		SET PASSWORD FOR 'root'@'localhost'=PASSWORD('${rootPasswordEscaped}') ;
-		-- 10.1: https://github.com/MariaDB/server/blob/d925aec1c10cebf6c34825a7de50afe4e630aff4/scripts/mysql_secure_installation.sh#L347-L365
-		-- 10.5: https://github.com/MariaDB/server/blob/00c3a28820c67c37ebbca72691f4897b57f2eed5/scripts/mysql_secure_installation.sh#L351-L369
-		DELETE FROM mysql.db WHERE Db='test' OR Db='test\_%' ;
+		DROP USER IF EXISTS root@'127.0.0.1', root@'::1';
+		EXECUTE IMMEDIATE CONCAT('drop user root@\'', @@hostname,'\'');
 
-		GRANT ALL ON *.* TO 'root'@'localhost' WITH GRANT OPTION ;
-		FLUSH PRIVILEGES ;
+		SET PASSWORD FOR 'root'@'localhost'=PASSWORD('${rootPasswordEscaped}') ;
 		${rootCreate}
+		-- pre-10.3
 		DROP DATABASE IF EXISTS test ;
 	EOSQL
 
