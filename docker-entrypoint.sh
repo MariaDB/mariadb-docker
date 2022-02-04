@@ -121,7 +121,7 @@ mysql_get_config() {
 # Do a temporary startup of the MariaDB server, for init purposes
 docker_temp_server_start() {
 	"$@" --skip-networking --default-time-zone=SYSTEM --socket="${SOCKET}" --wsrep_on=OFF --skip-log-bin \
-		--loose-innodb_buffer_pool_load_at_startup=0 --loose-innodb_buffer_pool_dump_at_shutdown=0 &
+		--loose-innodb_buffer_pool_load_at_startup=0 &
 	mysql_note "Waiting for server startup"
 	# only use the root password if the database has already been initializaed
 	# so that it won't try to fill in a password file when it hasn't been set yet
@@ -197,7 +197,10 @@ docker_init_database_dir() {
 		installArgs+=( --skip-auth-anonymous-user )
 	fi
 	# "Other options are passed to mysqld." (so we pass all "mysqld" arguments directly here)
-	mysql_install_db "${installArgs[@]}" "${@:2}" --default-time-zone=SYSTEM --enforce-storage-engine= --skip-log-bin
+	mysql_install_db "${installArgs[@]}" "${@:2}" \
+		--default-time-zone=SYSTEM --enforce-storage-engine= --skip-log-bin \
+		--loose-innodb_buffer_pool_load_at_startup=0 \
+		--loose-innodb_buffer_pool_dump_at_shutdown=0
 	_mariadb_fake_upgrade_info
 	mysql_note "Database files initialized"
 }
@@ -367,7 +370,8 @@ docker_mariadb_upgrade() {
 		return
 	fi
 	mysql_note "Starting temporary server"
-	docker_temp_server_start "$@" --skip-grant-tables
+	docker_temp_server_start "$@" --skip-grant-tables \
+		--loose-innodb_buffer_pool_dump_at_shutdown=0
 	local pid=$!
 	mysql_note "Temporary server started."
 
