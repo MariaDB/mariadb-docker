@@ -303,7 +303,7 @@ docker_setup_db() {
 		SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
 
 		DROP USER IF EXISTS root@'127.0.0.1', root@'::1';
-		EXECUTE IMMEDIATE CONCAT('drop user root@\'', @@hostname,'\'');
+		EXECUTE IMMEDIATE CONCAT('DROP USER IF EXISTS root@\'', @@hostname,'\'');
 
 		SET PASSWORD FOR 'root'@'localhost'=PASSWORD('${rootPasswordEscaped}') ;
 		${rootCreate}
