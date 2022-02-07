@@ -19,6 +19,7 @@
 #
 # TEST                      GRANTS REQUIRED
 # connect                   none*
+# innodb_initialized        USAGE
 # innodb_buffer_pool_loaded USAGE
 # galera_online             USAGE
 # replication               SUPER or REPLICATION_CLIENT or REPLICA MONITOR (10.5+)
@@ -69,6 +70,20 @@ connect()
 	return 0
 }
 
+# INNODB_INITIALIZED
+#
+# This tests that the crash recovery of InnoDB has completed
+# along with all the other things required to make it to a healthy
+# operational state. Note this may return true in the early
+# states of initialization. Use with a connect test to avoid
+# these false positives.
+innodb_initialized()
+{
+	local s
+	s=$(_process_sql --skip-column-names -e 'select 1 from information_schema.ENGINES WHERE engine="innodb" AND support in ("YES", "DEFAULT", "ENABLED")')
+	[ "$s" == 1 ]
+}
+
 # INNODB_BUFFER_POOL_LOADED
 #
 # Tests the load of the innodb buffer pool as been complete
@@ -84,10 +99,10 @@ innodb_buffer_pool_loaded()
 	return 1
 }
 
-# GALERAONLINE
+# GALERA_ONLINE
 #
 # Tests that the galera node is in the SYNCed state
-galeraonline()
+galera_online()
 {
 	local s
 	s=$(_process_sql --skip-column-names -e 'select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME="WSREP_LOCAL_STATE"')
