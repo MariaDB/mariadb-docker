@@ -141,10 +141,10 @@ docker_temp_server_start() {
 	fi
 }
 
-# Stop the server. When using a local socket file mysqladmin will block until
+# Stop the server. When using a local socket file mariadb-admin will block until
 # the shutdown is complete.
 docker_temp_server_stop() {
-	if ! MYSQL_PWD=$MARIADB_ROOT_PASSWORD mysqladmin shutdown -uroot --socket="${SOCKET}"; then
+	if ! MYSQL_PWD=$MARIADB_ROOT_PASSWORD mariadb-admin shutdown -uroot --socket="${SOCKET}"; then
 		mysql_error "Unable to shut down server."
 	fi
 }
@@ -241,7 +241,7 @@ docker_exec_client() {
 	if [ -n "$MYSQL_DATABASE" ]; then
 		set -- --database="$MYSQL_DATABASE" "$@"
 	fi
-	mysql --protocol=socket -uroot -hlocalhost --socket="${SOCKET}" "$@"
+	mariadb --protocol=socket -uroot -hlocalhost --socket="${SOCKET}" "$@"
 }
 
 # Execute sql script, passed via stdin
