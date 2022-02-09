@@ -34,7 +34,7 @@ jobs:
         name: Generate Jobs
         run: |
           git clone --depth 1 https://github.com/docker-library/bashbrew.git -b master ~/bashbrew
-          strategy="$(~/bashbrew/scripts/github-actions/generate.sh | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | select(.name != "10.8-focal") | .runs.mariadbtest = "./.test/run.sh " + $tag)')"
+          strategy="$(~/bashbrew/scripts/github-actions/generate.sh | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | select(.name != "10.9-jammy") | .runs.mariadbtest = "./.test/run.sh " + $tag)')"
           jq . <<<"$strategy" # sanity check / debugging aid
           echo "::set-output name=strategy::$strategy"
 
