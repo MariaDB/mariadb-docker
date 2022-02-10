@@ -311,10 +311,8 @@ docker_setup_db() {
 		ALTER USER mysql@localhost IDENTIFIED VIA unix_socket;
 		EOSQL
 		if [ -n "$MARIADB_MYSQL_LOCALHOST_GRANTS" ]; then
-			if [[ "$MARIADB_MYSQL_LOCALHOST_GRANTS" = ALL* ]] || \
-			   [[ "$MARIADB_MYSQL_LOCALHOST_GRANTS" = *UPDATE* ]] || \
-			   [[ "$MARIADB_MYSQL_LOCALHOST_GRANTS" = *INSERT* ]]; then
-				mysql_warn "ALL/INSERT/UPDATE privileges ON *.* TO mysql@localhost facilitates privilege escalation, recommending limiting to required privileges"
+			if [ "$MARIADB_MYSQL_LOCALHOST_GRANTS" != USAGE ]; then
+				mysql_warn "Excessive privileges ON *.* TO mysql@localhost facilitates risks to the confidentiality, integrity and availability of data stored"
 			fi
 			mysqlAtLocalhostGrants="GRANT ${MARIADB_MYSQL_LOCALHOST_GRANTS} ON *.* TO mysql@localhost;";
 		fi
