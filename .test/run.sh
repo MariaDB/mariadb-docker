@@ -430,7 +430,7 @@ fi
 	runandwait -v m57:/var/lib/mysql:Z -e MYSQL_INITDB_SKIP_TZINFO=1 -e MYSQL_ROOT_PASSWORD=bob docker.io/library/mysql:5.7
 	# clean shutdown required
 	mariadbclient -u root -pbob -e "set global innodb_fast_shutdown=0;SHUTDOWN"
-	while docker exec "$cid" ls -a /proc; do
+	while docker exec "$cid" ls -lad /proc/1; do
 		sleep 1
 	done
 
@@ -446,11 +446,6 @@ fi
 
 	docker exec "$cid" ls -la /var/lib/mysql/
 
-	# TODO, disable further tests until git branch --contains 0fd4d6d3bb77b9072305f0b1d5bebfb914ad55cc
-	killoff
-	docker volume rm m57
-	exit 0
-	# ENDOFTODO
 	echo "Final upgrade info reflects current version?"
 	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info || die "missing mysql_upgrade_info on install"
 	echo

@@ -179,12 +179,6 @@ _mariadb_version() {
 	echo -n "${mariaVersion}-MariaDB"
 }
 
-_mariadb_fake_upgrade_info() {
-	if [ ! -f "${DATADIR}"/mysql_upgrade_info ]; then
-		_mariadb_version > "${DATADIR}"/mysql_upgrade_info
-	fi
-}
-
 # initializes the database directory
 docker_init_database_dir() {
 	mysql_note "Initializing database files"
@@ -201,7 +195,6 @@ docker_init_database_dir() {
 		--default-time-zone=SYSTEM --enforce-storage-engine= --skip-log-bin \
 		--loose-innodb_buffer_pool_load_at_startup=0 \
 		--loose-innodb_buffer_pool_dump_at_shutdown=0
-	_mariadb_fake_upgrade_info
 	mysql_note "Database files initialized"
 }
 
@@ -403,9 +396,7 @@ docker_mariadb_upgrade() {
 	docker_mariadb_backup_system
 
 	mysql_note "Starting mariadb-upgrade"
-	mysql_upgrade --upgrade-system-tables || true # permission denied fixed in Jan 2022 release?
-	# _mariadb_fake_upgrade_info Possibly fixed by MDEV-27068
-        _mariadb_fake_upgrade_info
+	mysql_upgrade --upgrade-system-tables
 	mysql_note "Finished mariadb-upgrade"
 
 	# docker_temp_server_stop needs authentication since
