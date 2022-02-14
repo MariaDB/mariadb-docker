@@ -291,7 +291,7 @@ docker_setup_db() {
 	local mysqlAtLocalhost=
 	local mysqlAtLocalhostGrants=
 	# Install mysql@localhost user
-	if [ -n "$MARIADB_MYSQL_LOCALHOST_USER" ] || [ -n "$MARIADB_MYSQL_LOCALHOST_GRANTS" ]; then
+	if [ -n "$MARIADB_MYSQL_LOCALHOST_USER" ]; then
 		local pw=
 		pw="$(pwgen --numerals --capitalize --symbols --remove-chars="'\\" -1 32)"
 		# MDEV-24111 before MariaDB-10.4 cannot create unix_socket user directly auth with simple_password_check
