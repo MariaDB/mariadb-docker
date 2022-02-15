@@ -573,7 +573,7 @@ _main() {
 			mysql_note "Galera cluster addresses ${WSREP_CLUSTER_ADDRESS}"
 
 			# determine if this node is used for cluster bootstrapping. Skip it when cluster was already bootstrapped
-			if wsrep_enable_new_cluster "${WSREP_CLUSTER_ADDRESS}" "$@"; then
+			if [ ! -s "${DATADIR}"/gvwstate.dat ] && wsrep_enable_new_cluster "${WSREP_CLUSTER_ADDRESS}" "$@"; then
 				mysql_note "Enabled Galera cluster bootstrapping for this node"
 				set -- "$@" --wsrep-new-cluster
 			fi
