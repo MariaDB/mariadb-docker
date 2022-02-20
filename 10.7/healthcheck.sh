@@ -242,7 +242,7 @@ _test_exists() {
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--su=*)
-			u="${1#*-}"
+			u="${1#*=}"
 			shift
 			exec gosu "${u}" "${BASH_SOURCE[0]}" "$@"
 			;;
