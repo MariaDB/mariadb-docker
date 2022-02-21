@@ -404,19 +404,8 @@ docker_mariadb_upgrade() {
 	# upgrade ended in FLUSH PRIVILEGES
 	mysql_note "Stopping temporary server"
 	kill "$MARIADB_PID"
-	while killall -0 "$MARIADB_PID" ; do
-		sleep 1
-	done > /dev/null
+	wait "$MARIADB_PID"
 	mysql_note "Temporary server stopped"
-
-	local aria_control="$DATADIR"/aria_log_control
-	if [ -f "$aria_control" ]; then
-		mysql_note "Ensuring temporary server process really gone by locking $aria_control"
-		until flock --exclusive --wait 2 -n 9 9<"$aria_control"; do
-			mysql_note "Waiting 2 more seconds ..."
-		done
-		sleep 2
-	fi
 }
 
 
