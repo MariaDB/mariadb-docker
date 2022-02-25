@@ -82,7 +82,7 @@ If you are considering submitting a feature or pull request, be sure to check ou
 
 The development of the container image here aims to provide complete backwards compatibility for existing users. If there is a case where the container previously started and behaved in a certain way, after your change, it should, under the same circumstances, behave in the same way.
 
-Please update the tests to verify the behavor of your bug fix or feature request in the [.test](https://github.com/MariaDB/mariadb-docker/tree/master/.test) directory by extending [run.sh](https://github.com/MariaDB/mariadb-docker/blob/master/.test/run.sh) and including supporting files. Tests here run on [GitHub Actions](https://github.com/MariaDB/mariadb-docker/actions) and also in [Buildbot](https://buildbot.mariadb.org/) (Soon) so please avoid adding uncommon dependencies to running a test if possible. If additional dependencies are needed, please check for their existence and skip the test if this isn't available.
+Please update the tests to verify the behaviour of your bug fix or feature request in the [.test](https://github.com/MariaDB/mariadb-docker/tree/master/.test) directory by extending [run.sh](https://github.com/MariaDB/mariadb-docker/blob/master/.test/run.sh) and including supporting files. Tests here run on [GitHub Actions](https://github.com/MariaDB/mariadb-docker/actions) and also in [Buildbot](https://buildbot.mariadb.org/) (Soon) so please avoid adding uncommon dependencies to running a test if possible. If additional dependencies are needed, please check for their existence and skip the test if this isn't available.
 
 Changes to the Dockerfile should be done at the top level [Docker.template](https://github.com/MariaDB/mariadb-docker/blob/master/Dockerfile.template) and entrypoint changes in [entrypoint.sh](https://github.com/MariaDB/mariadb-docker/blob/master/docker-entrypoint.sh). Run [update.sh](https://github.com/MariaDB/mariadb-docker/blob/master/update.sh) to propagate these changes to the major version (10.X) folders underneath.
 
@@ -93,6 +93,14 @@ Please write code in a similar style to what is already there. Use tab indents o
 `_xxx` functions are intended for internal use and may be changed in the future. If you write a shell function that might be useful to a `/docker-entrypoint-initdb.d` script to use, prefix it with `docker_` and it will be considered a stable script interface.
 
 If you need a change to occur in a specific major version only, change the `update.sh` script to ensure that its `Dockerfile` / `docker-entrypoint.sh` generates version-specific changes.
+
+#### Branches
+
+There are two permanent branches:
+* master - changes that work with the currently released MariaDB packages go here.
+* next - changes that work with currently unreleased MariaDB code changes, including unreleased MariaDB versions.
+
+The "next" branch may be rebased on master occasionally and will be used in the [buildbot testing](https://buildbot.mariadb.org/#/builders/amd64-rhel8-dockerlibrary).
 
 ### Testing Changes
 
