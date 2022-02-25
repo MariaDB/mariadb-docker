@@ -2,11 +2,19 @@ name: GitHub CI
 
 on:
   pull_request:
+    branches-ignore:
+      - next
+    paths-ignore:
+      - Dockerfile.template
+      - LICENSE
+      - README.md
   push:
-  branches-ignore:
-    - next
-  schedule:
-    - cron: 0 0 * * 0
+    branches-ignore:
+      - next
+    paths-ignore:
+      - Dockerfile.template
+      - LICENSE
+      - README.md
 
 defaults:
   run:
