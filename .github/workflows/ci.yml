@@ -3,6 +3,8 @@ name: GitHub CI
 on:
   pull_request:
   push:
+  branches-ignore:
+    - next
   schedule:
     - cron: 0 0 * * 0
 
