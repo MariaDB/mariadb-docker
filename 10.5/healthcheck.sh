@@ -17,12 +17,12 @@
 #
 # Some tests require SQL privileges.
 #
-# TEST                      GRANTS REQUIRED
+# TEST                      MINIMUM GRANTS REQUIRED
 # connect                   none*
 # innodb_initialized        USAGE
 # innodb_buffer_pool_loaded USAGE
 # galera_online             USAGE
-# replication               SUPER or REPLICATION_CLIENT or REPLICA MONITOR (10.5+)
+# replication               REPLICATION_CLIENT (<10.5)or REPLICA MONITOR (10.5+)
 # mariadbupgrade            none, however unix user permissions on datadir
 #
 # The SQL user used is the default for the mysql client. This can be the unix user
@@ -233,7 +233,7 @@ _repl_param_check()
 }
 
 _test_exists() {
-    declare -F "$1"
+    declare -F "$1" > /dev/null
     return $?
 }
 
@@ -245,6 +245,12 @@ while [ $# -gt 0 ]; do
 			u="${1#*=}"
 			shift
 			exec gosu "${u}" "${BASH_SOURCE[0]}" "$@"
+			;;
+		--su)
+			shift
+			u=$1
+			shift
+			exec gosu "$u" "${BASH_SOURCE[0]}" "$@"
 			;;
 		--su-mysql)
 			shift
@@ -276,6 +282,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--datadir=*)
 			datadir=${1#*=}
+			;;
+		--datadir)
+			shift
+			datadir=${1}
 			;;
 		--no-defaults)
 			unset def
@@ -310,12 +320,13 @@ while [ $# -gt 0 ]; do
 	esac
 	if [ -n "$test" ]; then
 		if ! _test_exists "$test" ; then
-			echo "healthcheck unknown test '$test'" >&2
+			echo "healthcheck unknown option or test '$test'" >&2
 			exit 1
 		elif ! "$test"; then
 			echo "healthcheck $test failed" >&2
 			exit 1
 		fi
+		test=
 	fi
 	shift
 done
