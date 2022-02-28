@@ -391,7 +391,8 @@ docker_mariadb_upgrade() {
 	fi
 	mysql_note "Starting temporary server"
 	docker_temp_server_start "$@" --skip-grant-tables \
-		--loose-innodb_buffer_pool_dump_at_shutdown=0
+		--loose-innodb_buffer_pool_dump_at_shutdown=0 \
+		--skip-slave-start
 	mysql_note "Temporary server started."
 
 	docker_mariadb_backup_system
