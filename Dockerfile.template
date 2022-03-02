@@ -110,6 +110,8 @@ RUN set -ex; \
 		%%BACKUP_PACKAGE%% \
 		socat \
 	; \
+# Temporary work around for MDEV-27980, closes #417
+	sed --follow-symlinks -i -e 's/--loose-disable-plugin-file-key-management//' /usr/bin/mysql_install_db ; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership
 	rm -rf /var/lib/mysql; \
