@@ -502,7 +502,6 @@ fi
 	mariadbclient -u root -e 'SELECT * FROM information_schema.innodb_tablespaces_encryption' || die 'Failed to start container'
 
 
-	docker exec "$cid" ls -la /usr/bin/{mariadb-install-db,mysql_install_db} || die "missing install_db on install"
 	cnt=$(mariadbclient --skip-column-names -B -u root -e 'SELECT COUNT(*) FROM information_schema.innodb_tablespaces_encryption')
 	[ "$cnt" -gt 0 ] || die 'Failed to initialize encryption on initialization'
 	killoff
