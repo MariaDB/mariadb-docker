@@ -1,0 +1,29 @@
+[mariadb]
+
+# From https://mariadb.com/kb/en/file-key-management-encryption-plugin/#creating-the-key-file
+# for a in $(seq 4) ; do echo -n $a\; ; openssl rand -hex 32 ; done > keys
+# openssl rand -hex 128 > password_file.key
+# openssl enc -aes-256-cbc -md sha1 \
+#   -pass file:password_file.key \
+#   -in keys 
+#   -out keys.enc
+# rm keys
+plugin_load_add = file_key_management
+#file_key_management_filename = /etc/mysql/encryption/keys
+file_key_management_filename = /etc/encryption/keys.enc
+#file_key_management_filekey = 453c871814f9fa4fb48244a0da7c0a26ec884f05583e93c86bd72261121e632d8e4b6847c5ab8a5c1dacfceff7dd8cf96b3dbc585d7cfc593f3b1e83feea815d026a25cda9b9cf45c79f9babdc782cdf8398e3ef10fd0c11bb7b8a3bb672a548e8cb6d27fed5a2b52d14b11eb0616909ba5b0333360b62dc294c3da2c628d3ea
+file_key_management_filekey = FILE:/etc/encryption/password_file.key
+file_key_management_encryption_algorithm = AES_CBC
+ 
+innodb_encrypt_tables = ON
+innodb_encrypt_log = ON
+innodb_encryption_threads = 4
+innodb_encryption_rotate_key_age = 0 # Do not rotate key
+
+# Aria Encryption Setup
+aria_encrypt_tables = ON
+
+# Temp & Log Encryption
+encrypt-tmp-disk-tables = 1
+encrypt-tmp-files = 1
+encrypt_binlog = ON
