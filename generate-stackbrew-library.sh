@@ -62,14 +62,23 @@ for version in "${versions[@]}"; do
 	commit="$(dirCommit "$version")"
 
 	fullVersion="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "ARG" && $2 ~ "MARIADB_VERSION=" { gsub(/^MARIADB_VERSION=([0-9]+:)|[+].*$/, "", $2); print $2; exit }')"
-
-	versionAliases=( $fullVersion )
-	if [ "$version" != "$fullVersion" ]; then
-		versionAliases+=( $version )
-	fi
-	versionAliases+=( ${aliases[$version]:-} )
-
 	releaseStatus="$(grep -m1 'release-status:' "$version/Dockerfile" | cut -d':' -f2)"
+
+	case $releaseStatus in
+	Stable) ;&
+	Old\ Stable)
+		suffix=
+		;;
+	*)
+		suffix=-${releaseStatus,,*}
+	esac
+	versionAliases=( ${fullVersion}${suffix} )
+
+	if [ "$version" != "$fullVersion" ]; then
+		versionAliases+=( ${version}${suffix} )
+	fi
+
+	versionAliases+=( ${aliases[$version]:-} )
 	if [ "$releaseStatus" = 'Stable' ]; then
 		for tryAlias in "${version%%.*}" latest; do
 			if [ -z "${latest[$tryAlias]:-}" ]; then
