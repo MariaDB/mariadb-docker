@@ -38,14 +38,14 @@ update_version()
 	fi
 
 	cp Dockerfile.template "$version/Dockerfile"
-	
+
 	backup='mariadb-backup'
 	# shellcheck disable=SC2072
 	if [[ "$version" < "10.3" ]]; then
 		# 10.2 has mariadb major version in the package name
 		backup="$backup-$version"
 	fi
-	
+
 	cp docker-entrypoint.sh healthcheck.sh "$version/"
 	chmod a+x "$version"/healthcheck.sh
 	sed -i \
@@ -63,6 +63,7 @@ update_version()
 		10.2)
 			sed -i -e 's/libjemalloc2/libjemalloc1/' "$version/Dockerfile"
 			;;
+		10.3 | 10.4) ;; # nothing to see/do here
 		10.5)
 			sed -i '/backwards compat/d' "$version/Dockerfile"
 			;;
