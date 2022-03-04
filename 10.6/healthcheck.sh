@@ -201,11 +201,13 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
+# Marks the end of mariadb -> mariadb name changes in 10.6+
+#ENDOFSUBSTITIONS
 # Global variables used by tests
 declare -A repl
 declare -A def
 nodefaults=
-datadir=/var/lib/mariadb
+datadir=/var/lib/mysql
 
 _repl_param_check()
 {
@@ -237,8 +239,6 @@ _test_exists() {
     return $?
 }
 
-# Marks the end of mariadb -> mariadb name changes in 10.6+
-#ENDOFSUBSTITUTIONS
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--su=*)
@@ -252,9 +252,9 @@ while [ $# -gt 0 ]; do
 			shift
 			exec gosu "$u" "${BASH_SOURCE[0]}" "$@"
 			;;
-		--su-mariadb)
+		--su-mysql)
 			shift
-			exec gosu mariadb "${BASH_SOURCE[0]}" "$@"
+			exec gosu mysql "${BASH_SOURCE[0]}" "$@"
 			;;
 		--replication_*=*)
 			# Change the n to what is between _ and = and make lower case

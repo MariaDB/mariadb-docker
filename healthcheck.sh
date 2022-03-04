@@ -201,6 +201,8 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
+# Marks the end of mysql -> mariadb name changes in 10.6+
+#ENDOFSUBSTITIONS
 # Global variables used by tests
 declare -A repl
 declare -A def
@@ -237,8 +239,6 @@ _test_exists() {
     return $?
 }
 
-# Marks the end of mysql -> mariadb name changes in 10.6+
-#ENDOFSUBSTITUTIONS
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--su=*)
