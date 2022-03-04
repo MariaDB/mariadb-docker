@@ -252,6 +252,7 @@ while [ $# -gt 0 ]; do
 			shift
 			exec gosu "$u" "${BASH_SOURCE[0]}" "$@"
 			;;
+		--su-mariadb) ;& # compatible with prev mistake
 		--su-mysql)
 			shift
 			exec gosu mysql "${BASH_SOURCE[0]}" "$@"
