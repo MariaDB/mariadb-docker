@@ -4,7 +4,6 @@ set -Eeuo pipefail
 # Usage ./update.sh [version(multiple)...]
 #
 
-set -x -v
 defaultSuite='jammy'
 declare -A suites=(
 	[10.2]='bionic'
