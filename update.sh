@@ -4,9 +4,14 @@ set -Eeuo pipefail
 # Usage ./update.sh [version(multiple)...]
 #
 
-defaultSuite='focal'
+defaultSuite='jammy'
 declare -A suites=(
 	[10.2]='bionic'
+	[10.3]='focal'
+	[10.4]='focal'
+	[10.5]='focal'
+	[10.6]='focal'
+	[10.7]='focal'
 )
 declare -A dpkgArchToBashbrew=(
 	[amd64]='amd64'
