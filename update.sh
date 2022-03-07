@@ -75,10 +75,10 @@ update_version()
 			       -e 's/mysqladmin/mariadb-admin/' \
 			       -e 's/\bmysql --protocol\b/mariadb --protocol/' \
 			       -e 's/mysql_install_db/mariadb-install-db/' \
-			       -e "0,/#ENDOFSUBSTITIONS/s/mysqld/mariadbd/" \
+			       -e "0,/#ENDOFSUBSTITUTIONS/s/mysqld/mariadbd/" \
 			       -e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
 			       "$version/docker-entrypoint.sh"
-			sed -i -e '0,/#ENDOFSUBSTITIONS/s/\bmysql\b/mariadb/' "$version/healthcheck.sh"
+			sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\bmysql\b/mariadb/' "$version/healthcheck.sh"
 			;;
 		esac
 }

@@ -449,7 +449,7 @@ _main() {
 		set -- mysqld "$@"
 	fi
 
-	#ENDOFSUBSTITIONS
+	#ENDOFSUBSTITUTIONS
 	# skip setup if they aren't running mysqld or want an option that stops mysqld
 	if [ "$1" = 'mariadbd' ] || [ "$1" = 'mysqld' ] && ! _mysql_want_help "$@"; then
 		mysql_note "Entrypoint script for MariaDB Server ${MARIADB_VERSION} started."

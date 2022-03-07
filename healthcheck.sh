@@ -202,7 +202,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # Marks the end of mysql -> mariadb name changes in 10.6+
-#ENDOFSUBSTITIONS
+#ENDOFSUBSTITUTIONS
 # Global variables used by tests
 declare -A repl
 declare -A def
@@ -252,7 +252,6 @@ while [ $# -gt 0 ]; do
 			shift
 			exec gosu "$u" "${BASH_SOURCE[0]}" "$@"
 			;;
-		--su-mariadb) ;& # compatible with prev mistake
 		--su-mysql)
 			shift
 			exec gosu mysql "${BASH_SOURCE[0]}" "$@"
