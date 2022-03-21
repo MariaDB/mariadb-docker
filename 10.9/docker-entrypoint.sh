@@ -120,7 +120,7 @@ mysql_get_config() {
 
 # Do a temporary startup of the MariaDB server, for init purposes
 docker_temp_server_start() {
-	"$@" --skip-networking --default-time-zone=SYSTEM --socket="${SOCKET}" --wsrep_on=OFF --skip-log-bin \
+	"$@" --skip-networking --default-time-zone=SYSTEM --socket="${SOCKET}" --wsrep_on=OFF \
 		--loose-innodb_buffer_pool_load_at_startup=0 &
 	declare -g MARIADB_PID
 	MARIADB_PID=$!
@@ -449,7 +449,7 @@ _main() {
 		set -- mariadbd "$@"
 	fi
 
-	#ENDOFSUBSTITIONS
+	#ENDOFSUBSTITUTIONS
 	# skip setup if they aren't running mysqld or want an option that stops mysqld
 	if [ "$1" = 'mariadbd' ] || [ "$1" = 'mysqld' ] && ! _mysql_want_help "$@"; then
 		mysql_note "Entrypoint script for MariaDB Server ${MARIADB_VERSION} started."
