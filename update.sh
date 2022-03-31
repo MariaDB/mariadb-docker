@@ -118,14 +118,14 @@ all()
 	done
 }
 
-development_version=10.9
+development_version=10.10
 
 in_development()
 {
 	releaseStatus=Alpha
 	version=$development_version
 	mariaVersion=${development_version}.0
-	update_version
+	[ -d "$development_version" ] && update_version
 }
 
 
