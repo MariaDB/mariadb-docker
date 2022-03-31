@@ -39,7 +39,7 @@ trap "killoff" EXIT
 
 runandwait()
 {
-	cname="mariadb-container-$RANDOM-$RANDOM"
+	cname="mariadbcontainer$RANDOM"
 	cid="$(
 		docker run -d \
 			--name "$cname" --rm --publish 3306 "$@"
