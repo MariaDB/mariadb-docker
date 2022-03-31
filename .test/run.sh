@@ -552,8 +552,8 @@ binlog)
 		--health-interval=3s \
 		"$image" --server-id=2 --port 3307)
 
-	c=13
-	until docker exec "$cid" healthcheck.sh --su-mysql --connect --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ $c -eq 0 ]
+	c="${DOCKER_LIBRARY_START_TIMEOUT:-10}"
+	until docker exec "$cid" healthcheck.sh --su-mysql --connect --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ "$c" -eq 0 ]
 	do
 		sleep 1
 		c=$(( c - 1 ))
