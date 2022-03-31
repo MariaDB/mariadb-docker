@@ -21,6 +21,11 @@ killoff()
 	       docker rm -v -f "$cid" > /dev/null || true
 	fi
 	cid=""
+	if [ -n "$master_host" ]; then
+		cid=$master_host
+		master_host=""
+		killoff
+	fi
 }
 
 die()
@@ -510,15 +515,61 @@ binlog)
 
 	echo -e "Test: Ensure timezoneinfo isn't written to binary log\n"
 
-	runandwait -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}" --log-bin --log-basename=my-mariadb
+	runandwait \
+		-v "${dir}"/initdb.d:/docker-entrypoint-initdb.d:Z \
+		-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
+		-e MARIADB_USER=bob \
+		-e MARIADB_PASSWORD=roger \
+		-e MARIADB_DATABASE=rabbit \
+		"${image}" --log-bin --log-basename=my-mariadb
 	readarray -t vals < <(mariadbclient -u root --batch --skip-column-names -e 'show master status\G')
 	lastfile="${vals[1]}"
 	pos="${vals[2]}"
 	[[ "$lastfile" = my-mariadb-bin.00000[12] ]] || die "too many binlog files"
 	[ "$pos" -lt 500 ] || die 'binary log too big'
 	docker exec "$cid" ls -la /var/lib/mysql/my-mariadb-bin.000001
-	docker exec "$cid" sh -c '[ $(wc -c < /var/lib/mysql/my-mariadb-bin.000001 ) -gt 500 ]' && die 'binary log 1 too big'
+	docker exec "$cid" sh -c '[ $(wc -c < /var/lib/mysql/my-mariadb-bin.000001 ) -gt 2500 ]' && die 'binary log 1 too big'
 	docker exec "$cid" sh -c "[ \$(wc -c < /var/lib/mysql/$lastfile ) -gt $pos ]" && die 'binary log 2 too big'
+
+	cid_primary=$cid
+	count_primary=$(mariadbclient -u bob -proger rabbit --batch --skip-column-names -e 'select sum(i) from t1')
+
+	echo -e "Test: Replica container can be initialized with same contents\n"
+
+	master_host=$cname
+	cname="mariadb-container-$RANDOM-$RANDOM"
+	cid=$(docker run \
+		-d \
+		--rm \
+		--name "$cname" \
+		-e MASTER_HOST="$master_host" \
+		-e MARIADB_RANDOM_ROOT_PASSWORD=1 \
+		-e MARIADB_MYSQL_LOCALHOST_USER=1 \
+		-e MARIADB_MYSQL_LOCALHOST_GRANTS="REPLICATION CLIENT /*!100509 ,REPLICA MONITOR */" \
+		-v "${dir}"/replica-initdb.d/:/docker-entrypoint-initdb.d:Z \
+		--network=container:"$master_host" \
+		--health-cmd='healthcheck.sh --su-mysql --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
+		--health-interval=3s \
+		"$image" --server-id=2 --port 3307)
+
+	c=13
+	until docker exec "$cid" healthcheck.sh --su-mysql --connect --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ $c -eq 0 ]
+	do
+		sleep 1
+		c=$(( c - 1 ))
+	done
+	count_replica=$(mariadbclient -u bob -proger rabbit --batch --skip-column-names -e 'select sum(i) from t1')
+	if [ "$count_primary" != "$count_replica" ];
+	then
+		cid=$cid_primary killoff
+		die "Table contents didn't match on replica"
+	fi
+	docker exec --user mysql -i \
+		"$cname" \
+		mysql \
+		-e "SHOW SLAVE STATUS\G"
+	killoff
+	cid=$master_host
 	killoff
 # Insert new tests above by copying the comments below
 #	;&
