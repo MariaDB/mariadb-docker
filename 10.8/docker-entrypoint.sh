@@ -274,7 +274,7 @@ docker_setup_db() {
 			# --skip-write-binlog here is only if Galera is detected
 			# but usefully outputs LOCK TABLES to improve the IO of
 			# Aria (MDEV-23326).
-			mariadb-tzinfo-to-sql --skip-write-binlog /usr/share/zoneinfo \
+			mariadb-tzinfo-to-sql --skip-write-binlog /usr/share/zoneinfo
 
 			echo "SET SESSION SQL_LOG_BIN=@save_sql_log_bin;"
 		} | docker_process_sql --dont-use-mysql-root-password --database=mysql
