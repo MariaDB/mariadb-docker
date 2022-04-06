@@ -121,6 +121,7 @@ mysql_get_config() {
 # Do a temporary startup of the MariaDB server, for init purposes
 docker_temp_server_start() {
 	"$@" --skip-networking --default-time-zone=SYSTEM --socket="${SOCKET}" --wsrep_on=OFF \
+		--expire-logs-days=0 \
 		--loose-innodb_buffer_pool_load_at_startup=0 &
 	declare -g MARIADB_PID
 	MARIADB_PID=$!
@@ -194,7 +195,9 @@ docker_init_database_dir() {
 	fi
 	# "Other options are passed to mysqld." (so we pass all "mysqld" arguments directly here)
 	mysql_install_db "${installArgs[@]}" "${@:2}" \
-		--default-time-zone=SYSTEM --enforce-storage-engine= --skip-log-bin \
+		--default-time-zone=SYSTEM --enforce-storage-engine= \
+		--skip-log-bin \
+		--expire-logs-days=0 \
 		--loose-innodb_buffer_pool_load_at_startup=0 \
 		--loose-innodb_buffer_pool_dump_at_shutdown=0
 	mysql_note "Database files initialized"
