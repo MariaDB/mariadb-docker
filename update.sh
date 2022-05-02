@@ -67,6 +67,14 @@ update_version()
 		10.5)
 			sed -i '/backwards compat/d' "$version/Dockerfile"
 			;;
+		10.9 | 10.10)
+			# quoted $ intentional
+			# shellcheck disable=SC2016
+			sed -i -e '/^ARG MARIADB_MAJOR/d' \
+				-e '/^ENV MARIADB_MAJOR/d' \
+				-e 's/-\$MARIADB_MAJOR//' \
+				"$version/Dockerfile"
+			;&
 		*)
 			sed -i -e '/^CMD/s/mysqld/mariadbd/' \
 			       -e '/backwards compat/d' "$version/Dockerfile"

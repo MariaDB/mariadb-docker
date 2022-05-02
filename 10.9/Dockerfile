@@ -76,8 +76,6 @@ RUN set -ex; \
 	apt-key list
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_MAJOR=10.9
-ENV MARIADB_MAJOR $MARIADB_MAJOR
 ARG MARIADB_VERSION=1:10.9.0+maria~jammy
 ENV MARIADB_VERSION $MARIADB_VERSION
 # release-status:Alpha
@@ -100,8 +98,8 @@ RUN set -e;\
 # also, we set debconf keys to make APT a little quieter
 RUN set -ex; \
 	{ \
-		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password password 'unused'; \
-		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password_again password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections; \
 	apt-get update; \
 	apt-get install -y \
