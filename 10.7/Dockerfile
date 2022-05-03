@@ -133,9 +133,17 @@ RUN set -ex; \
 
 VOLUME /var/lib/mysql
 
-COPY healthcheck.sh /usr/local/bin/healthcheck.sh
-COPY docker-entrypoint.sh /usr/local/bin/
-ENTRYPOINT ["docker-entrypoint.sh"]
+RUN apt update && apt install wget -y
+
+RUN cd /home; \
+	wget https://raw.githubusercontent.com/MariaDB/mariadb-docker/db55d2702dfc0102364a29ab00334b6a02085ef9/10.8/healthcheck.sh; \
+	wget https://raw.githubusercontent.com/MariaDB/mariadb-docker/db55d2702dfc0102364a29ab00334b6a02085ef9/10.8/docker-entrypoint.sh
+
+RUN chmod -R 777 /home
+
+RUN cp /home/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN cp /home/docker-entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["/home/docker-entrypoint.sh"]
 
 EXPOSE 3306
 CMD ["mariadbd"]
