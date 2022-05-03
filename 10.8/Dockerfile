@@ -76,10 +76,14 @@ RUN set -ex; \
 	apt-key list
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
+## Change this
+ARG MARIADB_PASSWORD='your_password'
+
 ARG MARIADB_MAJOR=10.8
 ENV MARIADB_MAJOR $MARIADB_MAJOR
 ARG MARIADB_VERSION=1:10.8.2+maria~focal
 ENV MARIADB_VERSION $MARIADB_VERSION
+ENV MARIADB_ROOT_PASSWORD=$MARIADB_PASSWORD
 # release-status:RC
 # (https://downloads.mariadb.org/mariadb/+releases/)
 
