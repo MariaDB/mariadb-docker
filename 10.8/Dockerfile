@@ -80,7 +80,7 @@ ARG MARIADB_MAJOR=10.8
 ENV MARIADB_MAJOR $MARIADB_MAJOR
 ARG MARIADB_VERSION=1:10.8.3+maria~jammy
 ENV MARIADB_VERSION $MARIADB_VERSION
-# release-status:RC
+# release-status:Stable
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
