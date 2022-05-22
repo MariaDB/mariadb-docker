@@ -78,13 +78,13 @@ RUN set -ex; \
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
 ARG MARIADB_MAJOR=10.6
 ENV MARIADB_MAJOR $MARIADB_MAJOR
-ARG MARIADB_VERSION=1:10.6.7+maria~focal
+ARG MARIADB_VERSION=1:10.6.8+maria~focal
 ENV MARIADB_VERSION $MARIADB_VERSION
 # release-status:Stable
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.6.7/repo/ubuntu/ focal main"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.6.8/repo/ubuntu/ focal main"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \

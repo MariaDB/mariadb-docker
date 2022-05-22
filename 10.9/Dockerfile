@@ -76,13 +76,13 @@ RUN set -ex; \
 	apt-key list
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=1:10.9.0+maria~jammy
+ARG MARIADB_VERSION=1:10.9.1+maria~jammy
 ENV MARIADB_VERSION $MARIADB_VERSION
-# release-status:Alpha
+# release-status:RC
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.9.0/repo/ubuntu/ jammy main"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.9.1/repo/ubuntu/ jammy main"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
