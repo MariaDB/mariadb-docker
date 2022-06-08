@@ -6,7 +6,6 @@ set -Eeuo pipefail
 
 defaultSuite='jammy'
 declare -A suites=(
-	[10.2]='bionic'
 	[10.3]='focal'
 	[10.4]='focal'
 	[10.5]='focal'
@@ -39,13 +38,6 @@ update_version()
 
 	cp Dockerfile.template "$version/Dockerfile"
 
-	backup='mariadb-backup'
-	# shellcheck disable=SC2072
-	if [[ "$version" < "10.3" ]]; then
-		# 10.2 has mariadb major version in the package name
-		backup="$backup-$version"
-	fi
-
 	cp docker-entrypoint.sh healthcheck.sh "$version/"
 	chmod a+x "$version"/healthcheck.sh
 	sed -i \
@@ -54,15 +46,11 @@ update_version()
 		-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
 		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
 		-e 's!%%SUITE%%!'"$suite"'!g' \
-		-e 's!%%BACKUP_PACKAGE%%!'"$backup"'!g' \
 		-e 's!%%ARCHES%%!'"$arches"'!g' \
 		"$version/Dockerfile"
 
 	# Start using the new executable names
 	case "$version" in
-		10.2)
-			sed -i -e 's/libjemalloc2/libjemalloc1/' "$version/Dockerfile"
-			;;
 		10.3 | 10.4) ;; # nothing to see/do here
 		10.5)
 			sed -i '/backwards compat/d' "$version/Dockerfile"

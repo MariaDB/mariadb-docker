@@ -10,11 +10,6 @@ RUN set -ex; \
 	if ! which gpg; then \
 		apt-get install -y --no-install-recommends gnupg; \
 	fi; \
-	if ! gpg --version | grep -q '^gpg (GnuPG) 1\.'; then \
-# Ubuntu includes "gnupg" (not "gnupg2", but still 2.x), but not dirmngr, and gnupg 2.x requires dirmngr
-# so, if we're not running gnupg 1.x, explicitly install dirmngr too
-		apt-get install -y --no-install-recommends dirmngr; \
-	fi; \
 	rm -rf /var/lib/apt/lists/*
 
 # add gosu for easy step-down from root
@@ -104,11 +99,9 @@ RUN set -ex; \
 		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections; \
 	apt-get update; \
-	apt-get install -y \
-		"mariadb-server=$MARIADB_VERSION" \
 # mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
-		mariadb-backup \
-		socat \
+	apt-get install -y \
+		"mariadb-server=$MARIADB_VERSION" mariadb-backup socat \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership
