@@ -360,9 +360,8 @@ docker_setup_db() {
 # backup the mysql database
 docker_mariadb_backup_system()
 {
-	if [ -n "$MARIADB_DISABLE_UPGRADE_BACKUP" ] \
-		&& [ "$MARIADB_DISABLE_UPGRADE_BACKUP" = 1 ]; then
-		mysql_note "MariaDB upgrade backup disabled due to \$MARIADB_DISABLE_UPGRADE_BACKUP=1 setting"
+	if [ -n "$MARIADB_DISABLE_UPGRADE_BACKUP" ]; then
+		mysql_note "MariaDB upgrade backup disabled due to non-empty \$MARIADB_DISABLE_UPGRADE_BACKUP setting"
 		return
 	fi
 	local backup_db="system_mysql_backup_unknown_version.sql.zst"
