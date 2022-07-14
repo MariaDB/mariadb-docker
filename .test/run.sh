@@ -238,6 +238,7 @@ killoff
 echo -e "Test: Secrets _FILE vars should be same as env directly\n"
 
 secretdir=$(mktemp -d)
+datadir=$(mktemp -d)
 chmod go+rx "${secretdir}"
 echo bob > "$secretdir"/pass
 echo pluto > "$secretdir"/host
@@ -245,8 +246,16 @@ echo titan > "$secretdir"/db
 echo ron > "$secretdir"/u
 echo scappers > "$secretdir"/p
 
+ug="$(stat -c '%u:%g' "$datadir")"
+if command -v podman
+then
+	podman unshare chown "$ug" "$datadir"
+fi
+
 runandwait \
+	--user "$ug" \
        	-v "$secretdir":/run/secrets:Z \
+        -v "$datadir":/var/lib/mysql:z \
 	-e MYSQL_ROOT_PASSWORD_FILE=/run/secrets/pass \
 	-e MYSQL_ROOT_HOST_FILE=/run/secrets/host \
 	-e MYSQL_DATABASE_FILE=/run/secrets/db \
@@ -259,7 +268,12 @@ host=$(mariadbclient_unix --skip-column-names -B -u root -pbob -e 'select host f
 creation=$(mariadbclient --skip-column-names -B -u ron -pscappers -P 3306 --protocol tcp titan -e "CREATE TABLE landing(i INT)")
 [ "${creation}" = '' ] || die 'creation error'
 killoff
-rm -rf "${secretdir}"
+
+if command -v podman
+then
+	podman unshare rm -rf "$datadir"
+fi
+rm -rf "${secretdir}" "${datadir}"
 
 	;&
 	docker_entrypint_initdb)
