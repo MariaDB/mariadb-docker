@@ -13,6 +13,11 @@ declare -A suites=(
 	[10.7]='focal'
 )
 
+declare -A suffix=(
+	['focal']='ubu2004'
+	['jammy']='ubu2204'
+)
+
 #declare -A dpkgArchToBashbrew=(
 #	[amd64]='amd64'
 #	[armel]='arm32v5'
@@ -28,7 +33,7 @@ update_version()
 	echo "$version: $mariaVersion ($releaseStatus)"
 
 	suite="${suites[$version]:-$defaultSuite}"
-	fullVersion=1:${mariaVersion}+maria~${suite}
+	fullVersion=1:${mariaVersion}+maria~${suffix[${suite}]}
 
 	if [[ $version = 10.[234] ]]; then
 		arches=" amd64 arm64v8 ppc64le"
