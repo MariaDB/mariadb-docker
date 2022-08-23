@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM ubuntu:bionic
+FROM ubuntu:jammy
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
@@ -9,11 +9,6 @@ RUN set -ex; \
 	apt-get update; \
 	if ! which gpg; then \
 		apt-get install -y --no-install-recommends gnupg; \
-	fi; \
-	if ! gpg --version | grep -q '^gpg (GnuPG) 1\.'; then \
-# Ubuntu includes "gnupg" (not "gnupg2", but still 2.x), but not dirmngr, and gnupg 2.x requires dirmngr
-# so, if we're not running gnupg 1.x, explicitly install dirmngr too
-		apt-get install -y --no-install-recommends dirmngr; \
 	fi; \
 	rm -rf /var/lib/apt/lists/*
 
@@ -43,7 +38,7 @@ RUN set -eux; \
 
 RUN mkdir /docker-entrypoint-initdb.d
 
-# install "libjemalloc1" as it offers better performance in some cases. Use with LD_PRELOAD
+# install "libjemalloc2" as it offers better performance in some cases. Use with LD_PRELOAD
 # install "pwgen" for randomizing passwords
 # install "tzdata" for /usr/share/zoneinfo/
 # install "xz-utils" for .sql.xz docker-entrypoint-initdb.d files
@@ -51,7 +46,7 @@ RUN mkdir /docker-entrypoint-initdb.d
 RUN set -ex; \
 	apt-get update; \
 	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-		libjemalloc1 \
+		libjemalloc2 \
 		pwgen \
 		tzdata \
 		xz-utils \
@@ -75,16 +70,14 @@ RUN set -ex; \
 	rm -fr "$GNUPGHOME"; \
 	apt-key list
 
-# bashbrew-architectures: amd64 arm64v8 ppc64le
-ARG MARIADB_MAJOR=10.2
-ENV MARIADB_MAJOR $MARIADB_MAJOR
-ARG MARIADB_VERSION=1:10.2.44+maria~bionic
+# bashbrew-architectures: amd64 arm64v8 ppc64le s390x
+ARG MARIADB_VERSION=1:10.10.1+maria~ubu2204
 ENV MARIADB_VERSION $MARIADB_VERSION
-# release-status:Stable
+# release-status:RC
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.2.44/repo/ubuntu/ bionic main"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.10.1/repo/ubuntu/ jammy main"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
@@ -100,15 +93,13 @@ RUN set -e;\
 # also, we set debconf keys to make APT a little quieter
 RUN set -ex; \
 	{ \
-		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password password 'unused'; \
-		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password_again password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections; \
 	apt-get update; \
-	apt-get install -y \
-		"mariadb-server=$MARIADB_VERSION" \
 # mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
-		mariadb-backup-10.2 \
-		socat \
+	apt-get install -y \
+		"mariadb-server=$MARIADB_VERSION" mariadb-backup socat \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership
@@ -133,8 +124,7 @@ VOLUME /var/lib/mysql
 
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 3306
-CMD ["mysqld"]
+CMD ["mariadbd"]

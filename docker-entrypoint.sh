@@ -186,15 +186,9 @@ _mariadb_version() {
 docker_init_database_dir() {
 	mysql_note "Initializing database files"
 	installArgs=( --datadir="$DATADIR" --rpm --auth-root-authentication-method=normal )
-	if { mysql_install_db --help || :; } | grep -q -- '--skip-test-db'; then
-		# 10.3+
-		installArgs+=( --skip-test-db )
-	else
-		# 10.2 only
-		installArgs+=( --skip-auth-anonymous-user )
-	fi
 	# "Other options are passed to mysqld." (so we pass all "mysqld" arguments directly here)
 	mysql_install_db "${installArgs[@]}" "${@:2}" \
+                --skip-test-db \
 		--default-time-zone=SYSTEM --enforce-storage-engine= \
 		--skip-log-bin \
 		--expire-logs-days=0 \
@@ -271,8 +265,11 @@ docker_setup_db() {
 		# --skip-write-binlog usefully disables binary logging
 		# but also outputs LOCK TABLES to improve the IO of
 		# Aria (MDEV-23326) for 10.4+.
-		mysql_tzinfo_to_sql --skip-write-binlog /usr/share/zoneinfo \
-			| docker_process_sql --dont-use-mysql-root-password --database=mysql
+		{
+			# temporary fix for MDEV-29347 - ONLY_FULL_GROUP_BY incompatiblity
+			echo "SET @@SQL_MODE = REPLACE(@@SQL_MODE, 'ONLY_FULL_GROUP_BY', '');"
+			mysql_tzinfo_to_sql --skip-write-binlog /usr/share/zoneinfo
+		} | docker_process_sql --dont-use-mysql-root-password --database=mysql
 		# tell docker_process_sql to not use MYSQL_ROOT_PASSWORD since it is not set yet
 	fi
 	# Generate random root password
@@ -305,7 +302,7 @@ docker_setup_db() {
 		# MDEV-24111 before MariaDB-10.4 cannot create unix_socket user directly auth with simple_password_check
 		# It wasn't until 10.4 that the unix_socket auth was built in to the server.
 		read -r -d '' mysqlAtLocalhost <<-EOSQL || true
-		EXECUTE IMMEDIATE IF(VERSION() RLIKE '^10\.[23]\.',
+		EXECUTE IMMEDIATE IF(VERSION() RLIKE '^10\.3\.',
 			"INSTALL PLUGIN /*M10401 IF NOT EXISTS */ unix_socket SONAME 'auth_socket'",
 			"SELECT 'already there'");
 		CREATE USER mysql@localhost IDENTIFIED BY '$pw';

@@ -10,8 +10,8 @@
 # the --replication option. This allows a different set of replication checks
 # on different connections.
 #
-# --su{=|-mysql} is option to run the healthcheck as a different unix user.
-# Useful if mysql@localhost user exists with unix socket authentication
+# --su{=|-mariadb} is option to run the healthcheck as a different unix user.
+# Useful if mariadb@localhost user exists with unix socket authentication
 # Using this option disregards previous options set, so should usually be the
 # first option.
 #
@@ -25,7 +25,7 @@
 # replication               REPLICATION_CLIENT (<10.5)or REPLICA MONITOR (10.5+)
 # mariadbupgrade            none, however unix user permissions on datadir
 #
-# The SQL user used is the default for the mysql client. This can be the unix user
+# The SQL user used is the default for the mariadb client. This can be the unix user
 # if no user(or password) is set in the [mariadb-client] section of a configuration
 # file. --defaults-{file,extra-file,group-suffix} can specify a file/configuration
 # different from elsewhere.
@@ -37,7 +37,7 @@ set -eo pipefail
 
 _process_sql()
 {
-	mysql ${nodefaults:+--no-defaults} \
+	mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}} \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}} \
@@ -55,7 +55,7 @@ _process_sql()
 connect()
 {
 	set +e +o pipefail
-	mysql ${nodefaults:+--no-defaults} \
+	mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}}  \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}}  \
@@ -201,7 +201,7 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
-# Marks the end of mysql -> mariadb name changes in 10.6+
+# Marks the end of mariadb -> mariadb name changes in 10.6+
 #ENDOFSUBSTITUTIONS
 # Global variables used by tests
 declare -A repl
