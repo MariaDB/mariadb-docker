@@ -216,7 +216,8 @@ killoff
 
 echo -e "Test: MYSQL_INITDB_SKIP_TZINFO='' should still load timezones\n"
 
-runandwait -e MYSQL_INITDB_SKIP_TZINFO= -e MYSQL_ALLOW_EMPTY_PASSWORD=1 "${image}" --default-time-zone=Europe/Berlin
+# ONLY_FULL_GROUP_BY - test for MDEV-29347
+runandwait -e MYSQL_INITDB_SKIP_TZINFO= -e MYSQL_ALLOW_EMPTY_PASSWORD=1 "${image}" --default-time-zone=Europe/Berlin --sql-mode=ONLY_FULL_GROUP_BY
 tzcount=$(mariadbclient --skip-column-names -B -u root -e "SELECT COUNT(*) FROM mysql.time_zone")
 [ "${tzcount}" = '0' ] && die "should exist timezones"
 [ "$(mariadbclient --skip-column-names -B -u root -e 'SELECT @@time_zone')" != "Europe/Berlin" ] && die "Didn't set timezone to Berlin"
