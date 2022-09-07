@@ -586,6 +586,16 @@ binlog)
 	killoff
 	cid=$master_host
 	killoff
+	;&
+	password_hash)
+
+	echo -e "Test: create user passwords using password hash\n"
+
+	runandwait -e MARIADB_ROOT_PASSWORD_HASH='*61584B76F6ECE8FB9A328E7CF198094B2FAC55C7' -e MARIADB_PASSWORD_HASH='*0FD9A3F0F816D076CF239580A68A1147C250EB7B' -e MARIADB_DATABASE=neptune -e MARIADB_USER=henry "${image}"
+	mariadbclient -u root -pbob -e 'select current_user()'
+	mariadbclient -u henry -pjane neptune -e 'select current_user()'
+	killoff
+
 # Insert new tests above by copying the comments below
 #	;&
 #	THE_TEST_NAME)

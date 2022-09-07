@@ -154,8 +154,15 @@ docker_temp_server_stop() {
 
 # Verify that the minimally required password settings are set for new databases.
 docker_verify_minimum_env() {
-	if [ -z "$MARIADB_ROOT_PASSWORD" ] && [ -z "$MARIADB_ALLOW_EMPTY_ROOT_PASSWORD" ] && [ -z "$MARIADB_RANDOM_ROOT_PASSWORD" ]; then
-		mysql_error $'Database is uninitialized and password option is not specified\n\tYou need to specify one of MARIADB_ROOT_PASSWORD, MARIADB_ALLOW_EMPTY_ROOT_PASSWORD and MARIADB_RANDOM_ROOT_PASSWORD'
+	if [ -z "$MARIADB_ROOT_PASSWORD" ] && [ -z "$MARIADB_ROOT_PASSWORD_HASH" ] && [ -z "$MARIADB_ALLOW_EMPTY_ROOT_PASSWORD" ] && [ -z "$MARIADB_RANDOM_ROOT_PASSWORD" ]; then
+		mysql_error $'Database is uninitialized and password option is not specified\n\tYou need to specify one of MARIADB_ROOT_PASSWORD, MARIADB_ROOT_PASSWORD_HASH, MARIADB_ALLOW_EMPTY_ROOT_PASSWORD and MARIADB_RANDOM_ROOT_PASSWORD'
+	fi
+	# More preemptive exclusions of combinations should have been made before *PASSWORD_HASH was added, but for now we don't enforce due to compatibility.
+	if [ -n "$MARIADB_ROOT_PASSWORD" ] || [ -n "$MARIADB_ALLOW_EMPTY_ROOT_PASSWORD" ] || [ -n "$MARIADB_RANDOM_ROOT_PASSWORD" ] && [ -n "$MARIADB_ROOT_PASSWORD_HASH" ]; then
+		mysql_error "Cannot specify MARIADB_ROOT_PASSWORD_HASH and another MARIADB_ROOT_PASSWORD* option."
+	fi
+	if [ -n "$MARIADB_PASSWORD" ] && [ -n "$MARIADB_PASSWORD_HASH" ]; then
+		mysql_error "Cannot specify MARIADB_PASSWORD_HASH and MARIADB_PASSWORD option."
 	fi
 }
 
@@ -212,6 +219,9 @@ docker_setup_env() {
 	_mariadb_file_env 'MYSQL_USER'
 	_mariadb_file_env 'MYSQL_PASSWORD'
 	_mariadb_file_env 'MYSQL_ROOT_PASSWORD'
+	# No MYSQL_ compatibility needed for new variables
+	file_env 'MARIADB_PASSWORD_HASH'
+	file_env 'MARIADB_ROOT_PASSWORD_HASH'
 
 	# set MARIADB_ from MYSQL_ when it is unset and then make them the same value
 	: "${MARIADB_ALLOW_EMPTY_ROOT_PASSWORD:=${MYSQL_ALLOW_EMPTY_PASSWORD:-}}"
@@ -278,19 +288,28 @@ docker_setup_db() {
 		export MARIADB_ROOT_PASSWORD MYSQL_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD
 		mysql_note "GENERATED ROOT PASSWORD: $MARIADB_ROOT_PASSWORD"
 	fi
-	# Sets root password and creates root users for non-localhost hosts
+
+	# Creates root users for non-localhost hosts
 	local rootCreate=
-	local rootPasswordEscaped
-	rootPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}" )
 
 	# default root to listen for connections from anywhere
 	if [ -n "$MARIADB_ROOT_HOST" ] && [ "$MARIADB_ROOT_HOST" != 'localhost' ]; then
-		# no, we don't care if read finds a terminating character in this heredoc
-		# https://unix.stackexchange.com/questions/265149/why-is-set-o-errexit-breaking-this-read-heredoc-expression/265151#265151
-		read -r -d '' rootCreate <<-EOSQL || true
-			CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY '${rootPasswordEscaped}' ;
-			GRANT ALL ON *.* TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION ;
-		EOSQL
+		if [ -n "$MARIADB_ROOT_PASSWORD" ]; then
+			# Sets root password and creates root users for non-localhost hosts
+			local rootPasswordEscaped
+			rootPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}" )
+			# no, we don't care if read finds a terminating character in this heredoc
+			# https://unix.stackexchange.com/questions/265149/why-is-set-o-errexit-breaking-this-read-heredoc-expression/265151#265151
+			read -r -d '' rootCreate <<-EOSQL || true
+				CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY '${rootPasswordEscaped}' ;
+				GRANT ALL ON *.* TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION ;
+			EOSQL
+		else
+			read -r -d '' rootCreate <<-EOSQL || true
+				CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY PASSWORD '${MARIADB_ROOT_PASSWORD_HASH}' ;
+				GRANT ALL ON *.* TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION ;
+			EOSQL
+		fi
 	fi
 
 	local mysqlAtLocalhost=
@@ -343,15 +362,22 @@ docker_setup_db() {
 		docker_process_sql --database=mysql <<<"CREATE DATABASE IF NOT EXISTS \`$MARIADB_DATABASE\` ;"
 	fi
 
-	if [ -n "$MARIADB_USER" ] && [ -n "$MARIADB_PASSWORD" ]; then
+	if  [ -n "$MARIADB_PASSWORD" ] || [ -n "$MARIADB_PASSWORD_HASH" ] && [ -n "$MARIADB_USER" ]; then
 		mysql_note "Creating user ${MARIADB_USER}"
-		# SQL escape the user password, \ followed by '
-		local userPasswordEscaped
-		userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
-		docker_process_sql --database=mysql --binary-mode <<-EOSQL_USER
-			SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
-			CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';
-		EOSQL_USER
+		if [ -n "$MARIADB_PASSWORD" ]; then
+			# SQL escape the user password, \ followed by '
+			local userPasswordEscaped
+			userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
+			docker_process_sql --database=mysql --binary-mode <<-EOSQL_USER
+				SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
+				CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';
+			EOSQL_USER
+		else
+			docker_process_sql --database=mysql --binary-mode <<-EOSQL_USER
+				SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
+				CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY PASSWORD '$MARIADB_PASSWORD_HASH';
+			EOSQL_USER
+		fi
 
 		if [ -n "$MARIADB_DATABASE" ]; then
 			mysql_note "Giving user ${MARIADB_USER} access to schema ${MARIADB_DATABASE}"
