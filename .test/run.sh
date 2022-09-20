@@ -245,7 +245,7 @@ echo bob > "$secretdir"/pass
 echo pluto > "$secretdir"/host
 echo titan > "$secretdir"/db
 echo ron > "$secretdir"/u
-echo scappers > "$secretdir"/p
+echo '*D87991C62A9CAEDC4AE0F608F19173AC7E614952' > "$secretdir"/p
 
 ug="$(stat -c '%u:%g' "$datadir")"
 if command -v podman
@@ -261,7 +261,7 @@ runandwait \
 	-e MYSQL_ROOT_HOST_FILE=/run/secrets/host \
 	-e MYSQL_DATABASE_FILE=/run/secrets/db \
 	-e MYSQL_USER_FILE=/run/secrets/u \
-	-e MYSQL_PASSWORD_FILE=/run/secrets/p \
+	-e MARIADB_PASSWORD_HASH_FILE=/run/secrets/p \
 	"${image}" 
 
 host=$(mariadbclient_unix --skip-column-names -B -u root -pbob -e 'select host from mysql.user where user="root" and host="pluto"' titan)
