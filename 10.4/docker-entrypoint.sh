@@ -362,7 +362,7 @@ docker_setup_db() {
 		docker_process_sql --database=mysql <<<"CREATE DATABASE IF NOT EXISTS \`$MARIADB_DATABASE\` ;"
 	fi
 
-	if  [ -n "$MARIADB_PASSWORD" ] || [ -n "$MARIADB_PASSWORD_HASH" ] && [ -n "$MARIADB_USER" ]; then
+	if [ -n "$MARIADB_PASSWORD" ] || [ -n "$MARIADB_PASSWORD_HASH" ] && [ -n "$MARIADB_USER" ]; then
 		mysql_note "Creating user ${MARIADB_USER}"
 		if [ -n "$MARIADB_PASSWORD" ]; then
 			# SQL escape the user password, \ followed by '
