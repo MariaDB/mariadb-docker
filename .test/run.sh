@@ -202,6 +202,16 @@ ru=$(mariadbclient_unix --skip-column-names -B -u root -e 'select user,host from
 killoff
 
 	;&
+	mysql_root_host_localhost)
+
+echo -e "Test: MYSQL_ROOT_HOST=localhost\n"
+
+runandwait -e  MARIADB_ROOT_PASSWORD=bob  -e MYSQL_ROOT_HOST=localhost "${image}"
+ru=$(mariadbclient_unix --skip-column-names -B -u root -pbob -e 'select user,host from mysql.user where user="root" and host="localhost"')
+[ "${ru}" = '' ] && die 'root@localhost not created'
+killoff
+
+	;&
 	complex_passwords)
 
 echo -e "Test: complex passwords\n"
