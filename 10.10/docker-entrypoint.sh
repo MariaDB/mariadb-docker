@@ -147,9 +147,8 @@ docker_temp_server_start() {
 # Stop the server. When using a local socket file mariadb-admin will block until
 # the shutdown is complete.
 docker_temp_server_stop() {
-	if ! MYSQL_PWD=$MARIADB_ROOT_PASSWORD mariadb-admin shutdown -uroot --socket="${SOCKET}"; then
-		mysql_error "Unable to shut down server."
-	fi
+	kill "$MARIADB_PID"
+	wait "$MARIADB_PID"
 }
 
 # Verify that the minimally required password settings are set for new databases.
@@ -299,16 +298,16 @@ docker_setup_db() {
 
 	# default root to listen for connections from anywhere
 	if [ -n "$MARIADB_ROOT_HOST" ] && [ "$MARIADB_ROOT_HOST" != 'localhost' ]; then
-		if [ -n "$MARIADB_ROOT_PASSWORD" ]; then
-			# no, we don't care if read finds a terminating character in this heredoc
-			# https://unix.stackexchange.com/questions/265149/why-is-set-o-errexit-breaking-this-read-heredoc-expression/265151#265151
+		# ref "read -d ''", no, we don't care if read finds a terminating character in this heredoc
+		# https://unix.stackexchange.com/questions/265149/why-is-set-o-errexit-breaking-this-read-heredoc-expression/265151#265151
+		if [ -n "$MARIADB_ROOT_PASSWORD_HASH" ]; then
 			read -r -d '' rootCreate <<-EOSQL || true
-				CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY '${rootPasswordEscaped}' ;
+				CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY PASSWORD '${MARIADB_ROOT_PASSWORD_HASH}' ;
 				GRANT ALL ON *.* TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION ;
 			EOSQL
 		else
 			read -r -d '' rootCreate <<-EOSQL || true
-				CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY PASSWORD '${MARIADB_ROOT_PASSWORD_HASH}' ;
+				CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY '${rootPasswordEscaped}' ;
 				GRANT ALL ON *.* TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION ;
 			EOSQL
 		fi
@@ -337,12 +336,45 @@ docker_setup_db() {
 		fi
 	fi
 
+	local rootLocalhostPass
+	if [ -n "$MARIADB_ROOT_PASSWORD_HASH" ]; then
+		rootLocalhostPass="'${MARIADB_ROOT_PASSWORD_HASH}'"
+	else
+		rootLocalhostPass="PASSWORD('${rootPasswordEscaped}')"
+	fi
+
+	local createDatabase=
+	# Creates a custom database and user if specified
+	if [ -n "$MARIADB_DATABASE" ]; then
+		mysql_note "Creating database ${MARIADB_DATABASE}"
+		createDatabase="CREATE DATABASE IF NOT EXISTS \`$MARIADB_DATABASE\`;"
+	fi
+
+	local createUser=
+	local userGrants=
+	if  [ -n "$MARIADB_PASSWORD" ] || [ -n "$MARIADB_PASSWORD_HASH" ] && [ -n "$MARIADB_USER" ]; then
+		mysql_note "Creating user ${MARIADB_USER}"
+		if [ -n "$MARIADB_PASSWORD_HASH" ]; then
+			createUser="CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY PASSWORD '$MARIADB_PASSWORD_HASH';"
+		else
+			# SQL escape the user password, \ followed by '
+			local userPasswordEscaped
+			userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
+			createUser="CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';"
+		fi
+
+		if [ -n "$MARIADB_DATABASE" ]; then
+			mysql_note "Giving user ${MARIADB_USER} access to schema ${MARIADB_DATABASE}"
+			userGrants="GRANT ALL ON \`${MARIADB_DATABASE//_/\\_}\`.* TO '$MARIADB_USER'@'%';"
+		fi
+	fi
+
 	mysql_note "Securing system users (equivalent to running mysql_secure_installation)"
 	# tell docker_process_sql to not use MARIADB_ROOT_PASSWORD since it is just now being set
 	# --binary-mode to save us from the semi-mad users go out of their way to confuse the encoding.
 	docker_process_sql --dont-use-mysql-root-password --database=mysql --binary-mode <<-EOSQL
-		-- What's done in this file shouldn't be replicated
-		--  or products like mysql-fabric won't work
+		-- Securing system users shouldn't be replicated
+		SET @orig_sql_log_bin= @@SESSION.SQL_LOG_BIN;
 		SET @@SESSION.SQL_LOG_BIN=0;
                 -- we need the SQL_MODE NO_BACKSLASH_ESCAPES mode to be clear for the password to be set
 		SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
@@ -350,42 +382,19 @@ docker_setup_db() {
 		DROP USER IF EXISTS root@'127.0.0.1', root@'::1';
 		EXECUTE IMMEDIATE CONCAT('DROP USER IF EXISTS root@\'', @@hostname,'\'');
 
-		SET PASSWORD FOR 'root'@'localhost'=PASSWORD('${rootPasswordEscaped}') ;
+		SET PASSWORD FOR 'root'@'localhost'= $rootLocalhostPass;
 		${rootCreate}
 		${mysqlAtLocalhost}
 		${mysqlAtLocalhostGrants}
-		-- pre-10.3
+		-- pre-10.3 only
 		DROP DATABASE IF EXISTS test ;
+		-- end of securing system users, rest of init now...
+		SET @@SESSION.SQL_LOG_BIN=@orig_sql_log_bin;
+		-- create users/databases
+		${createDatabase}
+		${createUser}
+		${userGrants}
 	EOSQL
-
-	# Creates a custom database and user if specified
-	if [ -n "$MARIADB_DATABASE" ]; then
-		mysql_note "Creating database ${MARIADB_DATABASE}"
-		docker_process_sql --database=mysql <<<"CREATE DATABASE IF NOT EXISTS \`$MARIADB_DATABASE\` ;"
-	fi
-
-	if  [ -n "$MARIADB_PASSWORD" ] || [ -n "$MARIADB_PASSWORD_HASH" ] && [ -n "$MARIADB_USER" ]; then
-		mysql_note "Creating user ${MARIADB_USER}"
-		if [ -n "$MARIADB_PASSWORD" ]; then
-			# SQL escape the user password, \ followed by '
-			local userPasswordEscaped
-			userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
-			docker_process_sql --database=mysql --binary-mode <<-EOSQL_USER
-				SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
-				CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';
-			EOSQL_USER
-		else
-			docker_process_sql --database=mysql --binary-mode <<-EOSQL_USER
-				SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
-				CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY PASSWORD '$MARIADB_PASSWORD_HASH';
-			EOSQL_USER
-		fi
-
-		if [ -n "$MARIADB_DATABASE" ]; then
-			mysql_note "Giving user ${MARIADB_USER} access to schema ${MARIADB_DATABASE}"
-			docker_process_sql --database=mysql <<<"GRANT ALL ON \`${MARIADB_DATABASE//_/\\_}\`.* TO '$MARIADB_USER'@'%' ;"
-		fi
-	fi
 }
 
 # backup the mysql database
@@ -432,11 +441,8 @@ docker_mariadb_upgrade() {
 	mariadb-upgrade --upgrade-system-tables
 	mysql_note "Finished mariadb-upgrade"
 
-	# docker_temp_server_stop needs authentication since
-	# upgrade ended in FLUSH PRIVILEGES
 	mysql_note "Stopping temporary server"
-	kill "$MARIADB_PID"
-	wait "$MARIADB_PID"
+	docker_temp_server_stop
 	mysql_note "Temporary server stopped"
 }
 
