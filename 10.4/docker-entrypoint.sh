@@ -336,11 +336,10 @@ docker_setup_db() {
 		fi
 	fi
 
-	local rootLocalhostPass
-	if [ -n "$MARIADB_ROOT_PASSWORD_HASH" ]; then
-		rootLocalhostPass="'${MARIADB_ROOT_PASSWORD_HASH}'"
-	else
-		rootLocalhostPass="PASSWORD('${rootPasswordEscaped}')"
+	local rootLocalhostPass=
+	if [ -z "$MARIADB_ROOT_PASSWORD_HASH" ]; then
+		# handle MARIADB_ROOT_PASSWORD_HASH for root@localhost after /docker-entrypoint-initdb.d
+		rootLocalhostPass="SET PASSWORD FOR 'root'@'localhost'= PASSWORD('${rootPasswordEscaped}');"
 	fi
 
 	local createDatabase=
@@ -382,7 +381,7 @@ docker_setup_db() {
 		DROP USER IF EXISTS root@'127.0.0.1', root@'::1';
 		EXECUTE IMMEDIATE CONCAT('DROP USER IF EXISTS root@\'', @@hostname,'\'');
 
-		SET PASSWORD FOR 'root'@'localhost'= $rootLocalhostPass;
+		${rootLocalhostPass}
 		${rootCreate}
 		${mysqlAtLocalhost}
 		${mysqlAtLocalhostGrants}
@@ -517,6 +516,15 @@ _main() {
 
 			docker_setup_db
 			docker_process_init_files /docker-entrypoint-initdb.d/*
+			# Wait until after /docker-entrypoint-initdb.d is performed before setting
+			# root@localhost password to a hash we don't know the password for.
+			if [ -n "${MARIADB_ROOT_PASSWORD_HASH}" ]; then
+				mysql_note "Setting root@localhost password hash"
+				docker_process_sql --dont-use-mysql-root-password --binary-mode <<-EOSQL
+					SET @@SESSION.SQL_LOG_BIN=0;
+					SET PASSWORD FOR 'root'@'localhost'= '${MARIADB_ROOT_PASSWORD_HASH}';
+				EOSQL
+			fi
 
 			mysql_note "Stopping temporary server"
 			docker_temp_server_stop

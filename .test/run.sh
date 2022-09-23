@@ -601,11 +601,28 @@ binlog)
 
 	echo -e "Test: create user passwords using password hash\n"
 
-	runandwait -e MARIADB_ROOT_PASSWORD_HASH='*61584B76F6ECE8FB9A328E7CF198094B2FAC55C7' -e MARIADB_PASSWORD_HASH='*0FD9A3F0F816D076CF239580A68A1147C250EB7B' -e MARIADB_DATABASE=neptune -e MARIADB_USER=henry "${image}"
+initdb=$(mktemp -d)
+chmod go+rx "${initdb}"
+cp -a "$dir"/initdb.d/* "${initdb}"
+sed -i -e 's/^PASS=.*/PASS=jane/' "${initdb}"/a_first.sh
+gzip "${initdb}"/*gz*
+xz "${initdb}"/*xz*
+zstd "${initdb}"/*zst*
+
+	runandwait -e MARIADB_ROOT_PASSWORD_HASH='*61584B76F6ECE8FB9A328E7CF198094B2FAC55C7' \
+		-e MARIADB_PASSWORD_HASH='*0FD9A3F0F816D076CF239580A68A1147C250EB7B' \
+		-e MARIADB_DATABASE=neptune \
+		-e MARIADB_USER=henry \
+		-v "${initdb}":/docker-entrypoint-initdb.d:Z \
+		"${image}"
 	mariadbclient -u root -pbob -e 'select current_user()'
 	mariadbclient_unix -u root -pbob -e 'select current_user()'
 	mariadbclient -u henry -pjane neptune -e 'select current_user()'
+
+	init_sum=$(mariadbclient --skip-column-names -B -u henry -pjane -P 3306 -h 127.0.0.1  --protocol tcp neptune -e "select sum(i) from t1;")
+	[ "${init_sum}" = '1833' ] || (podman logs m_init; die 'initialization order error')
 	killoff
+	rm -rf "${initdb}"
 
 # Insert new tests above by copying the comments below
 #	;&
