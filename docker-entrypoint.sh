@@ -98,7 +98,6 @@ docker_process_init_files() {
 # arguments necessary to run "mysqld --verbose --help" successfully (used for testing configuration validity and for extracting default/configured values)
 _verboseHelpArgs=(
 	--verbose --help
-	--log-bin-index="$(mktemp -u)" # https://github.com/docker-library/mysql/issues/136
 )
 
 mysql_check_config() {
