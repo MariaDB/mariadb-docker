@@ -408,12 +408,12 @@ docker exec -i "$cid" my_print_defaults --mysqld |
 	while read -r line
 	do
 		case $line in
-		--skip-host-cache|--skip-name-resolve)
+		--host-cache-size=0|--skip-name-resolve)
 			echo "$line" found
 			(( arg_expected++ )) || : ;;
 		esac
 	done
-	[ "$arg_expected" -eq 2 ] || die "expected both skip-host-cache and skip-name-resolve"
+	[ "$arg_expected" -eq 2 ] || die "expected both host-cache-size=0 and skip-name-resolve"
 }
 killoff
 
