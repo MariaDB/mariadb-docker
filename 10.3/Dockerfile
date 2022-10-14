@@ -76,6 +76,18 @@ RUN set -ex; \
 		:; \
 	fi
 
+# OCI annotations to image
+LABEL org.opencontainers.image.authors="MariaDB Community" \
+      org.opencontainers.image.title="MariaDB Database" \
+      org.opencontainers.image.description="MariaDB Database for relational SQL" \
+      org.opencontainers.image.documentation="https://hub.docker.com/_/mariadb/" \
+      org.opencontainers.image.base.name="docker.io/library/ubuntu:focal" \
+      org.opencontainers.image.licenses="GPL-2.0" \
+      org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
+      org.opencontainers.image.vendor="MariaDB Community" \
+      org.opencontainers.image.version="10.3.36" \
+      org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
+
 # bashbrew-architectures: amd64 arm64v8 ppc64le
 ARG MARIADB_MAJOR=10.3
 ENV MARIADB_MAJOR $MARIADB_MAJOR
