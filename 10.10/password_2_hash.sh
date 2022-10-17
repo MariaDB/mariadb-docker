@@ -2,6 +2,16 @@
 set -eo pipefail
 shopt -s nullglob
 
+command -v openssl >/dev/null || {
+  echo "openssl command not found"
+  exit 1
+}
+
+command -v awk >/dev/null || {
+  echo "awk command not found"
+  exit 1
+}
+
 function hash_pw() {
   openssl sha1 -binary | openssl sha1 -hex | awk '{print "*"toupper($0)}'
 }
