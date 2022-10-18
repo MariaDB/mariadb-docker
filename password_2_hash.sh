@@ -13,7 +13,7 @@ command -v awk >/dev/null || {
 }
 
 function hash_pw() {
-  openssl sha1 -binary | openssl sha1 -hex | awk '{print "*"toupper($0)}'
+  openssl sha1 -binary | openssl sha1 -hex -r | awk -F ' ' '{print "*"toupper($1)}'
 }
 
 function test_hash() {
