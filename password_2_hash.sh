@@ -26,9 +26,13 @@ function test_hash() {
 test_hash 'mariadb' '*54958E764CE10E50764C2EECBB71D01F08549980'
 
 function ask_pw() {
-  stty -echo
+  if tty -s; then
+    stty -echo
+  fi
   head -n 1 | tr -d '\n'
-  stty echo
+  if tty -s; then
+    stty echo
+  fi
 }
 
 echo -n "Password: "
