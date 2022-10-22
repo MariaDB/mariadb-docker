@@ -76,6 +76,10 @@ RUN set -ex; \
 		:; \
 	fi
 
+# Ensure the container exec commands handle range of utf8 characters based of
+# default locales in base image (https://github.com/docker-library/docs/blob/135b79cc8093ab02e55debb61fdb079ab2dbce87/ubuntu/README.md#locales)
+ENV LANG C.UTF-8
+
 # OCI annotations to image
 LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.title="MariaDB Database" \
