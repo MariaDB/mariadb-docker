@@ -275,7 +275,7 @@ docker_setup_db() {
 		# but also outputs LOCK TABLES to improve the IO of
 		# Aria (MDEV-23326) for 10.4+.
 		{
-			# temporary fix for MDEV-29347 - ONLY_FULL_GROUP_BY incompatiblity
+			# temporary fix for MDEV-29347 - ONLY_FULL_GROUP_BY incompatibility
 			echo "SET @@SQL_MODE = REPLACE(@@SQL_MODE, 'ONLY_FULL_GROUP_BY', '');"
 			mariadb-tzinfo-to-sql --skip-write-binlog /usr/share/zoneinfo
 		} | docker_process_sql --dont-use-mysql-root-password --database=mysql
