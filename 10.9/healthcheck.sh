@@ -222,7 +222,7 @@ _repl_param_check()
 		all)
 			if [ -n "${repl['name']}" ]; then
 				unset 'repl[name]'
-				echo "Option --replication_all incompatible with specied source --replication_name, clearing replication_name" >&2
+				echo "Option --replication_all incompatible with specified source --replication_name, clearing replication_name" >&2
 			fi
 			;;
 		name)

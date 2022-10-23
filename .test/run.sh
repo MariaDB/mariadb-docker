@@ -152,7 +152,7 @@ killoff
 	;&
 	mysql_random_password_is_complex)
 
-echo -e "Test: MYSQL_RANDOM_ROOT_PASSWORD, needs to satisify minimium complexity of simple-password-check plugin\n"
+echo -e "Test: MYSQL_RANDOM_ROOT_PASSWORD, needs to satisfy minimium complexity of simple-password-check plugin\n"
 
 runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1 -e MARIADB_MYSQL_LOCALHOST_USER=1 -e MARIADB_MYSQL_LOCALHOST_GRANTS="RELOAD, PROCESS, LOCK TABLES" "${image}" --plugin-load-add=simple_password_check
 pass=$(docker logs "$cid" | grep 'GENERATED ROOT PASSWORD' 2>&1)
@@ -358,7 +358,7 @@ killoff
 	;&
 	mariadb_root_password_is_complex)
 
-echo -e "Test: MARIADB_RANDOM_ROOT_PASSWORD, needs to satisify minimium complexity of simple-password-check plugin\n"
+echo -e "Test: MARIADB_RANDOM_ROOT_PASSWORD, needs to satisfy minimium complexity of simple-password-check plugin\n"
 
 runandwait -e MARIADB_RANDOM_ROOT_PASSWORD=1 "${image}" --plugin-load-add=simple_password_check
 pass=$(docker logs "$cid"  2>&1 | grep 'GENERATED ROOT PASSWORD')
@@ -465,7 +465,7 @@ fi
 	done
 
 	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
-	
+
 	version=$(mariadbclient --skip-column-names -B -u root -pbob -e "SELECT VERSION()")
 
 	docker exec "$cid" ls -la /var/lib/mysql/system_mysql_backup_unknown_version.sql.zst || die "hopeing for backup file"
