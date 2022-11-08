@@ -98,7 +98,6 @@ docker_process_init_files() {
 # arguments necessary to run "mysqld --verbose --help" successfully (used for testing configuration validity and for extracting default/configured values)
 _verboseHelpArgs=(
 	--verbose --help
-	--log-bin-index="$(mktemp -u)" # https://github.com/docker-library/mysql/issues/136
 )
 
 mysql_check_config() {
@@ -274,11 +273,8 @@ docker_setup_db() {
 		# --skip-write-binlog usefully disables binary logging
 		# but also outputs LOCK TABLES to improve the IO of
 		# Aria (MDEV-23326) for 10.4+.
-		{
-			# temporary fix for MDEV-29347 - ONLY_FULL_GROUP_BY incompatibility
-			echo "SET @@SQL_MODE = REPLACE(@@SQL_MODE, 'ONLY_FULL_GROUP_BY', '');"
-			mysql_tzinfo_to_sql --skip-write-binlog /usr/share/zoneinfo
-		} | docker_process_sql --dont-use-mysql-root-password --database=mysql
+		mysql_tzinfo_to_sql --skip-write-binlog /usr/share/zoneinfo \
+			| docker_process_sql --dont-use-mysql-root-password --database=mysql
 		# tell docker_process_sql to not use MYSQL_ROOT_PASSWORD since it is not set yet
 	fi
 	# Generate random root password
