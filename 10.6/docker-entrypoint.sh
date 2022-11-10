@@ -125,7 +125,7 @@ docker_temp_server_start() {
 	declare -g MARIADB_PID
 	MARIADB_PID=$!
 	mysql_note "Waiting for server startup"
-	# only use the root password if the database has already been initializaed
+	# only use the root password if the database has already been initialized
 	# so that it won't try to fill in a password file when it hasn't been set yet
 	extraArgs=()
 	if [ -z "$DATABASE_ALREADY_EXISTS" ]; then
