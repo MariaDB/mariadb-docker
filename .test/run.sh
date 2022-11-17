@@ -31,6 +31,7 @@ killoff()
 die()
 {
 	[ -n "$cid" ] && docker logs "$cid"
+	[ -n "$tmpvol" ] && docker rm "$tmpvol"
 	killoff
         echo "$@" >&2
         exit 1
@@ -249,7 +250,6 @@ killoff
 echo -e "Test: Secrets _FILE vars should be same as env directly\n"
 
 secretdir=$(mktemp -d)
-datadir=$(mktemp -d)
 chmod go+rx "${secretdir}"
 echo bob > "$secretdir"/pass
 echo pluto > "$secretdir"/host
@@ -257,16 +257,14 @@ echo titan > "$secretdir"/db
 echo ron > "$secretdir"/u
 echo '*D87991C62A9CAEDC4AE0F608F19173AC7E614952' > "$secretdir"/p
 
-ug="$(stat -c '%u:%g' "$datadir")"
-if command -v podman
-then
-	podman unshare chown "$ug" "$datadir"
-fi
+tmpvol=v$RANDOM
+docker volume create "$tmpvol"
+# any container will work with tar in it, we may well use the image we have
+(cd "$secretdir" ; tar -cf - .) | docker run --rm --volume "$tmpvol":/v -i "${image}" tar -xf - -C /v
+rm -rf "${secretdir}"
 
 runandwait \
-	--user "$ug" \
-       	-v "$secretdir":/run/secrets:Z \
-        -v "$datadir":/var/lib/mysql:z \
+	-v "$tmpvol":/run/secrets \
 	-e MYSQL_ROOT_PASSWORD_FILE=/run/secrets/pass \
 	-e MYSQL_ROOT_HOST_FILE=/run/secrets/host \
 	-e MYSQL_DATABASE_FILE=/run/secrets/db \
@@ -279,12 +277,8 @@ host=$(mariadbclient_unix --skip-column-names -B -u root -pbob -e 'select host f
 creation=$(mariadbclient --skip-column-names -B -u ron -pscappers -P 3306 --protocol tcp titan -e "CREATE TABLE landing(i INT)")
 [ "${creation}" = '' ] || die 'creation error'
 killoff
-
-if command -v podman
-then
-	podman unshare rm -rf "$datadir"
-fi
-rm -rf "${secretdir}" "${datadir}"
+docker volume rm "$tmpvol"
+tmpvol=
 
 	;&
 	docker_entrypint_initdb)
