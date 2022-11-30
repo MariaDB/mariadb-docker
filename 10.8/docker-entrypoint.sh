@@ -193,7 +193,8 @@ docker_init_database_dir() {
 	installArgs=( --datadir="$DATADIR" --rpm --auth-root-authentication-method=normal )
 	# "Other options are passed to mariadbd." (so we pass all "mysqld" arguments directly here)
 	mariadb-install-db "${installArgs[@]}" "${@:2}" \
-                --skip-test-db \
+		--skip-test-db \
+		--old-mode='UTF8_IS_UTF8MB3' \
 		--default-time-zone=SYSTEM --enforce-storage-engine= \
 		--skip-log-bin \
 		--expire-logs-days=0 \

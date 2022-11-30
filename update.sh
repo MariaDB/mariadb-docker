@@ -56,8 +56,11 @@ update_version()
 
 	# Start using the new executable names
 	case "$version" in
-		10.3 | 10.4) ;; # nothing to see/do here
+		10.3 | 10.4)
+			sed -i -e '/--old-mode/d' "$version/docker-entrypoint.sh"
+		       	;; # almost nothing to see/do here
 		10.5)
+			sed -i -e '/--old-mode/d' "$version/docker-entrypoint.sh"
 			sed -i '/backwards compat/d' "$version/Dockerfile"
 			;;
 		*)
