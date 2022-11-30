@@ -193,7 +193,7 @@ docker_init_database_dir() {
 	installArgs=( --datadir="$DATADIR" --rpm --auth-root-authentication-method=normal )
 	# "Other options are passed to mysqld." (so we pass all "mysqld" arguments directly here)
 	mysql_install_db "${installArgs[@]}" "${@:2}" \
-                --skip-test-db \
+		--skip-test-db \
 		--default-time-zone=SYSTEM --enforce-storage-engine= \
 		--skip-log-bin \
 		--expire-logs-days=0 \

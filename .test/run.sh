@@ -153,9 +153,9 @@ killoff
 	;&
 	mysql_random_password_is_complex)
 
-echo -e "Test: MYSQL_RANDOM_ROOT_PASSWORD, needs to satisfy minimium complexity of simple-password-check plugin\n"
+echo -e "Test: MYSQL_RANDOM_ROOT_PASSWORD, needs to satisfy minimium complexity of simple-password-check plugin and old-mode=''\n"
 
-runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1 -e MARIADB_MYSQL_LOCALHOST_USER=1 -e MARIADB_MYSQL_LOCALHOST_GRANTS="RELOAD, PROCESS, LOCK TABLES" "${image}" --plugin-load-add=simple_password_check
+runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1 -e MARIADB_MYSQL_LOCALHOST_USER=1 -e MARIADB_MYSQL_LOCALHOST_GRANTS="RELOAD, PROCESS, LOCK TABLES" "${image}" --plugin-load-add=simple_password_check --old-mode=""
 pass=$(docker logs "$cid" | grep 'GENERATED ROOT PASSWORD' 2>&1)
 # trim up until passwod
 pass=${pass#*GENERATED ROOT PASSWORD: }
