@@ -1,0 +1,7 @@
+[mariadb]
+name = MariaDB
+# TODO fix upstream. baseurl = https://rpm.mariadb.org/%%MARIADB_VERSION%%/rhel9-$basearch/
+baseurl = https://rpm.mariadb.org/%%MARIADB_VERSION%%/rhel9-amd64/
+module_hotfixes=1
+gpgkey=https://rpm.mariadb.org/yum/RPM-GPG-KEY-MariaDB_v2
+gpgcheck=1

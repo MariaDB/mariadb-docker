@@ -1,0 +1,3 @@
+# Ubuntu container compatibility
+
+!includedir /etc/mysql/conf.d

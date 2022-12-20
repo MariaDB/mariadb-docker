@@ -39,23 +39,30 @@ update_version()
 {
 	echo "$version: $mariaVersion ($releaseStatus)"
 
-	suite="${suites[$version]:-$defaultSuite}"
-	fullVersion=1:${mariaVersion}+maria~${suffix[${suite}]}
-
-	if [[ $version = 10.[234] ]]; then
-		arches="amd64 arm64v8 ppc64le"
+	if [ -z "$ubi" ]; then
+		suite="${suites[$version]:-$defaultSuite}"
+		fullVersion=1:${mariaVersion}+maria~${suffix[${suite}]}
 	else
-		arches="amd64 arm64v8 ppc64le s390x"
+		suite=
+		fullVersion=
+		cp docker.cnf "$version"
+		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$version"/MariaDB.repo
 	fi
 
-	cp Dockerfile.template "$version/Dockerfile"
+	if [[ $version = 10.[234]* ]]; then
+		arches=" amd64 arm64v8 ppc64le"
+	else
+		arches=" amd64 arm64v8 ppc64le s390x"
+	fi
+
+	cp "Dockerfile${ubi}.template" "${version}/Dockerfile"
 
 	cp docker-entrypoint.sh healthcheck.sh "$version/"
 	chmod a+x "$version"/healthcheck.sh
 	sed -i \
 		-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
 		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
-		-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
+		-e 's!%%MARIADB_MAJOR%%!'"${version%-ubi}"'!g' \
 		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
 		-e 's!%%MARIADB_SUPPORT_TYPE%%!'"$supportType"'!g' \
 		-e 's!%%SUITE%%!'"$suite"'!g' \
@@ -101,7 +108,7 @@ update_version()
 					"$version/docker-entrypoint.sh"
 			fi
 			sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\bmysql\b/mariadb/' "$version/healthcheck.sh"
-			if [ ! "$version" = 10.6 ]; then
+			if [[ ! "${version%-ubi}" =~ 10.[678] ]]; then
 				# quoted $ intentional
 				# shellcheck disable=SC2016
 				sed -i -e '/^ARG MARIADB_MAJOR/d' \
@@ -153,8 +160,9 @@ update_version_array()
 
 mariaversion()
 {
-	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version}" \
+	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
 		| jq -r 'first(.releases[]).release_id')
+	mariaVersion=${mariaVersion//\"}
 }
 
 all()
@@ -171,7 +179,7 @@ in_development()
 {
 	releaseStatus=Alpha
 	supportType=Unknown
-	version=$development_version
+	version=$development_version$ubi
 	mariaVersion=${development_version}.0
 	[ -d "$development_version" ] && update_version
 }
@@ -179,6 +187,7 @@ in_development()
 
 if [ $# -eq 0 ]; then
 	in_development
+	ubi=-ubi in_development
 	all
 	exit 0
 fi
@@ -186,18 +195,23 @@ fi
 versions=( "$@" )
 
 for version in "${versions[@]}"; do
-	if [ "$version" == $development_version ]; then
+	if [ "${version#*-}" = "ubi" ]; then
+		ubi=-ubi
+	else
+		ubi=
+	fi
+
+	if [ "${version%-*}" == $development_version ]; then
 		in_development
 		continue
 	fi
 	if [ ! -d "$version" ]; then
-		mariaVersion=$version
 		version=${version%.[[:digit:]]*}
 	else
 		mariaversion
 	fi
 	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
-		| jq -r --arg version "$version" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
+		| jq -r --arg version "${version%-*}" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
 	releaseStatus=${release[0]}
 	supportType=${release[1]}
 
