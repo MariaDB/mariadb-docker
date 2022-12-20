@@ -122,7 +122,7 @@ all()
 	done
 }
 
-development_version=10.12
+development_version=11.0
 
 in_development()
 {
