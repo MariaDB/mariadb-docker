@@ -62,7 +62,7 @@ runandwait()
 	do
 		(( waiting-- ))
 		sleep 1
-		if ! docker exec -i "$cid" $mariadb -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | grep -F "Can't connect" > /dev/null
+		if ! docker exec -i "$cid" "$mariadb" -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | grep -F "Can't connect" > /dev/null
 		then
 			break
 		fi
