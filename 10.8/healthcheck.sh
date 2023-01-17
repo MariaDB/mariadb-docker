@@ -176,6 +176,8 @@ replication()
 		[ $? -gt 128 ] && return 1
 		return 0
        }
+       # reachable in command not found(?)
+       # shellcheck disable=SC2317
        return $?
 }
 
