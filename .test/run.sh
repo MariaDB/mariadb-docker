@@ -38,6 +38,14 @@ die()
 }
 trap "killoff" EXIT
 
+if docker run --rm "$image" mariadb --version 2>/dev/null
+then
+	mariadb=mariadb
+else
+	# still running 10.3
+	mariadb=mysql
+fi
+
 runandwait()
 {
 	cname="mariadbcontainer$RANDOM"
@@ -47,7 +55,6 @@ runandwait()
 	)"
 	port=$(docker port "$cname" 3306)
 	port=${port#*:}
-
 	waiting=${DOCKER_LIBRARY_START_TIMEOUT:-10}
 	echo "waiting to start..."
 	set +e +o pipefail +x
@@ -55,7 +62,7 @@ runandwait()
 	do
 		(( waiting-- ))
 		sleep 1
-		if ! docker exec -i "$cid" mysql -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | grep -F "Can't connect" > /dev/null
+		if ! docker exec -i "$cid" $mariadb -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | grep -F "Can't connect" > /dev/null
 		then
 			break
 		fi
@@ -70,7 +77,7 @@ runandwait()
 mariadbclient() {
 	docker exec -i \
 		"$cname" \
-		mysql \
+		$mariadb \
 		--host 127.0.0.1 \
 		--protocol tcp \
 		--silent \
@@ -80,7 +87,7 @@ mariadbclient() {
 mariadbclient_unix() {
 	docker exec -i \
 		"$cname" \
-		mysql \
+		$mariadb \
 		--silent \
 		"$@"
 }
@@ -133,7 +140,7 @@ killoff
 
 	createuser=$(docker exec --user mysql -i \
 		"$cname" \
-		mysql \
+		$mariadb \
 		--silent \
 		-e "show create user")
 	# shellcheck disable=SC2016
@@ -141,7 +148,7 @@ killoff
 
 	grants="$(docker exec --user mysql -i \
 		$cname \
-		mysql \
+		$mariadb \
 		--silent \
 		-e show\ grants)"
 
@@ -163,13 +170,13 @@ mariadbclient -u root -p"${pass}" -e 'select current_user()'
 
 	docker exec --user mysql -i \
 		"$cname" \
-		mysql \
+		$mariadb \
 		--silent \
 		-e "select 'I connect therefore I am'" || die "I'd hoped to work around MDEV-24111"
 
 	grants="$(docker exec --user mysql -i \
 		$cname \
-		mysql \
+		$mariadb \
 		--silent \
 		-e show\ grants)"
 
@@ -451,9 +458,9 @@ fi
 	docker volume rm m57 || echo "m57 already cleaned"
 	docker volume create m57
 	docker pull docker.io/library/mysql:5.7
-	runandwait -v m57:/var/lib/mysql:Z -e MYSQL_INITDB_SKIP_TZINFO=1 -e MYSQL_ROOT_PASSWORD=bob docker.io/library/mysql:5.7
+	mariadb=mysql runandwait -v m57:/var/lib/mysql:Z -e MYSQL_INITDB_SKIP_TZINFO=1 -e MYSQL_ROOT_PASSWORD=bob docker.io/library/mysql:5.7
 	# clean shutdown required
-	mariadbclient -u root -pbob -e "set global innodb_fast_shutdown=0;SHUTDOWN"
+	docker exec "$cid" mysql -u root -pbob -e "set global innodb_fast_shutdown=0;SHUTDOWN"
 	while docker exec "$cid" ls -lad /proc/1; do
 		sleep 1
 	done
@@ -585,7 +592,7 @@ binlog)
 	fi
 	docker exec --user mysql -i \
 		"$cname" \
-		mysql \
+		$mariadb \
 		-e "SHOW SLAVE STATUS\G"
 	killoff
 	cid=$master_host
