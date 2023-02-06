@@ -75,19 +75,19 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="10.7.7" \
+      org.opencontainers.image.version="10.7.8" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
 ARG MARIADB_MAJOR=10.7
 ENV MARIADB_MAJOR $MARIADB_MAJOR
-ARG MARIADB_VERSION=1:10.7.7+maria~ubu2004
+ARG MARIADB_VERSION=1:10.7.8+maria~ubu2004
 ENV MARIADB_VERSION $MARIADB_VERSION
 # release-status:Stable
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.7.7/repo/ubuntu/ focal main"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.7.8/repo/ubuntu/ focal main"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
