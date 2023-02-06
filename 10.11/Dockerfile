@@ -107,8 +107,7 @@ RUN set -ex; \
 	} | debconf-set-selections; \
 	apt-get update; \
 # mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
-	apt-get install -y \
-		"mariadb-server=$MARIADB_VERSION" mariadb-backup socat \
+	apt-get install -y --no-install-recommends mariadb-server="$MARIADB_VERSION" mariadb-backup socat \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership

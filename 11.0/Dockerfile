@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM ubuntu:focal
+FROM ubuntu:jammy
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
@@ -71,23 +71,21 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.title="MariaDB Database" \
       org.opencontainers.image.description="MariaDB Database for relational SQL" \
       org.opencontainers.image.documentation="https://hub.docker.com/_/mariadb/" \
-      org.opencontainers.image.base.name="docker.io/library/ubuntu:focal" \
+      org.opencontainers.image.base.name="docker.io/library/ubuntu:jammy" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="10.4.27" \
+      org.opencontainers.image.version="11.0.0" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
-# bashbrew-architectures: amd64 arm64v8 ppc64le
-ARG MARIADB_MAJOR=10.4
-ENV MARIADB_MAJOR $MARIADB_MAJOR
-ARG MARIADB_VERSION=1:10.4.27+maria~ubu2004
+# bashbrew-architectures: amd64 arm64v8 ppc64le s390x
+ARG MARIADB_VERSION=1:11.0.0+maria~ubu2204
 ENV MARIADB_VERSION $MARIADB_VERSION
-# release-status:Stable
+# release-status:Alpha
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.4.27/repo/ubuntu/ focal main"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-11.0.0/repo/ubuntu/ jammy main"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
@@ -104,8 +102,8 @@ RUN set -e;\
 # hadolint ignore=DL3015
 RUN set -ex; \
 	{ \
-		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password password 'unused'; \
-		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password_again password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections; \
 	apt-get update; \
 # mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
@@ -135,8 +133,7 @@ VOLUME /var/lib/mysql
 
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 3306
-CMD ["mysqld"]
+CMD ["mariadbd"]
