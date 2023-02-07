@@ -83,6 +83,10 @@ update_version()
 					-e 's/-\$MARIADB_MAJOR//' \
 					"$version/Dockerfile"
 			fi
+			if [ "$version" = 11.0 ]; then
+				sed -i -e 's/mysql_upgrade_info/mariadb_upgrade_info/' \
+					"$version/docker-entrypoint.sh" "$version/healthcheck.sh"
+			fi
 			;&
 		esac
 }

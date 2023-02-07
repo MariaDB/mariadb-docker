@@ -403,8 +403,8 @@ docker_mariadb_backup_system()
 	fi
 	local backup_db="system_mysql_backup_unknown_version.sql.zst"
 	local oldfullversion="unknown_version"
-	if [ -r "$DATADIR"/mysql_upgrade_info ]; then
-		read -r -d '' oldfullversion < "$DATADIR"/mysql_upgrade_info || true
+	if [ -r "$DATADIR"/mariadb_upgrade_info ]; then
+		read -r -d '' oldfullversion < "$DATADIR"/mariadb_upgrade_info || true
 		if [ -n "$oldfullversion" ]; then
 			backup_db="system_mysql_backup_${oldfullversion}.sql.zst"
 		fi
@@ -444,14 +444,14 @@ docker_mariadb_upgrade() {
 
 
 _check_if_upgrade_is_needed() {
-	if [ ! -f "$DATADIR"/mysql_upgrade_info ]; then
+	if [ ! -f "$DATADIR"/mariadb_upgrade_info ]; then
 		mysql_note "MariaDB upgrade information missing, assuming required"
 		return 0
 	fi
 	local mariadbVersion
 	mariadbVersion="$(_mariadb_version)"
 	IFS='.-' read -ra newversion <<<"$mariadbVersion"
-	IFS='.-' read -ra oldversion < "$DATADIR"/mysql_upgrade_info || true
+	IFS='.-' read -ra oldversion < "$DATADIR"/mariadb_upgrade_info || true
 
 	if [[ ${#newversion[@]} -lt 2 ]] || [[ ${#oldversion[@]} -lt 2 ]] \
 		|| [[ ${oldversion[0]} -lt ${newversion[0]} ]] \
