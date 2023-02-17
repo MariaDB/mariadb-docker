@@ -47,7 +47,8 @@ cat <<-EOH
 # this file is generated via https://github.com/MariaDB/mariadb-docker/blob/$(fileCommit "$self")/$self
 
 Maintainers: Daniel Black <daniel@mariadb.org> (@grooverdan),
-             Daniel Bartholomew <dbart@mariadb.com> (@dbart)
+             Daniel Bartholomew <dbart@mariadb.com> (@dbart),
+             Faustin Lammler <faustin@mariadb.org> (@fauust)
 GitRepo: https://github.com/MariaDB/mariadb-docker.git
 EOH
 
