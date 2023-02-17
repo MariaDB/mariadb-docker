@@ -28,6 +28,9 @@ declare -A suffix=(
 #	[s390x]='s390x'
 #)
 
+# For testing with https://downloads.dev.mariadb.org/rest-api
+typeset -r DOWNLOADS_REST_API="https://downloads.mariadb.org/rest-api"
+
 update_version()
 {
 	echo "$version: $mariaVersion ($releaseStatus)"
@@ -91,16 +94,15 @@ update_version()
 		esac
 }
 
-mariaversion()
-{
-	mariaVersion=$( curl -fsSL https://downloads.mariadb.org/rest-api/mariadb/"${version}" \
-	       | jq 'first(..|select(.release_id)) | .release_id' )
-	mariaVersion=${mariaVersion//\"}
+mariaversion() {
+  mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version}" |
+    jq 'first(..|select(.release_id)) | .release_id')
+  mariaVersion=${mariaVersion//\"/}
 }
 
 all()
 {
-	curl -fsSL https://downloads.mariadb.org/rest-api/mariadb/ \
+	curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq '.major_releases[] | [ .release_id ], [ .release_status ]  | @tsv ' \
 		| while read -r version
 	do
@@ -113,7 +115,7 @@ all()
 
 		read -r releaseStatus
 		releaseStatus=${releaseStatus//\"}
-	
+
 		case "$releaseStatus" in
 			Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
 		        "Old Stable" )
@@ -156,9 +158,9 @@ for version in "${versions[@]}"; do
 	else
 		mariaversion
 	fi
-	releaseStatus=$(curl -fsSL https://downloads.mariadb.org/rest-api/mariadb/ \
+	releaseStatus=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq ".major_releases[] | select(.release_id == \"$version\") | .release_status")
 	releaseStatus=${releaseStatus//\"}
-	
+
 	update_version
 done

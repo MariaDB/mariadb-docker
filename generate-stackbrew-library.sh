@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+err() {
+  echo >&2 "ERROR: $*"
+  exit 1
+}
+
 declare -A aliases=(
 	#[10.3]='10 latest'
 	#[5.5]='5'
@@ -11,6 +16,12 @@ declare -A latest=()
 
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
+
+# needed by .architectures-lib
+# https://github.com/docker-library/bashbrew/releases
+command -v bashbrew >/dev/null || {
+	err "bashbrew: command not found"
+}
 
 source '.architectures-lib'
 
@@ -78,7 +89,7 @@ for version in "${versions[@]}"; do
 		versionAliases+=( ${version}${suffix} )
 	fi
 
-	versionAliases+=( ${aliases[$version]:-} )
+	versionAliases+=( "${aliases[$version]:-}" )
 	if [ "$releaseStatus" = 'Stable' ]; then
 		for tryAlias in "${version%%.*}" latest; do
 			if [ -z "${latest[$tryAlias]:-}" ]; then
@@ -95,7 +106,7 @@ for version in "${versions[@]}"; do
 
 	variantAliases=( "${versionAliases[@]/%/-$suite}" )
 	versionAliases=( "${variantAliases[@]//latest-/}" "${versionAliases[@]}" )
-	arches=$(versionArches $version)
+	arches=$(versionArches "$version")
 
 	for arch in $arches; do
 		# Debify the arch
@@ -114,7 +125,7 @@ for version in "${versions[@]}"; do
 	echo
 	cat <<-EOE
 		Tags: $(join ', ' "${versionAliases[@]}")
-		Architectures: $(join ', ' $arches)
+		Architectures: $(join ', ' "$arches")
 		GitCommit: $commit
 		Directory: $version
 	EOE
