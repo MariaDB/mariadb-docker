@@ -120,8 +120,10 @@ othertables=$(mariadbclient -u root --skip-column-names -Be "select group_concat
 otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'))")
 [ "$otherusers" != '' ] && die "unexpected users $otherusers"
 
-	echo "Contents of /var/lib/mysql/mysql_upgrade_info:"
-	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info || die "missing mysql_upgrade_info on install"
+	echo "Contents of /var/lib/mysql/{mysql,mariadb}_upgrade_info:"
+	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info \
+		|| docker exec "$cid" cat /var/lib/mysql/mariadb_upgrade_info \
+		|| die "missing {mariadb,mysql_upgrade}_info on install"
 	echo
 
 killoff
@@ -478,16 +480,22 @@ fi
 	docker exec "$cid" ls -la /var/lib/mysql/
 
 	echo "Final upgrade info reflects current version?"
-	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info || die "missing mysql_upgrade_info on install"
+	if docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info; then
+	       upgrade_file=mysql_upgrade_info
+	elif docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info; then
+	       upgrade_file=mariadb_upgrade_info
+	else
+		die "missing {mysql,mariadb}_upgrade_info on install"
+	fi
 	echo
 
-	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info)
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/$upgrade_file)
 	# note VERSION() is longer
 	[[ $version =~ ^${upgradeversion} ]] || die "upgrade version didn't match"
 
 	echo "fix version to 5.x"
-	docker exec "$cid" sed -i -e 's/[0-9]*\(.*\)/5\1/' /var/lib/mysql/mysql_upgrade_info
-	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info
+	docker exec "$cid" sed -i -e 's/[0-9]*\(.*\)/5\1/' /var/lib/mysql/$upgrade_file
+	docker exec "$cid" cat /var/lib/mysql/$upgrade_file
 	killoff
 
 	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
@@ -505,19 +513,19 @@ fi
 	echo
 
 	echo "Final upgrade info reflects current version?"
-	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info || die "missing mysql_upgrade_info on install"
-	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info)
+	docker exec "$cid" cat /var/lib/mysql/$upgrade_file || die "missing mysql_upgrade_info on install"
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/$upgrade_file)
 	[[ $version =~ ^${upgradeversion} ]] || die "upgrade version didn't match current version"
 	echo
 
 	echo "Fixing back to 0 minor version"
-	docker exec "$cid" sed -i -e 's/[0-9]*-\(MariaDB\)/0-\1/' /var/lib/mysql/mysql_upgrade_info
-	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info)
+	docker exec "$cid" sed -i -e 's/[0-9]*-\(MariaDB\)/0-\1/' /var/lib/mysql/$upgrade_file
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/$upgrade_file)
 	killoff
 
 	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
-	docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info
-	newupgradeversion=$(docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info)
+	docker exec "$cid" cat /var/lib/mysql/$upgrade_file
+	newupgradeversion=$(docker exec "$cid" cat /var/lib/mysql/$upgrade_file)
 	[ "$upgradeversion" = "$newupgradeversion" ] || die "upgrade versions from mysql_upgrade_info should match"
        	docker logs "$cid" 2>&1 | grep -C 5 'MariaDB upgrade not required' || die 'should not have upgraded'
 
@@ -528,7 +536,7 @@ fi
 	encryption)
 
 	echo -e "Test: Startup using encryption \n"
-	runandwait -v "${dir}"/encryption_conf/:/etc/mysql/conf.d/ -v "${dir}"/encryption:/etc/encryption/ -v "${dir}"/initenc:/docker-entrypoint-initdb.d/ \
+	runandwait -v "${dir}"/encryption_conf/:/etc/mysql/conf.d/:z -v "${dir}"/encryption:/etc/encryption/:z -v "${dir}"/initenc:/docker-entrypoint-initdb.d/:z \
 		-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 -e MARIADB_DATABASE=bob -e MARIADB_USER=bob -e MARIADB_PASSWORD=hope "${image}"
 	mariadbclient -u root -e 'SELECT * FROM information_schema.innodb_tablespaces_encryption' || die 'Failed to start container'
 
@@ -537,7 +545,7 @@ fi
 	[ "$cnt" -gt 0 ] || die 'Failed to initialize encryption on initialization'
 	killoff
 	;&
-binlog)
+        binlog)
 
 	echo -e "Test: Ensure timezoneinfo isn't written to binary log\n"
 
