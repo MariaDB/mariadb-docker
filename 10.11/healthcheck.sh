@@ -183,7 +183,7 @@ replication()
 
 # mariadbupgrade
 #
-# Test the lock on the file /var/lib/mysql_upgrade_info
+# Test the lock on the file /var/lib/mariadb/mysql_upgrade_info
 # https://jira.mariadb.org/browse/MDEV-27068
 mariadbupgrade()
 {
