@@ -128,7 +128,7 @@ all()
 	done
 }
 
-development_version=11.0
+development_version=11.1
 
 in_development()
 {
