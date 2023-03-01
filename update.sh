@@ -10,7 +10,6 @@ declare -A suites=(
 	[10.4]='focal'
 	[10.5]='focal'
 	[10.6]='focal'
-	[10.7]='focal'
 )
 
 declare -A suffix=(
