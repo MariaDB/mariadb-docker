@@ -482,7 +482,7 @@ fi
 	echo "Final upgrade info reflects current version?"
 	if docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info; then
 	       upgrade_file=mysql_upgrade_info
-	elif docker exec "$cid" cat /var/lib/mysql/mysql_upgrade_info; then
+	elif docker exec "$cid" cat /var/lib/mysql/mariadb_upgrade_info; then
 	       upgrade_file=mariadb_upgrade_info
 	else
 		die "missing {mysql,mariadb}_upgrade_info on install"
