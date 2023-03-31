@@ -26,6 +26,10 @@ killoff()
 		master_host=""
 		killoff
 	fi
+	if [ -n "$netid" ]; then
+		docker network rm "$netid"
+		netid=
+	fi
 }
 
 die()
@@ -41,20 +45,35 @@ trap "killoff" EXIT
 if docker run --rm "$image" mariadb --version 2>/dev/null
 then
 	mariadb=mariadb
+	RPL_MONITOR="REPLICA MONITOR"
+	v=$(docker run --rm "$image" mariadb --version)
+	if [[ $v =~ 'Distrib 10.4' ]]; then
+		# the new age hasn't begun yet
+		RPL_MONITOR="REPLICATION CLIENT"
+	fi
 else
 	# still running 10.3
 	mariadb=mysql
+	RPL_MONITOR="REPLICATION CLIENT"
 fi
 
 runandwait()
 {
+	local port_int
 	cname="mariadbcontainer$RANDOM"
-	cid="$(
-		docker run -d \
-			--name "$cname" --rm --publish 3306 "$@"
-	)"
-	port=$(docker port "$cname" 3306)
-	port=${port#*:}
+	if [ -z "$port" ]; then
+		cid="$(
+			docker run -d \
+				--name "$cname" --rm --publish 3306 "$@"
+		)"
+		port_int=3306
+	else
+		cid="$(
+			docker run -d \
+				--name "$cname" --rm "$@"
+		)"
+		port_int=$port
+	fi
 	waiting=${DOCKER_LIBRARY_START_TIMEOUT:-10}
 	echo "waiting to start..."
 	set +e +o pipefail +x
@@ -62,7 +81,7 @@ runandwait()
 	do
 		(( waiting-- ))
 		sleep 1
-		if ! docker exec -i "$cid" "$mariadb" -h localhost --protocol tcp -P 3306 -e 'select 1' 2>&1 | grep -F "Can't connect" > /dev/null
+		if ! docker exec -i "$cid" "$mariadb" -h localhost --protocol tcp -P "$port_int" -e 'select 1' 2>&1 | grep -F "Can't connect" > /dev/null
 		then
 			break
 		fi
@@ -90,6 +109,94 @@ mariadbclient_unix() {
 		$mariadb \
 		--silent \
 		"$@"
+}
+
+checkUserExistInMariaDB() {
+	if [ -z $1 ] ; then
+		return 1
+	fi
+
+	local user=$(mariadbclient -u root -e "SELECT User FROM mysql.user where User='$1';")
+	if [ -z $user ] ; then
+		return 1
+	fi
+
+	return 0
+}
+
+checkReplication() {
+	mariadb_replication_user='foo'
+	local pass_str=
+	local pass=
+	if [ $1 = 'MARIADB_REPLICATION_PASSWORD_HASH' ] ; then 
+		pass_str=MARIADB_REPLICATION_PASSWORD_HASH='*0FD9A3F0F816D076CF239580A68A1147C250EB7B'
+		pass='jane'
+	else
+		pass_str='MARIADB_REPLICATION_PASSWORD=foo123'
+		pass='foo123'
+	fi
+
+	netid="mariadbnetwork$RANDOM"
+	docker network create "$netid"
+
+	# When MARIADB_REPLICATION_HOST is not specified as env, and MARIADB_REPLICATION_USER exists, then considered as master container.
+	runandwait \
+		--network "$netid" \
+		-e MARIADB_REPLICATION_USER="$mariadb_replication_user" \
+		-e "$pass_str" \
+		-e MARIADB_DATABASE=replcheck \
+		-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
+		"$image" --server-id=3000 --log-bin --log-basename=my-mariadb
+
+	# Checks $mariadb_replication_user get created or not
+	if checkUserExistInMariaDB $mariadb_replication_user ; then
+		grants=$(mariadbclient -u $mariadb_replication_user -p$pass -e "SHOW GRANTS")
+		[[ "${grants/SLAVE/REPLICA}" =~ "GRANT REPLICATION REPLICA ON *.* TO \`$mariadb_replication_user\`@\`%\`" ]] || die "I wasn't created how I was expected: got $grants"
+
+		mariadbclient -u root --batch --skip-column-names -e 'create table t1(i int)' replcheck
+		readarray -t vals < <(mariadbclient -u root --batch --skip-column-names -e 'show master status\G' replcheck)
+		lastfile="${vals[1]}"
+		pos="${vals[2]}"
+		[[ "$lastfile" = my-mariadb-bin.00000[12] ]] || die "too many binlog files"
+		[ "$pos" -lt 500 ] || die 'binary log too big'
+		docker exec "$cid" ls -la /var/lib/mysql/my-mariadb-bin.000001
+		docker exec "$cid" sh -c '[ $(wc -c < /var/lib/mysql/my-mariadb-bin.000001 ) -gt 2500 ]' && die 'binary log 1 too big'
+		docker exec "$cid" sh -c "[ \$(wc -c < /var/lib/mysql/$lastfile ) -gt $pos ]" && die 'binary log 2 too big'
+
+		master_host=$cname
+		master_cid=$cid
+		port=3307
+		runandwait \
+			--network "$netid" \
+			-e MARIADB_MASTER_HOST="$master_host" \
+			-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
+			-e MARIADB_REPLICATION_USER="$mariadb_replication_user" \
+			-e MARIADB_REPLICATION_PASSWORD="$pass" \
+			-e MARIADB_MYSQL_LOCALHOST_USER=1 \
+			-e MARIADB_MYSQL_LOCALHOST_GRANTS="${RPL_MONITOR}" \
+			--health-cmd='healthcheck.sh --su-mysql --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
+			--health-interval=3s \
+			"$image" --server-id=3001 --port "${port}"
+		unset port
+
+		c="${DOCKER_LIBRARY_START_TIMEOUT:-10}"
+		until docker exec "$cid" healthcheck.sh --su-mysql --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ "$c" -eq 0 ]
+		do
+			sleep 1
+			c=$(( c - 1 ))
+		done
+
+		docker exec --user mysql -i \
+			"$cname" \
+			$mariadb \
+			-e 'SHOW SLAVE STATUS\G' || die 'error examining replica status'
+
+		mariadbclient_unix -u root replcheck --batch --skip-column-names -e 'show create table t1;' || die 'sample table not replicated'
+
+		killoff
+	else
+		die "User $mariadb_replication_user did not get created for replication mode master"
+	fi
 }
 
 case ${2:-all} in
@@ -164,7 +271,8 @@ killoff
 
 echo -e "Test: MYSQL_RANDOM_ROOT_PASSWORD, needs to satisfy minimium complexity of simple-password-check plugin and old-mode=''\n"
 
-runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1 -e MARIADB_MYSQL_LOCALHOST_USER=1 -e MARIADB_MYSQL_LOCALHOST_GRANTS="RELOAD, PROCESS, LOCK TABLES" "${image}" --plugin-load-add=simple_password_check --old-mode=""
+runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1 -e MARIADB_MYSQL_LOCALHOST_USER=1 -e MARIADB_MYSQL_LOCALHOST_GRANTS="RELOAD, PROCESS, LOCK TABLES" \
+	"${image}" --plugin-load-add=simple_password_check --old-mode=""
 pass=$(docker logs "$cid" | grep 'GENERATED ROOT PASSWORD' 2>&1)
 # trim up until passwod
 pass=${pass#*GENERATED ROOT PASSWORD: }
@@ -206,7 +314,7 @@ killoff
 
 echo -e "Test: MYSQL_ROOT_HOST\n"
 
-runandwait -e  MYSQL_ALLOW_EMPTY_PASSWORD=1  -e MYSQL_ROOT_HOST=apple "${image}" 
+runandwait -e  MYSQL_ALLOW_EMPTY_PASSWORD=1  -e MYSQL_ROOT_HOST=apple "${image}"
 ru=$(mariadbclient_unix --skip-column-names -B -u root -e 'select user,host from mysql.user where host="apple"')
 [ "${ru}" = '' ] && die 'root@apple not created'
 killoff
@@ -226,8 +334,12 @@ killoff
 
 echo -e "Test: complex passwords\n"
 
-runandwait -e MYSQL_USER=bob -e MYSQL_PASSWORD=$'\n \' \n' -e MYSQL_ROOT_PASSWORD=$'\n\'\\aa-\x09-zz"_%\n' "${image}"
+runandwait -e MYSQL_USER=bob -e MYSQL_PASSWORD=$'\n \' \n' -e MYSQL_ROOT_PASSWORD=$'\n\'\\aa-\x09-zz"_%\n' \
+	-e MARIADB_REPLICATION_USER="foo" \
+	-e MARIADB_REPLICATION_PASSWORD=$'\n\'\\aa-\x09-zz"_%\n' \
+	"${image}"
 mariadbclient_unix --skip-column-names -B -u root -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
+mariadbclient_unix --skip-column-names -B -u foo -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
 mariadbclient_unix --skip-column-names -B -u bob -p$'\n \' \n' -e 'select 1'
 killoff
 
@@ -279,7 +391,7 @@ runandwait \
 	-e MYSQL_DATABASE_FILE=/run/secrets/db \
 	-e MYSQL_USER_FILE=/run/secrets/u \
 	-e MARIADB_PASSWORD_HASH_FILE=/run/secrets/p \
-	"${image}" 
+	"${image}"
 
 host=$(mariadbclient_unix --skip-column-names -B -u root -pbob -e 'select host from mysql.user where user="root" and host="pluto"' titan)
 [ "${host}" != 'pluto' ] && die 'root@pluto not created'
@@ -605,6 +717,43 @@ fi
 	killoff
 	cid=$master_host
 	killoff
+
+	;&
+	validate_master_env)
+
+	echo -e "Test: Expect failure for master; MARIADB_REPLICATION_USER without MARIADB_REPLICATION_PASSWORD or MARIADB_REPLICATION_PASSWORD_HASH specified\n"
+	cname="mariadb-container-replica-fail-to-start-options-$RANDOM-$RANDOM"
+	docker run  --rm  --name "$cname" \
+		-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
+		-e MARIADB_REPLICATION_USER="repl" \
+		"$image" \
+		&& die "$cname should fail with incomplete options" 
+
+	;&
+	validate_replica_env)
+
+	echo -e "Test: Expect failure for replica mode without MARIADB_REPLICATION_USER specified\n"
+	cname="mariadb-container-replica-fail-to-start-options-$RANDOM-$RANDOM"
+	docker run  --rm  --name "$cname" \
+		-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
+		-e MARIADB_MASTER_HOST="ok" \
+		"$image" \
+		&& die "$cname should fail with incomplete options" 
+
+	;&
+	replication)
+
+	echo -e "Test: Replica container can be initialized with environment variables when MARIADB_REPLICATION_PASSWORD is set\n"
+
+	checkReplication 'MARIADB_REPLICATION_PASSWORD'
+
+	;&
+	replication_password_hash)
+
+	echo -e "Test: Replica container can be initialized with environment variables when MARIADB_REPLICATION_PASSWORD_HASH is set\n"
+
+	checkReplication 'MARIADB_REPLICATION_PASSWORD_HASH'
+
 	;&
 	password_hash)
 
