@@ -84,6 +84,7 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 ARG MARIADB_VERSION=1:10.8.7+maria~ubu2204
 ENV MARIADB_VERSION $MARIADB_VERSION
 # release-status:Stable
+# release-support-type:Short Term Support
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
