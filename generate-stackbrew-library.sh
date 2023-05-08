@@ -90,7 +90,7 @@ for version in "${versions[@]}"; do
 		versionAliases+=( ${version}${suffix} )
 	fi
 
-	versionAliases+=( "${aliases[$version]:-}" )
+	versionAliases+=( ${aliases[$version]:-} )
 	if [ "$releaseStatus" = 'Stable' ]; then
 		for tryAlias in "${version%%.*}" latest; do
 			if [ -z "${latest[$tryAlias]:-}" ]; then
@@ -126,7 +126,7 @@ for version in "${versions[@]}"; do
 	echo
 	cat <<-EOE
 		Tags: $(join ', ' "${versionAliases[@]}")
-		Architectures: $(join ', ' "$arches")
+		Architectures: $(join ', ' $arches)
 		GitCommit: $commit
 		Directory: $version
 	EOE

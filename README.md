@@ -108,7 +108,7 @@ To build, you can use [docker build](https://docs.docker.com/engine/reference/co
 
 Run:
 ```
-.test/run {container hash}
+.test/run {container hash/tag}
 ```
 
 This will run through all current tests and the new tests you have created. The key aspect is that the script should error returning a non-zero exit code if the test fails.
