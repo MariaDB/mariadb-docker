@@ -75,6 +75,7 @@ for version in "${versions[@]}"; do
 
 	fullVersion="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "ARG" && $2 ~ "MARIADB_VERSION=" { gsub(/^MARIADB_VERSION=([0-9]+:)|[+].*$/, "", $2); print $2; exit }')"
 	releaseStatus="$(grep -m1 'release-status:' "$version/Dockerfile" | cut -d':' -f2)"
+	supportType="$(grep -m1 'support-type:' "$version/Dockerfile" | cut -d':' -f2)"
 
 	case $releaseStatus in
 	Stable) ;&
@@ -86,6 +87,17 @@ for version in "${versions[@]}"; do
 	esac
 	versionAliases=( ${fullVersion}${suffix} )
 
+	case "${supportType}" in
+	"Long Term Support")
+		supportType=LTS
+		;;
+	"Short Term Support")
+		supportType=STS
+		;;
+	*)
+		supportType=Unknown
+	esac
+
 	if [ "$version" != "$fullVersion" ]; then
 		versionAliases+=( ${version}${suffix} )
 	fi
@@ -96,6 +108,9 @@ for version in "${versions[@]}"; do
 			if [ -z "${latest[$tryAlias]:-}" ]; then
 				latest[$tryAlias]="$version"
 				versionAliases+=( "$tryAlias" )
+				if [ "$supportType" = LTS ]; then
+					versionAliases+=( "${tryAlias}-lts" )
+				fi
 			fi
 		done
 	fi
