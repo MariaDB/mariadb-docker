@@ -164,11 +164,12 @@ checkReplication() {
 		docker exec "$cid" sh -c "[ \$(wc -c < /var/lib/mysql/$lastfile ) -gt $pos ]" && die 'binary log 2 too big'
 
 		master_host=$cname
+		master_ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $cname)
 		master_cid=$cid
 		port=3307
 		runandwait \
 			--network "$netid" \
-			-e MARIADB_MASTER_HOST="$master_host" \
+			-e MARIADB_MASTER_HOST="$master_ip" \
 			-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
 			-e MARIADB_REPLICATION_USER="$mariadb_replication_user" \
 			-e MARIADB_REPLICATION_PASSWORD="$pass" \
