@@ -46,7 +46,7 @@ update_version()
 
 	cp Dockerfile.template "$version/Dockerfile"
 
-	cp docker-entrypoint.sh healthcheck.sh "$version/"
+	cp docker-entrypoint.sh healthcheck.sh password_2_hash.sh "$version/"
 	chmod a+x "$version"/healthcheck.sh
 	sed -i \
 		-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
