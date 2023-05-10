@@ -162,6 +162,25 @@ docker_verify_minimum_env() {
 	if [ -n "$MARIADB_PASSWORD" ] && [ -n "$MARIADB_PASSWORD_HASH" ]; then
 		mysql_error "Cannot specify MARIADB_PASSWORD_HASH and MARIADB_PASSWORD option."
 	fi
+	if [ -n "$MARIADB_REPLICATION_USER" ]; then
+		if [ -z "$MARIADB_MASTER_HOST" ]; then
+			# its a master, we're creating a user
+			if [ -z "$MARIADB_REPLICATION_PASSWORD" ] && [ -z "$MARIADB_REPLICATION_PASSWORD_HASH" ]; then
+				mysql_error "MARIADB_REPLICATION_PASSWORD or MARIADB_REPLICATION_PASSWORD_HASH not found to create replication user for master"
+			fi
+		else
+			# its a replica
+			if [ -z "$MARIADB_REPLICATION_PASSWORD" ] ; then
+				mysql_error "MARIADB_REPLICATION_PASSWORD is mandatory to specify the replication on the replica image."
+			fi
+			if [ -n "$MARIADB_REPLICATION_PASSWORD_HASH" ] ; then
+				mysql_warn "MARIADB_REPLICATION_PASSWORD_HASH cannot be specified on a replica"
+			fi
+		fi
+	fi
+	if [ -n "$MARIADB_MASTER_HOST" ] && { [ -z "$MARIADB_REPLICATION_USER" ] || [ -z "$MARIADB_REPLICATION_PASSWORD" ] ; }; then
+		mysql_error "For a replica, MARIADB_REPLICATION_USER and MARIADB_REPLICATION is mandatory."
+	fi
 }
 
 # creates folders for the database
@@ -221,6 +240,13 @@ docker_setup_env() {
 	# No MYSQL_ compatibility needed for new variables
 	file_env 'MARIADB_PASSWORD_HASH'
 	file_env 'MARIADB_ROOT_PASSWORD_HASH'
+	# env variables related to replication
+	file_env 'MARIADB_REPLICATION_USER'
+	file_env 'MARIADB_REPLICATION_PASSWORD'
+	file_env 'MARIADB_REPLICATION_PASSWORD_HASH'
+	# env variables related to master
+	file_env 'MARIADB_MASTER_HOST'
+	file_env 'MARIADB_MASTER_PORT' 3306
 
 	# set MARIADB_ from MYSQL_ when it is unset and then make them the same value
 	: "${MARIADB_ALLOW_EMPTY_ROOT_PASSWORD:=${MYSQL_ALLOW_EMPTY_PASSWORD:-}}"
@@ -265,6 +291,19 @@ docker_sql_escape_string_literal() {
 	local escaped=${1//\\/\\\\}
 	escaped="${escaped//$newline/\\n}"
 	echo "${escaped//\'/\\\'}"
+}
+
+# Creates replication user
+create_replica_user() {
+	if [ -n  "$MARIADB_REPLICATION_PASSWORD_HASH" ]; then
+		echo "CREATE USER '$MARIADB_REPLICATION_USER'@'%' IDENTIFIED BY PASSWORD '$MARIADB_REPLICATION_PASSWORD_HASH';"
+	else
+		# SQL escape the user password, \ followed by '
+		local userPasswordEscaped
+		userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}" )
+		echo "CREATE USER '$MARIADB_REPLICATION_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';"
+	fi
+	echo "GRANT REPLICATION REPLICA ON *.* TO '$MARIADB_REPLICATION_USER'@'%';"
 }
 
 # Initializes database with timezone info and root password, plus optional extra db/user
@@ -365,6 +404,24 @@ docker_setup_db() {
 		fi
 	fi
 
+	# To create replica user
+	local createReplicaUser=
+	local changeMasterTo=
+	local startReplica=
+	if  [ -n "$MARIADB_REPLICATION_USER" ] ; then
+		if [ -z "$MARIADB_MASTER_HOST" ]; then
+			# on master
+			mysql_note "Creating user ${MARIADB_REPLICATION_USER}"
+			createReplicaUser=$(create_replica_user)
+		else
+			# on replica
+			local rplPasswordEscaped
+			rplPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}" )
+			changeMasterTo="CHANGE MASTER TO MASTER_HOST='$MARIADB_MASTER_HOST', MASTER_USER='$MARIADB_REPLICATION_USER', MASTER_PASSWORD='$rplPasswordEscaped', MASTER_PORT=$MARIADB_MASTER_PORT, MASTER_CONNECT_RETRY=10;"
+			startReplica="START REPLICA;"
+		fi
+	fi
+
 	mysql_note "Securing system users (equivalent to running mysql_secure_installation)"
 	# tell docker_process_sql to not use MARIADB_ROOT_PASSWORD since it is just now being set
 	# --binary-mode to save us from the semi-mad users go out of their way to confuse the encoding.
@@ -389,7 +446,11 @@ docker_setup_db() {
 		-- create users/databases
 		${createDatabase}
 		${createUser}
+		${createReplicaUser}
 		${userGrants}
+
+		${changeMasterTo}
+		${startReplica}
 	EOSQL
 }
 
@@ -403,8 +464,8 @@ docker_mariadb_backup_system()
 	fi
 	local backup_db="system_mysql_backup_unknown_version.sql.zst"
 	local oldfullversion="unknown_version"
-	if [ -r "$DATADIR"/mysql_upgrade_info ]; then
-		read -r -d '' oldfullversion < "$DATADIR"/mysql_upgrade_info || true
+	if [ -r "$DATADIR"/mariadb_upgrade_info ]; then
+		read -r -d '' oldfullversion < "$DATADIR"/mariadb_upgrade_info || true
 		if [ -n "$oldfullversion" ]; then
 			backup_db="system_mysql_backup_${oldfullversion}.sql.zst"
 		fi
@@ -444,14 +505,14 @@ docker_mariadb_upgrade() {
 
 
 _check_if_upgrade_is_needed() {
-	if [ ! -f "$DATADIR"/mysql_upgrade_info ]; then
+	if [ ! -f "$DATADIR"/mariadb_upgrade_info ]; then
 		mysql_note "MariaDB upgrade information missing, assuming required"
 		return 0
 	fi
 	local mariadbVersion
 	mariadbVersion="$(_mariadb_version)"
 	IFS='.-' read -ra newversion <<<"$mariadbVersion"
-	IFS='.-' read -ra oldversion < "$DATADIR"/mysql_upgrade_info || true
+	IFS='.-' read -ra oldversion < "$DATADIR"/mariadb_upgrade_info || true
 
 	if [[ ${#newversion[@]} -lt 2 ]] || [[ ${#oldversion[@]} -lt 2 ]] \
 		|| [[ ${oldversion[0]} -lt ${newversion[0]} ]] \

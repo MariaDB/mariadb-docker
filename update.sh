@@ -10,7 +10,6 @@ declare -A suites=(
 	[10.4]='focal'
 	[10.5]='focal'
 	[10.6]='focal'
-	[10.7]='focal'
 )
 
 declare -A suffix=(
@@ -53,6 +52,7 @@ update_version()
 		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
 		-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
 		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
+		-e 's!%%MARIADB_SUPPORT_TYPE%%!'"$supportType"'!g' \
 		-e 's!%%SUITE%%!'"$suite"'!g' \
 		-e 's!%%ARCHES%%!'"$arches"'!g' \
 		"$version/Dockerfile"
@@ -60,7 +60,10 @@ update_version()
 	# Start using the new executable names
 	case "$version" in
 		10.3 | 10.4)
-			sed -i -e '/--old-mode/d' "$version/docker-entrypoint.sh"
+			sed -i -e '/--old-mode/d' \
+				-e 's/REPLICATION REPLICA/REPLICATION SLAVE/' \
+			       	-e 's/START REPLICA/START SLAVE/' \
+				"$version/docker-entrypoint.sh"
 		       	;; # almost nothing to see/do here
 		10.5)
 			sed -i -e '/--old-mode/d' "$version/docker-entrypoint.sh"
@@ -86,12 +89,37 @@ update_version()
 					-e 's/-\$MARIADB_MAJOR//' \
 					"$version/Dockerfile"
 			fi
-			if [ "$version" = 11.0 ]; then
+			if [[ $version =~ 11.[012345] ]]; then
 				sed -i -e 's/mysql_upgrade_info/mariadb_upgrade_info/' \
 					"$version/docker-entrypoint.sh" "$version/healthcheck.sh"
 			fi
 			;&
 		esac
+}
+
+update_version_array()
+{
+	c0=$(( $1 - 2 ))
+	c1=$(( $1 - 1 ))
+	version=${release[$c0]//\"}
+	if [ ! -d "$version" ]; then
+		echo >&2 "warning: no rule for $version"
+		return
+	fi
+	mariaversion
+
+	releaseStatus=${release[$c1]//\"}
+
+	case "$releaseStatus" in
+		Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
+	        "Old Stable" )
+			releaseStatus=Stable ;; # insanity check
+		*) echo >&2 "error: unexpected 'release status' value for $mariaVersion: $releaseStatus"; ;;
+	esac
+
+	supportType=${2//\"}
+
+	update_version
 }
 
 mariaversion() {
@@ -102,30 +130,8 @@ mariaversion() {
 
 all()
 {
-	curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
-		| jq '.major_releases[] | [ .release_id ], [ .release_status ]  | @tsv ' \
-		| while read -r version
-	do
-		version=${version//\"}
-		if [ ! -d "$version" ]; then
-			echo >&2 "warning: no rule for $version"
-			continue
-		fi
-		mariaversion
-
-		read -r releaseStatus
-		releaseStatus=${releaseStatus//\"}
-
-		case "$releaseStatus" in
-			Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
-		        "Old Stable" )
-				releaseStatus=Stable
-			       	;; # insanity check
-			*) echo >&2 "error: unexpected 'release status' value for $mariaVersion: $releaseStatus"; ;;
-		esac
-
-		update_version
-	done
+	readarray -O 0 -c 3 -C update_version_array -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
+		| jq '.major_releases[] | [ .release_id ], [ .release_status ], [ .release_support_type ]  | @tsv ')"
 }
 
 development_version=11.1
@@ -133,6 +139,7 @@ development_version=11.1
 in_development()
 {
 	releaseStatus=Alpha
+	supportType=Unknown
 	version=$development_version
 	mariaVersion=${development_version}.0
 	[ -d "$development_version" ] && update_version
@@ -158,9 +165,10 @@ for version in "${versions[@]}"; do
 	else
 		mariaversion
 	fi
-	releaseStatus=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
-		| jq ".major_releases[] | select(.release_id == \"$version\") | .release_status")
-	releaseStatus=${releaseStatus//\"}
+	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
+		| jq ".major_releases[] | select(.release_id == \"$version\") | [ .release_status ] , [ .release_support_type ] | @tsv")"
+	releaseStatus=${release[0]//\"}
+	supportType=${release[1]//\"}
 
 	update_version
 done
