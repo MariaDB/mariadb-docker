@@ -78,8 +78,7 @@ for version in "${versions[@]}"; do
 	supportType="$(grep -m1 'support-type:' "$version/Dockerfile" | cut -d':' -f2)"
 
 	case $releaseStatus in
-	Stable) ;&
-	Old\ Stable)
+	Stable)
 		suffix=
 		;;
 	*)
@@ -104,13 +103,15 @@ for version in "${versions[@]}"; do
 
 	versionAliases+=( ${aliases[$version]:-} )
 	if [ "$releaseStatus" = 'Stable' ]; then
-		for tryAlias in "${version%%.*}" latest; do
+		versions=( "${version%%.*}" latest )
+		if [ "$supportType" = LTS ]; then
+			versions+=( lts )
+		fi
+
+		for tryAlias in "${versions[@]}"; do
 			if [ -z "${latest[$tryAlias]:-}" ]; then
 				latest[$tryAlias]="$version"
 				versionAliases+=( "$tryAlias" )
-				if [ "$supportType" = LTS ]; then
-					versionAliases+=( "${tryAlias}-lts" )
-				fi
 			fi
 		done
 	fi
