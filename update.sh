@@ -112,8 +112,6 @@ update_version_array()
 
 	case "$releaseStatus" in
 		Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
-	        "Old Stable" )
-			releaseStatus=Stable ;; # insanity check
 		*) echo >&2 "error: unexpected 'release status' value for $mariaVersion: $releaseStatus"; ;;
 	esac
 
