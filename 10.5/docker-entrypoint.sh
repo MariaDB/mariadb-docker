@@ -416,6 +416,8 @@ docker_setup_db() {
 			# on replica
 			local rplPasswordEscaped
 			rplPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}" )
+			# SC cannot follow how MARIADB_MASTER_PORT is assigned a default value.
+			# shellcheck disable=SC2153
 			changeMasterTo="CHANGE MASTER TO MASTER_HOST='$MARIADB_MASTER_HOST', MASTER_USER='$MARIADB_REPLICATION_USER', MASTER_PASSWORD='$rplPasswordEscaped', MASTER_PORT=$MARIADB_MASTER_PORT, MASTER_CONNECT_RETRY=10;"
 			startReplica="START REPLICA;"
 		fi

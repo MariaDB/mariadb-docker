@@ -47,7 +47,7 @@ then
 	mariadb=mariadb
 	RPL_MONITOR="REPLICA MONITOR"
 	v=$(docker run --rm "$image" mariadb --version)
-	if [[ $v =~ 'Distrib 10.4' ]]; then
+	if [[ $v =~ Distrib\ 10.4 ]]; then
 		# the new age hasn't begun yet
 		RPL_MONITOR="REPLICATION CLIENT"
 	fi
@@ -112,12 +112,13 @@ mariadbclient_unix() {
 }
 
 checkUserExistInMariaDB() {
-	if [ -z $1 ] ; then
+	if [ -z "$1" ] ; then
 		return 1
 	fi
 
-	local user=$(mariadbclient -u root -e "SELECT User FROM mysql.user where User='$1';")
-	if [ -z $user ] ; then
+	local user
+	user=$(mariadbclient -u root -e "SELECT User FROM mysql.user where User='$1';")
+	if [ -z "$user" ] ; then
 		return 1
 	fi
 
@@ -128,7 +129,7 @@ checkReplication() {
 	mariadb_replication_user='foo'
 	local pass_str=
 	local pass=
-	if [ $1 = 'MARIADB_REPLICATION_PASSWORD_HASH' ] ; then 
+	if [ "$1" = 'MARIADB_REPLICATION_PASSWORD_HASH' ] ; then
 		pass_str=MARIADB_REPLICATION_PASSWORD_HASH='*0FD9A3F0F816D076CF239580A68A1147C250EB7B'
 		pass='jane'
 	else
@@ -151,6 +152,7 @@ checkReplication() {
 	# Checks $mariadb_replication_user get created or not
 	if checkUserExistInMariaDB $mariadb_replication_user ; then
 		grants=$(mariadbclient -u $mariadb_replication_user -p$pass -e "SHOW GRANTS")
+		# shellcheck disable=SC2076
 		[[ "${grants/SLAVE/REPLICA}" =~ "GRANT REPLICATION REPLICA ON *.* TO \`$mariadb_replication_user\`@\`%\`" ]] || die "I wasn't created how I was expected: got $grants"
 
 		mariadbclient -u root --batch --skip-column-names -e 'create table t1(i int)' replcheck
@@ -165,7 +167,6 @@ checkReplication() {
 
 		master_host=$cname
 		master_ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $cname)
-		master_cid=$cid
 		port=3307
 		runandwait \
 			--network "$netid" \
