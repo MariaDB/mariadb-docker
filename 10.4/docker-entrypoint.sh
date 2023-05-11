@@ -352,16 +352,8 @@ docker_setup_db() {
 	local mysqlAtLocalhostGrants=
 	# Install mysql@localhost user
 	if [ -n "$MARIADB_MYSQL_LOCALHOST_USER" ]; then
-		local pw=
-		pw="$(pwgen --numerals --capitalize --symbols --remove-chars="'\\" -1 32)"
-		# MDEV-24111 before MariaDB-10.4 cannot create unix_socket user directly auth with simple_password_check
-		# It wasn't until 10.4 that the unix_socket auth was built in to the server.
 		read -r -d '' mysqlAtLocalhost <<-EOSQL || true
-		EXECUTE IMMEDIATE IF(VERSION() RLIKE '^10\.3\.',
-			"INSTALL PLUGIN /*M10401 IF NOT EXISTS */ unix_socket SONAME 'auth_socket'",
-			"SELECT 'already there'");
-		CREATE USER mysql@localhost IDENTIFIED BY '$pw';
-		ALTER USER mysql@localhost IDENTIFIED VIA unix_socket;
+		CREATE USER mysql@localhost IDENTIFIED VIA unix_socket;
 		EOSQL
 		if [ -n "$MARIADB_MYSQL_LOCALHOST_GRANTS" ]; then
 			if [ "$MARIADB_MYSQL_LOCALHOST_GRANTS" != USAGE ]; then
@@ -440,8 +432,6 @@ docker_setup_db() {
 		${rootCreate}
 		${mysqlAtLocalhost}
 		${mysqlAtLocalhostGrants}
-		-- pre-10.3 only
-		DROP DATABASE IF EXISTS test ;
 		-- end of securing system users, rest of init now...
 		SET @@SESSION.SQL_LOG_BIN=@orig_sql_log_bin;
 		-- create users/databases

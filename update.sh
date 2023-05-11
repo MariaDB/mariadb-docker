@@ -6,7 +6,6 @@ set -Eeuo pipefail
 
 defaultSuite='jammy'
 declare -A suites=(
-	[10.3]='focal'
 	[10.4]='focal'
 	[10.5]='focal'
 	[10.6]='focal'
@@ -59,7 +58,7 @@ update_version()
 
 	# Start using the new executable names
 	case "$version" in
-		10.3 | 10.4)
+		10.4)
 			sed -i -e '/--old-mode/d' \
 				-e 's/REPLICATION REPLICA/REPLICATION SLAVE/' \
 			       	-e 's/START REPLICA/START SLAVE/' \
