@@ -25,7 +25,7 @@ command -v bashbrew >/dev/null || {
 
 source '.architectures-lib'
 
-GLOBIGNORE=.*/:test/
+GLOBIGNORE=.*/:test/:11.2/
 versions=( */ )
 versions=( "${versions[@]%/}" )
 
