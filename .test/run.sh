@@ -174,9 +174,8 @@ checkReplication() {
 			-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
 			-e MARIADB_REPLICATION_USER="$mariadb_replication_user" \
 			-e MARIADB_REPLICATION_PASSWORD="$pass" \
-			-e MARIADB_MYSQL_LOCALHOST_USER=1 \
-			-e MARIADB_MYSQL_LOCALHOST_GRANTS="${RPL_MONITOR}" \
-			--health-cmd='healthcheck.sh --su-mysql --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
+			-e MARIADB_HEALTHCHECK_GRANTS="${RPL_MONITOR}" \
+			--health-cmd='healthcheck.sh --connect --innodb-initialized --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
 			--health-interval=3s \
 			"$image" --server-id=3001 --port "${port}"
 		unset port
@@ -190,7 +189,7 @@ checkReplication() {
 
 		docker exec --user mysql -i \
 			"$cname" \
-			$mariadb \
+			$mariadb --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
 			-e 'SHOW SLAVE STATUS\G' || die 'error examining replica status'
 
 		mariadbclient_unix -u root replcheck --batch --skip-column-names -e 'show create table t1;' || die 'sample table not replicated'
@@ -226,7 +225,7 @@ mariadbclient -u root -e 'show databases'
 othertables=$(mariadbclient -u root --skip-column-names -Be "select group_concat(SCHEMA_NAME) from information_schema.SCHEMATA where SCHEMA_NAME not in ('mysql', 'information_schema', 'performance_schema', 'sys')")
 [ "${othertables}" != 'NULL' ] && die "unexpected table(s) $othertables"
 
-otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'))")
+otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.global_priv where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'), ('healthcheck', '::1'), ('healthcheck', '127.0.0.1'), ('healthcheck', 'localhost'))")
 [ "$otherusers" != '' ] && die "unexpected users $otherusers"
 
 	echo "Contents of /var/lib/mysql/{mysql,mariadb}_upgrade_info:"
@@ -246,7 +245,7 @@ killoff
 	mariadbclient -u root -pexamplepass -e 'select current_user()'
 	mariadbclient -u root -pwrongpass -e 'select current_user()' || echo 'expected failure'
 
-	otherusers=$(mariadbclient -u root -pexamplepass --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'), ('mysql','localhost'))")
+	otherusers=$(mariadbclient -u root -pexamplepass --skip-column-names -Be "select user,host from mysql.global_priv where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'), ('mysql','localhost'), ('healthcheck', '::1'), ('healthcheck', '127.0.0.1'), ('healthcheck', 'localhost'))")
 	[ "$otherusers" != '' ] && die "unexpected users $otherusers"
 
 	createuser=$(docker exec --user mysql -i \
@@ -266,6 +265,22 @@ killoff
 	# shellcheck disable=SC2016
 	[ "${grants//\'/\`}" == 'GRANT USAGE ON *.* TO `mysql`@`localhost` IDENTIFIED VIA unix_socket' ] || die "I wasn't granted what I was expected"
 
+	createuser=$(docker exec --user mysql -i \
+		"$cname" \
+		$mariadb --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
+		--silent \
+		-e "show create user")
+	# shellcheck disable=SC2016
+	[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`localhost` IDENTIFIED' ]] || die "I wasn't created how I was expected"
+
+	grants="$(docker exec --user mysql -i \
+		$cname \
+		$mariadb --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
+		--silent \
+		-e show\ grants)"
+
+	# shellcheck disable=SC2016
+	[[ "${grants//\'/\`}" =~ 'GRANT USAGE ON *.* TO `healthcheck`@`localhost`' ]] || die "I wasn't granted what I was expected"
 	killoff
 
 	;&
@@ -458,7 +473,7 @@ mariadbclient -u root -e 'show databases'
 othertables=$(mariadbclient -u root --skip-column-names -Be "select group_concat(SCHEMA_NAME) from information_schema.SCHEMATA where SCHEMA_NAME not in ('mysql', 'information_schema', 'performance_schema', 'sys')")
 [ "${othertables}" != 'NULL' ] && die "unexpected table(s) $othertables"
 
-otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'), ('mysql','localhost'))")
+otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'), ('mysql','localhost'), ('healthcheck', '::1'), ('healthcheck', '127.0.0.1'), ('healthcheck', 'localhost'))")
 [ "$otherusers" != '' ] && die "unexpected users $otherusers"
 killoff
 

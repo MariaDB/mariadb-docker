@@ -55,6 +55,8 @@ _process_sql()
 connect()
 {
 	set +e +o pipefail
+	# (on second extra_file)
+	# shellcheck disable=SC2086
 	mysql ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}}  \
@@ -210,6 +212,9 @@ declare -A repl
 declare -A def
 nodefaults=
 datadir=/var/lib/mysql
+if [ -f $datadir/.my-healthcheck.cnf ]; then
+	def['extra_file']=$datadir/.my-healthcheck.cnf
+fi
 
 _repl_param_check()
 {
