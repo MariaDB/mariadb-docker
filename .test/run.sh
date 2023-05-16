@@ -520,17 +520,39 @@ tzcount=$(mariadbclient --skip-column-names -B -u root -e "SELECT COUNT(*) FROM 
 # note uses previous instance
 echo -e "Test: default configuration items are present\n"
 arg_expected=0
+arg_unexpected=0
 docker exec -i "$cid" my_print_defaults --mysqld |
 	{
+
 	while read -r line
 	do
 		case $line in
-		--host-cache-size=0|--skip-name-resolve)
+		--socket=*|--pid-file=*|--basedir=*|--expire_logs_days=*|--character-set-server=*|--collation-server=*)
 			echo "$line" found
-			(( arg_expected++ )) || : ;;
-		esac
+			(( arg_expected++ )) || :
+			;;
+		--host-cache-size=0|--skip-name-resolve)
+			die "$line unexpected"
+			;;
+		'')     ;; # ignore blank
+		*)
+			echo "$line unexpected (for 10.4+)"
+			(( arg_unexpected++ )) || :
+		;;
+               esac
+
 	done
-	[ "$arg_expected" -eq 2 ] || die "expected both host-cache-size=0 and skip-name-resolve"
+	if [ "$RPL_MONITOR" = "REPLICATION CLIENT" ]; then
+		# 10.4 only
+		expect=4
+		unexpect=34
+	else
+		expect=6
+		unexpect=0
+	fi
+	# 10.4 has much junk here.
+	[ "$arg_unexpected" -eq $unexpect ] || die "unexpected default args should exist"
+	[ "$arg_expected" -eq $expect ] || die "expect default args count wrong"
 }
 killoff
 
