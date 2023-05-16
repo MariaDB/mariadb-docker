@@ -225,9 +225,10 @@ docker_init_database_dir() {
 # This should be called after mysql_check_config, but before any other functions
 docker_setup_env() {
 	# Get config
-	declare -g DATADIR SOCKET
+	declare -g DATADIR SOCKET PORT
 	DATADIR="$(mysql_get_config 'datadir' "$@")"
 	SOCKET="$(mysql_get_config 'socket' "$@")"
+	PORT="$(mysql_get_config 'port' "$@")"
 
 
 	# Initialize values that might be stored in a file
@@ -363,6 +364,29 @@ docker_setup_db() {
 		fi
 	fi
 
+	local healthCheckUser
+	local healthCheckGrant=USAGE
+	local healthCheckConnectPass
+	local healthCheckConnectPassEscaped
+	healthCheckConnectPass="$(pwgen --numerals --capitalize --symbols --remove-chars="=#'\\" -1 32)"
+	healthCheckConnectPassEscaped=$( docker_sql_escape_string_literal "${healthCheckConnectPass}" )
+	if [ -n "$MARIADB_HEALTHCHECK_GRANTS" ]; then
+		healthCheckGrant="$MARIADB_HEALTHCHECK_GRANTS"
+	fi
+	read -r -d '' healthCheckUser <<-EOSQL || true
+	CREATE USER healthcheck@'127.0.0.1' IDENTIFIED BY '$healthCheckConnectPassEscaped';
+	CREATE USER healthcheck@'::1' IDENTIFIED BY '$healthCheckConnectPassEscaped';
+	CREATE USER healthcheck@localhost IDENTIFIED BY '$healthCheckConnectPassEscaped';
+	GRANT $healthCheckGrant ON *.* TO healthcheck@'127.0.0.1';
+	GRANT $healthCheckGrant ON *.* TO healthcheck@'::1';
+	GRANT $healthCheckGrant ON *.* TO healthcheck@localhost;
+	EOSQL
+	local maskPreserve
+	maskPreserve=$(umask -p)
+	umask 0077
+	echo -e "[mariadb-client]\\nport=$PORT\\nsocket=$SOCKET\\nuser=healthcheck\\npassword=$healthCheckConnectPass\\nprotocol=tcp\\n" > "$DATADIR"/.my-healthcheck.cnf
+	$maskPreserve
+
 	local rootLocalhostPass=
 	if [ -z "$MARIADB_ROOT_PASSWORD_HASH" ]; then
 		# handle MARIADB_ROOT_PASSWORD_HASH for root@localhost after /docker-entrypoint-initdb.d
@@ -432,6 +456,7 @@ docker_setup_db() {
 		${rootCreate}
 		${mysqlAtLocalhost}
 		${mysqlAtLocalhostGrants}
+		${healthCheckUser}
 		-- end of securing system users, rest of init now...
 		SET @@SESSION.SQL_LOG_BIN=@orig_sql_log_bin;
 		-- create users/databases
