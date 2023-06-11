@@ -1,0 +1,1 @@
+# Add docker-column-store image related scripts.
