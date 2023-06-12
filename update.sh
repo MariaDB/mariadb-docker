@@ -94,6 +94,10 @@ update_version()
 			fi
 			;&
 		esac
+		if [[ $version =~ 11.[012345] ]]; then
+			# shellcheck disable=SC2016
+			sed -i -e 's/mariadb-server="\$MARIADB_VERSION"/mariadb-server="\$MARIADB_VERSION" mariadb-server-compat="\$MARIADB_VERSION" mariadb-client-compat="\$MARIADB_VERSION"/' "$version/Dockerfile"
+		fi
 }
 
 update_version_array()
