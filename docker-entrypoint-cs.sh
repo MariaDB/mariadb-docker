@@ -1,1 +1,30 @@
-# Add docker-column-store image related scripts.
+#!/bin/bash
+set -eo pipefail
+
+# logging functions
+mysql_log() {
+	local type="$1"; shift
+	printf '%s [%s] [Entrypoint]: %s\n' "$(date --rfc-3339=seconds)" "$type" "$*"
+}
+mysql_note() {
+	mysql_log Note "$@"
+}
+mysql_warn() {
+	mysql_log Warn "$@" >&2
+}
+mysql_error() {
+	mysql_log ERROR "$@" >&2
+	exit 1
+}
+
+_main() {
+    if [ "$1" = 'mariadbd' ]; then
+        # simply start maridb with column-store
+    elif [ "$1" = 'StorageManager' ]; then
+        # Run StorageManage of column-store
+    elif [ "$1" = 'brm' ]; then
+        # Run brm
+    fi
+}
+
+_main "$@"
