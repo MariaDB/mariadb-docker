@@ -20,6 +20,7 @@ mysql_error() {
 _main() {
     if [ "$1" = 'mariadbd' ]; then
         # simply start maridb with column-store
+        exec docker-entrypoint.sh "$@"
     elif [ "$1" = 'StorageManager' ]; then
         # Run StorageManage of column-store
     elif [ "$1" = 'brm' ]; then
@@ -27,4 +28,5 @@ _main() {
     fi
 }
 
+# Runs _main() function.
 _main "$@"
