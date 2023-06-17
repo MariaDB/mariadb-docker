@@ -37,9 +37,9 @@ update_version()
 	fullVersion=1:${mariaVersion}+maria~${suffix[${suite}]}
 
 	if [[ $version = 10.[234] ]]; then
-		arches=" amd64 arm64v8 ppc64le"
+		arches="amd64 arm64v8 ppc64le"
 	else
-		arches=" amd64 arm64v8 ppc64le s390x"
+		arches="amd64 arm64v8 ppc64le s390x"
 	fi
 
 	cp Dockerfile.template "$version/Dockerfile"
@@ -53,7 +53,7 @@ update_version()
 		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
 		-e 's!%%MARIADB_SUPPORT_TYPE%%!'"$supportType"'!g' \
 		-e 's!%%SUITE%%!'"$suite"'!g' \
-		-e 's!%%ARCHES%%!'"$arches"'!g' \
+		-e 's!%%ARCHES%%! '"$arches"'!g' \
 		"$version/Dockerfile"
 
 	# Start using the new executable names
@@ -94,6 +94,12 @@ update_version()
 			fi
 			;&
 		esac
+
+		# Add version to versions.json
+		versionJson="$(jq -e \
+			--arg milestone "$version" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "ubuntu:$suite" --arg arches "$arches" \
+			'.[$milestone] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
+		printf '%s\n' "$versionJson" > versions.json
 }
 
 update_version_array()
@@ -126,6 +132,8 @@ mariaversion() {
 
 all()
 {
+	printf '%s\n' "{}" > versions.json
+
 	readarray -O 0 -c 3 -C update_version_array -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq -r '.major_releases[] | [ .release_id ], [ .release_status ], [ .release_support_type ]  | @tsv')"
 }
