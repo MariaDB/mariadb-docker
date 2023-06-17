@@ -100,35 +100,34 @@ update_version_array()
 {
 	c0=$(( $1 - 2 ))
 	c1=$(( $1 - 1 ))
-	version=${release[$c0]//\"}
+	version=${release[$c0]}
 	if [ ! -d "$version" ]; then
 		echo >&2 "warning: no rule for $version"
 		return
 	fi
 	mariaversion
 
-	releaseStatus=${release[$c1]//\"}
+	releaseStatus=${release[$c1]}
 
 	case "$releaseStatus" in
 		Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
 		*) echo >&2 "error: unexpected 'release status' value for $mariaVersion: $releaseStatus"; ;;
 	esac
 
-	supportType=${2//\"}
+	supportType=$2
 
 	update_version
 }
 
 mariaversion() {
   mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version}" |
-    jq 'first(..|select(.release_id)) | .release_id')
-  mariaVersion=${mariaVersion//\"/}
+    jq -r 'first(.releases[]).release_id')
 }
 
 all()
 {
 	readarray -O 0 -c 3 -C update_version_array -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
-		| jq '.major_releases[] | [ .release_id ], [ .release_status ], [ .release_support_type ]  | @tsv ')"
+		| jq -r '.major_releases[] | [ .release_id ], [ .release_status ], [ .release_support_type ]  | @tsv')"
 }
 
 development_version=11.2
@@ -163,9 +162,9 @@ for version in "${versions[@]}"; do
 		mariaversion
 	fi
 	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
-		| jq ".major_releases[] | select(.release_id == \"$version\") | [ .release_status ] , [ .release_support_type ] | @tsv")"
-	releaseStatus=${release[0]//\"}
-	supportType=${release[1]//\"}
+		| jq -r --arg version "$version" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
+	releaseStatus=${release[0]}
+	supportType=${release[1]}
 
 	update_version
 done
