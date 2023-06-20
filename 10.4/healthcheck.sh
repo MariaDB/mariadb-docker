@@ -129,7 +129,7 @@ replication()
 	# SHOW REPLICA available 10.5+
 	# https://github.com/koalaman/shellcheck/issues/2383
 	# shellcheck disable=SC2016,SC2026
-	_process_sql -e "show ${repl['all']:+all} slave${repl['all']:+s} ${repl['name']:+'${repl['name']}'} status\G" | \
+	_process_sql -e "SHOW ${repl['all']:+all} SLAVE${repl['all']:+S} ${repl['name']:+'${repl['name']}'} STATUS\G" | \
 		{
 		# required for trim of leading space.
 		shopt -s extglob
