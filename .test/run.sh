@@ -254,7 +254,7 @@ killoff
 		--silent \
 		-e "show create user")
 	# shellcheck disable=SC2016
-	[ "${createuser//\'/\`}" == 'CREATE USER `mysql`@`localhost` IDENTIFIED VIA unix_socket' ] || die "I wasn't created how I was expected"
+	[ "${createuser//\'/\`}" == 'CREATE USER `mysql`@`localhost` IDENTIFIED VIA unix_socket' ] || die "mysql@localhost wasn't created how I was expected"
 
 	grants="$(docker exec --user mysql -i \
 		$cname \
@@ -263,7 +263,7 @@ killoff
 		-e show\ grants)"
 
 	# shellcheck disable=SC2016
-	[ "${grants//\'/\`}" == 'GRANT USAGE ON *.* TO `mysql`@`localhost` IDENTIFIED VIA unix_socket' ] || die "I wasn't granted what I was expected"
+	[ "${grants//\'/\`}" == 'GRANT USAGE ON *.* TO `mysql`@`localhost` IDENTIFIED VIA unix_socket' ] || die "mysql@localhost wasn't granted what I was expected"
 
 	createuser=$(docker exec --user mysql -i \
 		"$cname" \
@@ -271,7 +271,7 @@ killoff
 		--silent \
 		-e "show create user")
 	# shellcheck disable=SC2016
-	[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`localhost` IDENTIFIED' ]] || die "I wasn't created how I was expected"
+	[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`::1` IDENTIFIED' ]] || die "healtheck wasn't created how I was expected"
 
 	grants="$(docker exec --user mysql -i \
 		$cname \
@@ -279,8 +279,7 @@ killoff
 		--silent \
 		-e show\ grants)"
 
-	# shellcheck disable=SC2016
-	[[ "${grants//\'/\`}" =~ 'GRANT USAGE ON *.* TO `healthcheck`@`localhost`' ]] || die "I wasn't granted what I was expected"
+	[[ "${grants//\'/\`}" =~ GRANT\ USAGE\ ON\ *.*\ TO\ \`healthcheck\`@\`::1\` ]] || die "healthcheck wasn't granted what I was expected"
 	killoff
 
 	;&
