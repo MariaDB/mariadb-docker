@@ -42,18 +42,11 @@ die()
 }
 trap "killoff" EXIT
 
-if docker run --rm "$image" mariadb --version 2>/dev/null
-then
-	mariadb=mariadb
-	RPL_MONITOR="REPLICA MONITOR"
-	v=$(docker run --rm "$image" mariadb --version)
-	if [[ $v =~ Distrib\ 10.4 ]]; then
-		# the new age hasn't begun yet
-		RPL_MONITOR="REPLICATION CLIENT"
-	fi
-else
-	# still running 10.3
-	mariadb=mysql
+mariadb=mariadb
+RPL_MONITOR="REPLICA MONITOR"
+v=$(docker run --rm "$image" mariadb --version)
+if [[ $v =~ Distrib\ 10.4 ]]; then
+	# the new age hasn't begun yet
 	RPL_MONITOR="REPLICATION CLIENT"
 fi
 
@@ -685,6 +678,8 @@ fi
 		-e MARIADB_USER=bob \
 		-e MARIADB_PASSWORD=roger \
 		-e MARIADB_DATABASE=rabbit \
+		-e MARIADB_REPLICATION_USER="repluser" \
+		-e MARIADB_REPLICATION_PASSWORD="replpassword" \
 		"${image}" --log-bin --log-basename=my-mariadb
 	readarray -t vals < <(mariadbclient -u root --batch --skip-column-names -e 'show master status\G')
 	lastfile="${vals[1]}"
@@ -706,18 +701,18 @@ fi
 		-d \
 		--rm \
 		--name "$cname" \
-		-e MASTER_HOST="$master_host" \
+		-e MARIADB_MASTER_HOST="$master_host" \
+		-e MARIADB_REPLICATION_USER="repluser" \
+		-e MARIADB_REPLICATION_PASSWORD="replpassword" \
 		-e MARIADB_RANDOM_ROOT_PASSWORD=1 \
-		-e MARIADB_MYSQL_LOCALHOST_USER=1 \
-		-e MARIADB_MYSQL_LOCALHOST_GRANTS="REPLICATION CLIENT /*!100509 ,REPLICA MONITOR */" \
-		-v "${dir}"/replica-initdb.d/:/docker-entrypoint-initdb.d:Z \
+		-e MARIADB_HEALTHCHECK_GRANTS="${RPL_MONITOR}" \
 		--network=container:"$master_host" \
-		--health-cmd='healthcheck.sh --su-mysql --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
+		--health-cmd='healthcheck.sh --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
 		--health-interval=3s \
 		"$image" --server-id=2 --port 3307)
 
 	c="${DOCKER_LIBRARY_START_TIMEOUT:-10}"
-	until docker exec "$cid" healthcheck.sh --su-mysql --connect --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ "$c" -eq 0 ]
+	until docker exec "$cid" healthcheck.sh --connect --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ "$c" -eq 0 ]
 	do
 		sleep 1
 		c=$(( c - 1 ))
@@ -728,10 +723,6 @@ fi
 		cid=$cid_primary killoff
 		die "Table contents didn't match on replica"
 	fi
-	docker exec --user mysql -i \
-		"$cname" \
-		$mariadb \
-		-e "SHOW SLAVE STATUS\G"
 	killoff
 	cid=$master_host
 	killoff
