@@ -15,8 +15,8 @@
   },
   "11.1": {
     "milestone": "11.1",
-    "version": "11.1.1",
-    "fullVersion": "1:11.1.1+maria~ubu2204",
+    "version": "11.1.2",
+    "fullVersion": "1:11.1.2+maria~ubu2204",
     "releaseStatus": "RC",
     "supportType": "Short Term Support",
     "base": "ubuntu:jammy",
