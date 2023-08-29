@@ -123,5 +123,19 @@
       "arm64v8",
       "ppc64le"
     ]
+  },
+  "11.3": {
+    "milestone": "11.3",
+    "version": "11.3.0",
+    "fullVersion": "1:11.3.0+maria~ubu2204",
+    "releaseStatus": "Alpha",
+    "supportType": "Unknown",
+    "base": "ubuntu:jammy",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
   }
 }

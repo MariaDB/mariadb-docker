@@ -142,7 +142,7 @@ all()
 		| jq -r '.major_releases[] | [ .release_id ], [ .release_status ], [ .release_support_type ]  | @tsv')"
 }
 
-development_version=11.2
+development_version=11.3
 
 in_development()
 {
