@@ -161,7 +161,8 @@ checkReplication() {
 		docker exec "$cid" sh -c "[ \$(wc -c < /var/lib/mysql/$lastfile ) -gt $pos ]" && die 'binary log 2 too big'
 
 		master_host=$cname
-		master_ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $cname)
+		unset cname
+		master_ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $master_host)
 		port=3307
 		runandwait \
 			--network "$netid" \
