@@ -53,7 +53,9 @@ fi
 runandwait()
 {
 	local port_int
-	cname="mariadbcontainer$RANDOM"
+	if [ -z "$cname" ]; then
+		cname="mariadbcontainer$RANDOM"
+	fi
 	if [ -z "$port" ]; then
 		cid="$(
 			docker run -d \
@@ -191,6 +193,48 @@ checkReplication() {
 	else
 		die "User $mariadb_replication_user did not get created for replication mode master"
 	fi
+}
+
+galera_sst()
+{
+	sst=$1
+
+	netid="mariadbnetwork$RANDOM"
+	docker network create "$netid"
+
+	cname="mariadbcontainer_donor$RANDOM"
+	donorname=$cname
+	runandwait \
+		--network "$netid" \
+		--env MARIADB_ROOT_PASSWORD=secret  --env MARIADB_DATABASE=test  --env MARIADB_USER=test --env MARIADB_PASSWORD=test \
+		"${image}"\
+		--wsrep-new-cluster --wsrep-provider=/usr/lib/libgalera_smm.so --wsrep_cluster_address=gcomm://"$cname" --binlog_format=ROW --innodb_autoinc_lock_mode=2 --wsrep_on=ON --wsrep_sst_method="$sst" --wsrep_sst_auth=root:secret
+	master_host=$cid
+	unset cname
+	DOCKER_LIBRARY_START_TIMEOUT=$(( ${DOCKER_LIBRARY_START_TIMEOUT:-10} * 7 )) runandwait \
+		--network "$netid" \
+		--env MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
+		"${image}" \
+		--wsrep-provider=/usr/lib/libgalera_smm.so  --wsrep_cluster_address=gcomm://"$donorname" --binlog_format=ROW --innodb_autoinc_lock_mode=2 --wsrep_on=ON --wsrep_sst_method="$sst" --wsrep_sst_auth=root:secret
+
+	v=$(mariadbclient -u root -psecret -e 'select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME="WSREP_LOCAL_STATE"' || :)
+
+	waiting=${DOCKER_LIBRARY_START_TIMEOUT:-10}
+	set +e +o pipefail +x
+	while [ "$waiting" -gt 0 ] && [ "$v" != 4 ]
+	do
+		(( waiting-- ))
+		sleep 1
+		v=$(mariadbclient -u root -psecret -e 'select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME="WSREP_LOCAL_STATE"' || :)
+        done
+	set -eo pipefail -x
+	if [ "$v" != 4 ]
+	then
+		docker logs "$donorcid"
+		die 'timeout'
+	fi
+
+	killoff
 }
 
 case ${2:-all} in
@@ -790,6 +834,22 @@ zstd "${initdb}"/*zst*
 	[ "${init_sum}" = '1833' ] || (podman logs m_init; die 'initialization order error')
 	killoff
 	rm -rf "${initdb}"
+
+	;&
+	galera_mariadbbackup)
+
+	galera_sst mariabackup
+
+	;&
+	galera_sst_rsync)
+
+	galera_sst rsync
+
+	# TODO fix - failing to do the authentication correctly of wsrep_sst_auth - Access denied on mysql usage within SST script
+	#;&
+	#galera_sst_mariadbdump)
+	#
+	#galera_sst mysqldump
 
 # Insert new tests above by copying the comments below
 #	;&
