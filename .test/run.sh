@@ -198,6 +198,10 @@ checkReplication() {
 
 galera_sst()
 {
+        if [ "$architecture" != amd64 ]; then
+		echo test is too slow if not run natively
+		return 0
+	fi
 	sst=$1
 
 	netid="mariadbnetwork$RANDOM"
