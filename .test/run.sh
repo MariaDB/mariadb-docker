@@ -254,7 +254,8 @@ docker run --name "$cname" --rm "$image" 2>&1 && die "$cname should fail with un
 	mysql_allow_empty_password_is_empty)
 
 echo -e "Test: MYSQL_ALLOW_EMPTY_PASSWORD Implementation is empty value so this should fail\n"
-docker run  --rm  --name "$cname" -e MYSQL_ALLOW_EMPTY_PASSWORD  "$image" || echo 'expected failure of empty MYSQL_ALLOW_EMPTY_PASSWORD'
+docker run  --rm  --name "$cname" -e MYSQL_ALLOW_EMPTY_PASSWORD  "$image" && die "$cname should fail with empty MYSQL_ALLOW_EMPTY_PASSWORD"
+echo 'expected failure of empty MYSQL_ALLOW_EMPTY_PASSWORD'
 
 	;&
 	mysql_allow_empty_password_is_clean)
