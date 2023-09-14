@@ -64,10 +64,12 @@ update_version()
 			       	-e 's/START REPLICA/START SLAVE/' \
 				"$version/docker-entrypoint.sh"
 			sed -i -e 's/ REPLICA\$/ SLAVE$/' "$version"/healthcheck.sh
+			sed -i -e '/# 11.3+ only/d' "$version/Dockerfile"
 		       	;; # almost nothing to see/do here
 		10.5)
 			sed -i -e '/--old-mode/d' "$version/docker-entrypoint.sh"
 			sed -i '/backwards compat/d' "$version/Dockerfile"
+			sed -i -e '/# 11.3+ only/d' "$version/Dockerfile"
 			;;
 		*)
 			sed -i -e '/^CMD/s/mysqld/mariadbd/' \
@@ -95,6 +97,11 @@ update_version()
 			fi
 			if [[ $version =~ 11.[01] ]]; then
 				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$version/Dockerfile"
+			fi
+			if [[ $version =~ 11.[3456789] ]]; then
+				sed -i -e 's/# 11.3+ only//' "$version/Dockerfile"
+			else
+				sed -i -e '/# 11.3+ only/d' "$version/Dockerfile"
 			fi
 			;&
 		esac
