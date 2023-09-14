@@ -125,7 +125,6 @@ RUN set -ex; \
 		| xargs -rt -0 sed -Ei 's/^(bind-address|log|user\s)/#&/'; \
 # don't reverse lookup hostnames, they are usually another container
 	printf "[mariadb]\nhost-cache-size=0\nskip-name-resolve\n" > /etc/mysql/mariadb.conf.d/05-skipcache.cnf; \
-	 printf "[client]\ndisable-ssl-verify-server-cert\n" > /etc/mysql/mariadb.conf.d/05-client-disable-ssl-verify-server-cert.cnf; \
 # Issue #327 Correct order of reading directories /etc/mysql/mariadb.conf.d before /etc/mysql/conf.d (mount-point per documentation)
 	if [ -L /etc/mysql/my.cnf ]; then \
 # 10.5+
