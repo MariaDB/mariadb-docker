@@ -36,6 +36,7 @@ die()
 {
 	[ -n "$cid" ] && docker logs "$cid"
 	[ -n "$tmpvol" ] && docker rm "$tmpvol"
+	[ -n "$master_host" ] && docker logs "$master_host"
 	killoff
         echo "$@" >&2
         exit 1
@@ -235,7 +236,6 @@ galera_sst()
 	set -eo pipefail -x
 	if [ "$v" != 4 ]
 	then
-		docker logs "$donorcid"
 		die 'timeout'
 	fi
 
