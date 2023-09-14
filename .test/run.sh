@@ -89,7 +89,7 @@ runandwait()
 	fi
 }
 
-mariadbclient() {
+mariadbclient_tcp() {
 	docker exec -i \
 		"$cname" \
 		$mariadb \
@@ -99,7 +99,7 @@ mariadbclient() {
 		"$@"
 }
 
-mariadbclient_unix() {
+mariadbclient() {
 	docker exec -i \
 		"$cname" \
 		$mariadb \
@@ -113,7 +113,7 @@ checkUserExistInMariaDB() {
 	fi
 
 	local user
-	user=$(mariadbclient -u root -e "SELECT User FROM mysql.user where User='$1';")
+	user=$(mariadbclient --user root ${2:+--password=$2} -e "SELECT User FROM mysql.global_priv where User='$1';")
 	if [ -z "$user" ] ; then
 		return 1
 	fi
@@ -137,22 +137,23 @@ checkReplication() {
 	docker network create "$netid"
 
 	# When MARIADB_REPLICATION_HOST is not specified as env, and MARIADB_REPLICATION_USER exists, then considered as master container.
+	rootpass=consistent_and_checkcheckable
 	runandwait \
 		--network "$netid" \
 		-e MARIADB_REPLICATION_USER="$mariadb_replication_user" \
 		-e "$pass_str" \
 		-e MARIADB_DATABASE=replcheck \
-		-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
+		-e MARIADB_ROOT_PASSWORD="${rootpass}" \
 		"$image" --server-id=3000 --log-bin --log-basename=my-mariadb
 
 	# Checks $mariadb_replication_user get created or not
-	if checkUserExistInMariaDB $mariadb_replication_user ; then
-		grants=$(mariadbclient -u $mariadb_replication_user -p$pass -e "SHOW GRANTS")
+	if checkUserExistInMariaDB $mariadb_replication_user  "${rootpass}"; then
+		grants=$(mariadbclient_tcp -u $mariadb_replication_user -p$pass -e "SHOW GRANTS")
 		# shellcheck disable=SC2076
 		[[ "${grants/SLAVE/REPLICA}" =~ "GRANT REPLICATION REPLICA ON *.* TO \`$mariadb_replication_user\`@\`%\`" ]] || die "I wasn't created how I was expected: got $grants"
 
-		mariadbclient -u root --batch --skip-column-names -e 'create table t1(i int)' replcheck
-		readarray -t vals < <(mariadbclient -u root --batch --skip-column-names -e 'show master status\G' replcheck)
+		mariadbclient_tcp -u root --password="$rootpass" --batch --skip-column-names -e 'create table t1(i int)' replcheck
+		readarray -t vals < <(mariadbclient_tcp --password="$rootpass" -u root --batch --skip-column-names -e 'show master status\G' replcheck)
 		lastfile="${vals[1]}"
 		pos="${vals[2]}"
 		[[ "$lastfile" = my-mariadb-bin.00000[12] ]] || die "too many binlog files"
@@ -168,7 +169,7 @@ checkReplication() {
 		runandwait \
 			--network "$netid" \
 			-e MARIADB_MASTER_HOST="$master_ip" \
-			-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
+		        -e MARIADB_ROOT_PASSWORD="${rootpass}" \
 			-e MARIADB_REPLICATION_USER="$mariadb_replication_user" \
 			-e MARIADB_REPLICATION_PASSWORD="$pass" \
 			-e MARIADB_HEALTHCHECK_GRANTS="${RPL_MONITOR}" \
@@ -178,7 +179,7 @@ checkReplication() {
 		unset port
 
 		c="${DOCKER_LIBRARY_START_TIMEOUT:-10}"
-		until docker exec "$cid" healthcheck.sh --su-mysql --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ "$c" -eq 0 ]
+		until docker exec "$cid" healthcheck.sh --connect --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ "$c" -eq 0 ]
 		do
 			sleep 1
 			c=$(( c - 1 ))
@@ -189,7 +190,7 @@ checkReplication() {
 			$mariadb --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
 			-e 'SHOW SLAVE STATUS\G' || die 'error examining replica status'
 
-		mariadbclient_unix -u root replcheck --batch --skip-column-names -e 'show create table t1;' || die 'sample table not replicated'
+		mariadbclient -u root --password="$rootpass" --batch --skip-column-names replcheck -e 'show create table t1;' || die 'sample table not replicated'
 
 		killoff
 	else
@@ -376,7 +377,7 @@ killoff
 echo -e "Test: MYSQL_ROOT_HOST\n"
 
 runandwait -e  MYSQL_ALLOW_EMPTY_PASSWORD=1  -e MYSQL_ROOT_HOST=apple "${image}"
-ru=$(mariadbclient_unix --skip-column-names -B -u root -e 'select user,host from mysql.user where host="apple"')
+ru=$(mariadbclient --skip-column-names -B -u root -e 'select user,host from mysql.global_priv where host="apple"')
 [ "${ru}" = '' ] && die 'root@apple not created'
 killoff
 
@@ -386,7 +387,7 @@ killoff
 echo -e "Test: MYSQL_ROOT_HOST=localhost\n"
 
 runandwait -e  MARIADB_ROOT_PASSWORD=bob  -e MYSQL_ROOT_HOST=localhost "${image}"
-ru=$(mariadbclient_unix --skip-column-names -B -u root -pbob -e 'select user,host from mysql.user where user="root" and host="localhost"')
+ru=$(mariadbclient --skip-column-names -B -u root -pbob -e 'select user,host from mysql.global_priv where user="root" and host="localhost"')
 [ "${ru}" = '' ] && die 'root@localhost not created'
 killoff
 
@@ -399,9 +400,9 @@ runandwait -e MYSQL_USER=bob -e MYSQL_PASSWORD=$'\n \' \n' -e MYSQL_ROOT_PASSWOR
 	-e MARIADB_REPLICATION_USER="foo" \
 	-e MARIADB_REPLICATION_PASSWORD=$'\n\'\\aa-\x09-zz"_%\n' \
 	"${image}"
-mariadbclient_unix --skip-column-names -B -u root -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
-mariadbclient_unix --skip-column-names -B -u foo -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
-mariadbclient_unix --skip-column-names -B -u bob -p$'\n \' \n' -e 'select 1'
+mariadbclient --skip-column-names -B -u root -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
+mariadbclient --skip-column-names -B -u foo -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
+mariadbclient --skip-column-names -B -u bob -p$'\n \' \n' -e 'select 1'
 killoff
 
 	;&
@@ -454,7 +455,7 @@ runandwait \
 	-e MARIADB_PASSWORD_HASH_FILE=/run/secrets/p \
 	"${image}"
 
-host=$(mariadbclient_unix --skip-column-names -B -u root -pbob -e 'select host from mysql.user where user="root" and host="pluto"' titan)
+host=$(mariadbclient --skip-column-names -B -u root -pbob -e 'select host from mysql.global_priv where user="root" and host="pluto"' titan)
 [ "${host}" != 'pluto' ] && die 'root@pluto not created'
 creation=$(mariadbclient --skip-column-names -B -u ron -pscappers -P 3306 --protocol tcp titan -e "CREATE TABLE landing(i INT)")
 [ "${creation}" = '' ] || die 'creation error'
@@ -483,7 +484,7 @@ runandwait \
 	"${image}" 
 
 init_sum=$(mariadbclient --skip-column-names -B -u ron -pscappers -P 3306 -h 127.0.0.1  --protocol tcp titan -e "select sum(i) from t1;")
-[ "${init_sum}" = '1833' ] || (podman logs m_init; die 'initialization order error')
+[ "${init_sum}" = '1833' ] || die 'initialization order error'
 killoff
 rm -rf "${initdb}"
 
@@ -517,7 +518,7 @@ mariadbclient -u root -e 'show databases'
 othertables=$(mariadbclient -u root --skip-column-names -Be "select group_concat(SCHEMA_NAME) from information_schema.SCHEMATA where SCHEMA_NAME not in ('mysql', 'information_schema', 'performance_schema', 'sys')")
 [ "${othertables}" != 'NULL' ] && die "unexpected table(s) $othertables"
 
-otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.user where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'), ('mysql','localhost'), ('healthcheck', '::1'), ('healthcheck', '127.0.0.1'), ('healthcheck', 'localhost'))")
+otherusers=$(mariadbclient -u root --skip-column-names -Be "select user,host from mysql.global_priv where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'), ('mysql','localhost'), ('healthcheck', '::1'), ('healthcheck', '127.0.0.1'), ('healthcheck', 'localhost'))")
 [ "$otherusers" != '' ] && die "unexpected users $otherusers"
 killoff
 
@@ -563,7 +564,7 @@ killoff
 echo -e "Test: MARIADB_ROOT_HOST\n"
 
 runandwait -e  MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1  -e MARIADB_ROOT_HOST=apple "${image}"
-ru=$(mariadbclient_unix --skip-column-names -B -u root -e 'select user,host from mysql.user where host="apple"')
+ru=$(mariadbclient --skip-column-names -B -u root -e 'select user,host from mysql.global_priv where host="apple"')
 [ "${ru}" = '' ] && die 'root@apple not created'
 killoff
 
@@ -613,7 +614,7 @@ case "$architecture" in
 		debarch=aarch64 ;;
 	ppc64le)
 		debarch=powerpc64le ;;
-	s390x|i386)
+	s390x|i386|*)
 		debarch=$architecture ;;
 esac
 if [ -n "$debarch" ]
@@ -767,7 +768,7 @@ fi
 		sleep 1
 		c=$(( c - 1 ))
 	done
-	count_replica=$(mariadbclient -u bob -proger rabbit --batch --skip-column-names -e 'select sum(i) from t1')
+	count_replica=$(mariadbclient_tcp -u bob -proger rabbit --batch --skip-column-names -e 'select sum(i) from t1')
 	if [ "$count_primary" != "$count_replica" ];
 	then
 		cid=$cid_primary killoff
@@ -798,6 +799,8 @@ fi
 		-e MARIADB_MASTER_HOST="ok" \
 		"$image" \
 		&& die "$cname should fail with incomplete options" 
+
+	cname=
 
 	;&
 	replication)
@@ -833,11 +836,11 @@ zstd "${initdb}"/*zst*
 		-v "${initdb}":/docker-entrypoint-initdb.d:Z \
 		"${image}"
 	mariadbclient -u root -pbob -e 'select current_user()'
-	mariadbclient_unix -u root -pbob -e 'select current_user()'
+	mariadbclient -u root -pbob -e 'select current_user()'
 	mariadbclient -u henry -pjane neptune -e 'select current_user()'
 
 	init_sum=$(mariadbclient --skip-column-names -B -u henry -pjane -P 3306 -h 127.0.0.1  --protocol tcp neptune -e "select sum(i) from t1;")
-	[ "${init_sum}" = '1833' ] || (podman logs m_init; die 'initialization order error')
+	[ "${init_sum}" = '1833' ] || die 'initialization order error'
 	killoff
 	rm -rf "${initdb}"
 
