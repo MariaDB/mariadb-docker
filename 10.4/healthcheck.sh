@@ -22,6 +22,7 @@
 # innodb_initialized        USAGE
 # innodb_buffer_pool_loaded USAGE
 # galera_online             USAGE
+# galera_ready              USAGE
 # replication               REPLICATION_CLIENT (<10.5)or REPLICA MONITOR (10.5+)
 # mariadbupgrade            none, however unix user permissions on datadir
 #
@@ -111,6 +112,19 @@ galera_online()
 	# 4 from https://galeracluster.com/library/documentation/node-states.html#node-state-changes
 	# not https://xkcd.com/221/
 	if [[ $s -eq 4 ]]; then
+		return 0
+	fi
+	return 1
+}
+
+# GALERA_READY
+#
+# Tests that the Galera provider is ready.
+galera_ready()
+{
+	local s
+	s=$(_process_sql --skip-column-names -e 'select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME="WSREP_READY"')
+	if [ "$s" = "ON" ]; then
 		return 0
 	fi
 	return 1
