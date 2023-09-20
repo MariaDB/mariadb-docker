@@ -340,11 +340,13 @@ docker_setup_db() {
 			read -r -d '' rootCreate <<-EOSQL || true
 				CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY PASSWORD '${MARIADB_ROOT_PASSWORD_HASH}' ;
 				GRANT ALL ON *.* TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION ;
+				GRANT PROXY ON ''@'%' TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION;
 			EOSQL
 		else
 			read -r -d '' rootCreate <<-EOSQL || true
 				CREATE USER 'root'@'${MARIADB_ROOT_HOST}' IDENTIFIED BY '${rootPasswordEscaped}' ;
 				GRANT ALL ON *.* TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION ;
+				GRANT PROXY ON ''@'%' TO 'root'@'${MARIADB_ROOT_HOST}' WITH GRANT OPTION;
 			EOSQL
 		fi
 	fi
