@@ -15,7 +15,9 @@ architecture=$(docker image inspect --format '{{.Architecture}}' "$image")
 
 killoff()
 {
-	[ -n "$cid" ] && docker kill "$cid" > /dev/null
+	if [ -n "$cid" ]; then
+	      docker kill "$cid" > /dev/null || true
+	fi
 	sleep 2
 	if [ -n "$cid" ]; then
 	       docker rm -v -f "$cid" > /dev/null || true
@@ -218,11 +220,12 @@ galera_sst()
 		--wsrep-new-cluster --wsrep-provider=/usr/lib/libgalera_smm.so --wsrep_cluster_address=gcomm://"$cname" --binlog_format=ROW --innodb_autoinc_lock_mode=2 --wsrep_on=ON --wsrep_sst_method="$sst" --wsrep_sst_auth=root:secret
 	master_host=$cid
 	unset cname
+	ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$cid")
 	DOCKER_LIBRARY_START_TIMEOUT=$(( ${DOCKER_LIBRARY_START_TIMEOUT:-10} * 7 )) runandwait \
 		--network "$netid" \
 		--env MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 \
 		"${image}" \
-		--wsrep-provider=/usr/lib/libgalera_smm.so  --wsrep_cluster_address=gcomm://"$donorname" --binlog_format=ROW --innodb_autoinc_lock_mode=2 --wsrep_on=ON --wsrep_sst_method="$sst" --wsrep_sst_auth=root:secret
+		--wsrep-provider=/usr/lib/libgalera_smm.so  --wsrep_cluster_address=gcomm://"$ip" --binlog_format=ROW --innodb_autoinc_lock_mode=2 --wsrep_on=ON --wsrep_sst_method="$sst" --wsrep_sst_auth=root:secret
 
 	v=$(mariadbclient -u root -psecret -e 'select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME="WSREP_LOCAL_STATE"' || :)
 
@@ -847,16 +850,21 @@ zstd "${initdb}"/*zst*
 	;&
 	galera_mariadbbackup)
 
+	echo -e "Test: Galera SST mechnism mariadb-backup\n"
+
 	galera_sst mariabackup
 
 	;&
 	galera_sst_rsync)
+
+	echo -e "Test: Galera SST mechnism rsync\n"
 
 	galera_sst rsync
 
 	# TODO fix - failing to do the authentication correctly of wsrep_sst_auth - Access denied on mysql usage within SST script
 	#;&
 	#galera_sst_mariadbdump)
+	#echo -e "Test: Galera SST mechnism mariadb-dump\n"
 	#
 	#galera_sst mysqldump
 
