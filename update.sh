@@ -29,6 +29,25 @@ declare -A suffix=(
 # For testing with https://downloads.dev.mariadb.org/rest-api
 typeset -r DOWNLOADS_REST_API="https://downloads.mariadb.org/rest-api"
 
+update_cs_version()
+{
+	echo "Creating column store specific directory for mariadb version $version: $mariaVersion ($releaseStatus)"
+
+	cp Dockerfile.cs.template "cs-$version/Dockerfile"
+
+	cp docker-entrypoint-cs.sh healthcheck.sh "cs-$version/"
+	chmod a+x "cs-$version"/healthcheck.sh
+	sed -i \
+		-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
+		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
+		-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
+		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
+		-e 's!%%MARIADB_SUPPORT_TYPE%%!'"$supportType"'!g' \
+		-e 's!%%SUITE%%!'"$suite"'!g' \
+		-e 's!%%ARCHES%%! '"$arches"'!g' \
+		"cs-$version/Dockerfile"
+}
+
 update_version()
 {
 	echo "$version: $mariaVersion ($releaseStatus)"
@@ -163,7 +182,7 @@ fi
 versions=( "$@" )
 
 for version in "${versions[@]}"; do
-	if [ "$version" == $development_version ]; then
+	if [ "$version" == $development_version ] || [ "${versions[0]}" == "--cs" ] && [ "$#" -eq 1 ]; then
 		in_development
 		continue
 	fi
@@ -180,3 +199,7 @@ for version in "${versions[@]}"; do
 
 	update_version
 done
+
+if [ "${versions[0]}" == "--cs" ]; then
+	update_cs_version
+fi
