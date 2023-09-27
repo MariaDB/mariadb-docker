@@ -2,7 +2,7 @@
 FROM mariadb:%%MARIADB_VERSION%%
 
 RUN apt-get update && \
-        apt-get install -y mariadb-plugin-columnstore=$MARIADB_VERSION ; \
+        apt-get install -y mariadb-plugin-columnstore=%%MARIADB_VERSION%% ; \
         rm -rf /var/lib/apt/lists/*
 
 COPY docker-entrypoint-cs.sh /usr/local/bin/

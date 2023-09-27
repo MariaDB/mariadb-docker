@@ -33,19 +33,21 @@ update_cs_version()
 {
 	echo "Creating column store specific directory for mariadb version $version: $mariaVersion ($releaseStatus)"
 
-	cp Dockerfile.cs.template "cs-$version/Dockerfile"
+	mkdir "$cs_dir"
+	cp Dockerfile.cs.template "$cs_dir/Dockerfile"
 
-	cp docker-entrypoint-cs.sh healthcheck.sh "cs-$version/"
-	chmod a+x "cs-$version"/healthcheck.sh
+	cp docker-entrypoint-cs.sh healthcheck.sh "$cs_dir/"
+	chmod a+x "$cs_dir"/healthcheck.sh
 	sed -i \
-		-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
-		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
-		-e 's!%%MARIADB_MAJOR%%!'"$version"'!g' \
-		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
-		-e 's!%%MARIADB_SUPPORT_TYPE%%!'"$supportType"'!g' \
-		-e 's!%%SUITE%%!'"$suite"'!g' \
-		-e 's!%%ARCHES%%! '"$arches"'!g' \
-		"cs-$version/Dockerfile"
+		-e 's!%%MARIADB_VERSION%%!'"$mariaVersion"'!g' \
+		"$cs_dir/Dockerfile"
+}
+
+createCSImage() {
+	cs_dir="cs-$version"
+	if [ "${#versions[@]}" -gt 0 ] && [ "${versions[0]}" == "--cs" ] && [ ! -d "$cs_dir" ]; then
+		update_cs_version
+	fi
 }
 
 update_version()
@@ -123,6 +125,8 @@ update_version()
 			--arg milestone "$version" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "ubuntu:$suite" --arg arches "$arches" \
 			'.[$milestone] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
 		printf '%s\n' "$versionJson" > versions.json
+
+		createCSImage
 }
 
 update_version_array()
@@ -170,19 +174,25 @@ in_development()
 	version=$development_version
 	mariaVersion=${development_version}.0
 	[ -d "$development_version" ] && update_version
+	if  [ "${#versions[@]}" -gt 0 ] && [ "${versions[0]}" == "--cs" ]; then
+		createCSImage
+	fi
 }
 
+versions=( "$@" )
 
-if [ $# -eq 0 ]; then
+if [ $# -eq 0 ] || ( [ "${versions[0]}" == "--cs" ] && [ "$#" -eq 1 ] ); then
 	all
 	in_development
 	exit 0
 fi
 
-versions=( "$@" )
 
 for version in "${versions[@]}"; do
-	if [ "$version" == $development_version ] || [ "${versions[0]}" == "--cs" ] && [ "$#" -eq 1 ]; then
+	if [ "${version}" == "--cs" ]; then
+		continue
+	fi
+	if [ "$version" == $development_version ]; then
 		in_development
 		continue
 	fi
@@ -200,6 +210,3 @@ for version in "${versions[@]}"; do
 	update_version
 done
 
-if [ "${versions[0]}" == "--cs" ]; then
-	update_cs_version
-fi
