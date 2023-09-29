@@ -18,15 +18,17 @@ mysql_error() {
 }
 
 _main() {
-    if [ "$1" = 'mariadbd' ]; then
-        # simply start mariadb with column-store
-        exec docker-entrypoint.sh "$@"
-    elif [ "$1" = 'StorageManager' ]; then
+    if [ "$1" = 'StorageManager' ]; then
         # Run StorageManage of column-store
         # storageManager's directroy :- /var/lib/columnstore/storagemanager
-        print "$@"
+        echo "$@"
     elif [ "$1" = 'brm' ]; then
         # Run brm
+        echo "$@"
+    else
+        # if [ "$1" = 'mariadbd' ] or No argument then by default: 
+        # simply start mariadb with column-store
+        exec docker-entrypoint.sh "$@"
     fi
 }
 
