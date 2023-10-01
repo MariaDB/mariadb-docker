@@ -64,6 +64,7 @@ update_version()
 			       	-e 's/START REPLICA/START SLAVE/' \
 				"$version/docker-entrypoint.sh"
 			sed -i -e 's/ REPLICA\$/ SLAVE$/' "$version"/healthcheck.sh
+			sed -i -e 's/\/run/\/var\/run\//g' "$version/Dockerfile"
 		       	;; # almost nothing to see/do here
 		10.5)
 			sed -i -e '/--old-mode/d' "$version/docker-entrypoint.sh"

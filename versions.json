@@ -1,4 +1,18 @@
 {
+  "11.3": {
+    "milestone": "11.3",
+    "version": "11.3.0",
+    "fullVersion": "1:11.3.0+maria~ubu2204",
+    "releaseStatus": "Alpha",
+    "supportType": "Unknown",
+    "base": "ubuntu:jammy",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
   "11.2": {
     "milestone": "11.2",
     "version": "11.2.1",
@@ -69,20 +83,6 @@
       "s390x"
     ]
   },
-  "10.9": {
-    "milestone": "10.9",
-    "version": "10.9.8",
-    "fullVersion": "1:10.9.8+maria~ubu2204",
-    "releaseStatus": "Stable",
-    "supportType": "Short Term Support",
-    "base": "ubuntu:jammy",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
   "10.6": {
     "milestone": "10.6",
     "version": "10.6.15",
@@ -122,20 +122,6 @@
       "amd64",
       "arm64v8",
       "ppc64le"
-    ]
-  },
-  "11.3": {
-    "milestone": "11.3",
-    "version": "11.3.0",
-    "fullVersion": "1:11.3.0+maria~ubu2204",
-    "releaseStatus": "Alpha",
-    "supportType": "Unknown",
-    "base": "ubuntu:jammy",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
     ]
   }
 }
