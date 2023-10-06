@@ -868,6 +868,45 @@ zstd "${initdb}"/*zst*
 	#
 	#galera_sst mysqldump
 
+	;&
+	backup_restore)
+
+	tmpvol=v$RANDOM
+	docker volume create "$tmpvol"
+
+	runandwait -v $tmpvol:/backup \
+		--env MARIADB_ROOT_PASSWORD=soverysecret \
+		"$image"
+
+	docker exec \
+		"$cname" \
+		mariabackup --backup --target-dir=/backup/d --user root --password soverysecret
+
+	docker exec \
+		"$cname" \
+		mariabackup --prepare --target-dir=/backup/d
+
+	docker exec \
+		--workdir /backup/d \
+		"$cname" \
+		tar -Jcf ../backup.tar.xz .
+
+	docker exec \
+		"$cname" \
+		rm -rf /backup/d
+
+	killoff
+
+	runandwait -v $tmpvol:/docker-entrypoint-initdb.d/:z \
+		--env MARIADB_AUTO_UPGRADE=1 \
+		"$image"
+
+	mariadbclient -u root -psoverysecret -e 'select current_user() as connected_ok'
+	killoff
+
+	docker volume rm "$tmpvol"
+	tmpvol=
+
 # Insert new tests above by copying the comments below
 #	;&
 #	THE_TEST_NAME)
