@@ -498,13 +498,18 @@ docker_mariadb_init()
 			mv "$DATADIR"/.restore/** "$DATADIR"/
 			# Waiting on MDEV-32361 fix
 			for iblogfile in "$DATADIR"/.init/iblogfile*; do
-				mv "$iblogfile" "$DATADIR"/
+				[ ! -f "${iblogfile/.init/}" ] && mv "$iblogfile" "$DATADIR"/
 			done
-			if [ -f backup-my.cnf ]; then
-				mysql_note "Ensure startup parameters are compatible with:"
-				my_print_defaults --defaults-file="$DATADIR/.init/backup-my.cnf" --mariadbd
+			if [ -f "$DATADIR/.init/backup-my.cnf" ]; then
+				mv "$DATADIR/.init/backup-my.cnf" "$DATADIR/.my.cnf"
+				mysql_note "Adding startup configuration:"
+				my_print_defaults --defaults-file="$DATADIR/.my.cnf" --mariadbd
 			fi
 			rm -rf "$DATADIR"/.init "$DATADIR"/.restore
+			if [ "$(id -u)" = "0" ]; then
+				# this will cause less disk access than `chown -R`
+				find "$DATADIR" \! -user mysql -exec chown mysql: '{}' +
+			fi
 		done
 		if _check_if_upgrade_is_needed; then
 			docker_mariadb_upgrade "$@"
