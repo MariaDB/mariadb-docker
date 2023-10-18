@@ -1,0 +1,11 @@
+services:
+  mariadb:
+    image: quay.io/mariadb-foundation/mariadb-debug:11.2
+    volumes:
+      - mariadbdata:/var/lib/mysql
+    environment:
+      - MARIADB_ROOT_PASSWORD=bob
+    command: gdb -ex r  -ex 'thread apply all bt -frame-arguments all full'  --args mariadbd
+    user: mysql
+volumes:
+  mariadbdata: {}
