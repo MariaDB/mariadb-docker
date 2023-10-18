@@ -17,14 +17,12 @@ mysql_error() {
 	exit 1
 }
 
-check_existence() {
-    for n in a b c;
-    do
-        echo $n
-    done
-}
+# arg_splitter() {
+
+# }
 
 validate_args() {
+    local storage_manager_args=
     storage_manager_args[0]=service
     storage_manager_args[1]=object_size 
     storage_manager_args[2]=metadata_path
@@ -49,11 +47,25 @@ validate_args() {
     storage_manager_args[21]=cache_size
     storage_manager_args[22]=cache_path
 
-    # ************Code Here ************
-    # Split each arg by `=`. And check whether arg exist in storage_manager_args or not.
-    # If Not then print an error/warning message to the user but don't fail.
+    for arg in $@; do
+        if [ $arg == '' ]; then
+            continue
+        fi
+        local arr=(${arg//=/ })
+        local arg_key=${arr[0]}
+        local is_exist=false
+        for storage_manager_arg in "${storage_manager_args[@]}"; do
+            if [ "$storage_manager_arg" == "$arg_key" ]; then
+                is_exist=true
+            fi 
+        done
+        if [ "$is_exist" != "true" ]; then
+            echo "argument $arg_key is unknown for storage-manager" >&2
+        fi
+    done
 
-    # If everything is alright then update the default values if arguments ware provided by user relevant to the fields.
+    # *************CODE HERE****************
+    # Now, Update the default values if arguments were provided by user relevant to the fields.
 }
 
 get_storage_manager_default_values() {
