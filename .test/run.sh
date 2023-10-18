@@ -166,7 +166,7 @@ checkReplication() {
 
 		master_host=$cname
 		unset cname
-		master_ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $master_host)
+		master_ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$master_host")
 		port=3307
 		runandwait \
 			--network "$netid" \
@@ -212,7 +212,6 @@ galera_sst()
 	docker network create "$netid"
 
 	cname="mariadbcontainer_donor$RANDOM"
-	donorname=$cname
 	runandwait \
 		--network "$netid" \
 		--env MARIADB_ROOT_PASSWORD=secret  --env MARIADB_DATABASE=test  --env MARIADB_USER=test --env MARIADB_PASSWORD=test \
@@ -304,7 +303,7 @@ killoff
 	[ "${createuser//\'/\`}" == 'CREATE USER `mysql`@`localhost` IDENTIFIED VIA unix_socket' ] || die "mysql@localhost wasn't created how I was expected"
 
 	grants="$(docker exec --user mysql -i \
-		$cname \
+		"$cname" \
 		$mariadb \
 		--silent \
 		-e show\ grants)"
@@ -322,7 +321,7 @@ killoff
 		[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`127.0.0.1` IDENTIFIED' ]] || die "healtheck wasn't created how I was expected"
 
 	grants="$(docker exec --user mysql -i \
-		$cname \
+		"$cname" \
 		$mariadb --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
 		--silent \
 		-e show\ grants)"
@@ -350,7 +349,7 @@ mariadbclient -u root -p"${pass}" -e 'select current_user()'
 		-e "select 'I connect therefore I am'" || die "I'd hoped to work around MDEV-24111"
 
 	grants="$(docker exec --user mysql -i \
-		$cname \
+		"$cname" \
 		$mariadb \
 		--silent \
 		-e show\ grants)"
