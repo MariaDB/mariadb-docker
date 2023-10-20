@@ -83,7 +83,7 @@ connect()
 innodb_initialized()
 {
 	local s
-	s=$(_process_sql --skip-column-names -e 'select 1 from information_schema.ENGINES WHERE engine="innodb" AND support in ("YES", "DEFAULT", "ENABLED")')
+	s=$(_process_sql --skip-column-names -e "select 1 from information_schema.ENGINES WHERE engine='innodb' AND support in ('YES', 'DEFAULT', 'ENABLED')")
 	[ "$s" == 1 ]
 }
 
@@ -95,7 +95,7 @@ innodb_initialized()
 innodb_buffer_pool_loaded()
 {
 	local s
-	s=$(_process_sql --skip-column-names -e 'select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME="Innodb_buffer_pool_load_status"')
+	s=$(_process_sql --skip-column-names -e "select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME='Innodb_buffer_pool_load_status'")
 	if [[ $s =~ 'load completed' ]]; then
 		return 0
 	fi
@@ -108,7 +108,7 @@ innodb_buffer_pool_loaded()
 galera_online()
 {
 	local s
-	s=$(_process_sql --skip-column-names -e 'select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME="WSREP_LOCAL_STATE"')
+	s=$(_process_sql --skip-column-names -e "select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME='WSREP_LOCAL_STATE'")
 	# 4 from https://galeracluster.com/library/documentation/node-states.html#node-state-changes
 	# not https://xkcd.com/221/
 	if [[ $s -eq 4 ]]; then
@@ -123,7 +123,7 @@ galera_online()
 galera_ready()
 {
 	local s
-	s=$(_process_sql --skip-column-names -e 'select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME="WSREP_READY"')
+	s=$(_process_sql --skip-column-names -e "select VARIABLE_VALUE from information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME='WSREP_READY'")
 	if [ "$s" = "ON" ]; then
 		return 0
 	fi
