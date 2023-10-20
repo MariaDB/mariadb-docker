@@ -309,7 +309,7 @@ while [ $# -gt 0 ]; do
 			datadir=${1}
 			;;
 		--no-defaults)
-			unset def
+			def=()
 			nodefaults=1
 			;;
 		--defaults-file=*|--defaults-extra-file=*|--defaults-group-suffix=*)
