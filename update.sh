@@ -78,9 +78,16 @@ update_version()
 			       -e 's/mysqladmin/mariadb-admin/' \
 			       -e 's/\bmysql --protocol\b/mariadb --protocol/' \
 			       -e 's/mysql_install_db/mariadb-install-db/' \
-			       -e "0,/#ENDOFSUBSTITUTIONS/s/mysqld/mariadbd/" \
 			       -e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
 			       "$version/docker-entrypoint.sh"
+			if [ "$version" = 10.6 ] || [ "$version" = 10.10 ]; then
+				# my_print_defaults didn't recognise --mysqld until 10.11
+				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\([^-]\)mysqld/\1mariadbd/g' \
+					"$version/docker-entrypoint.sh"
+			else
+				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\mysqld/mariadbd/g' \
+					"$version/docker-entrypoint.sh"
+			fi
 			sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\bmysql\b/mariadb/' "$version/healthcheck.sh"
 			if [[ ! $version =~ 10.[678] ]]; then
 				# quoted $ intentional

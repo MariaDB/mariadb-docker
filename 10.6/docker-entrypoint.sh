@@ -218,7 +218,7 @@ _mariadb_version() {
 docker_init_database_dir() {
 	mysql_note "Initializing database files"
 	installArgs=( --datadir="$DATADIR" --rpm --auth-root-authentication-method=normal )
-	# "Other options are passed to mariadbd." (so we pass all "mysqld" arguments directly here)
+	# "Other options are passed to mariadbd." (so we pass all "mariadbd" arguments directly here)
 	mariadb-install-db "${installArgs[@]}" "${@:2}" \
 		--skip-test-db \
 		--old-mode='UTF8_IS_UTF8MB3' \
@@ -503,7 +503,7 @@ docker_mariadb_init()
 			if [ -f "$DATADIR/.init/backup-my.cnf" ]; then
 				mv "$DATADIR/.init/backup-my.cnf" "$DATADIR/.my.cnf"
 				mysql_note "Adding startup configuration:"
-				my_print_defaults --defaults-file="$DATADIR/.my.cnf" --mariadbd
+				my_print_defaults --defaults-file="$DATADIR/.my.cnf" --mysqld
 			fi
 			rm -rf "$DATADIR"/.init "$DATADIR"/.restore
 			if [ "$(id -u)" = "0" ]; then
