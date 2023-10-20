@@ -870,6 +870,8 @@ zstd "${initdb}"/*zst*
 	;&
 	backup_restore)
 
+	echo -e "Test: Backup/Restore\n"
+
 	tmpvol=v$RANDOM
 	docker volume create "$tmpvol"
 
@@ -909,6 +911,7 @@ zstd "${initdb}"/*zst*
 # Insert new tests above by copying the comments below
 #	;&
 #	THE_TEST_NAME)
+#	echo -e "Test: DESCRIPTION\n"
 
 	;;
 	*)
