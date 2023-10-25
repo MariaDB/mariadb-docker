@@ -888,6 +888,10 @@ zstd "${initdb}"/*zst*
 		mariabackup --prepare --target-dir=/backup/d
 
 	docker exec \
+		"$cname" \
+		sh -c '[ ! -f /backup/d/.my-healthcheck.cnf ] && cp /var/lib/mysql/.my-healthcheck.cnf /backup/d'
+
+	docker exec \
 		--workdir /backup/d \
 		"$cname" \
 		tar -Jcf ../backup.tar.xz .
@@ -903,6 +907,9 @@ zstd "${initdb}"/*zst*
 		"$image"
 
 	mariadbclient -u root -psoverysecret -e 'select current_user() as connected_ok'
+
+	docker exec "$cname" healthcheck.sh --connect --innodb_initialized
+
 	killoff
 
 	docker volume rm "$tmpvol"
