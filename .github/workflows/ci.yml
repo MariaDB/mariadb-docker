@@ -5,6 +5,7 @@ on:
     branches-ignore:
       - next
     paths-ignore:
+      - examples
       - Dockerfile.template
       - LICENSE
       - README.md
@@ -12,6 +13,7 @@ on:
     branches-ignore:
       - next
     paths-ignore:
+      - examples
       - Dockerfile.template
       - LICENSE
       - README.md
