@@ -205,6 +205,15 @@ docker_create_db_directories() {
 		find "$DATADIR" \! -user mysql -exec chown mysql: '{}' +
 		# See https://github.com/MariaDB/mariadb-docker/issues/363
 		find "${SOCKET%/*}" -maxdepth 0 \! -user mysql -exec chown mysql: '{}' \;
+
+		# memory.pressure
+		local cgroup; cgroup=$(</proc/self/cgroup)
+		local mempressure="/sys/fs/cgroup/${cgroup:3}/memory.pressure"
+		if [ -w "$mempressure" ]; then
+			chown mysql: "$mempressure" || mysql_warn "unable to change ownership of $mempressure, functionality unavailable to MariaDB"
+		else
+			mysql_warn "$mempressure not writable, functionality unavailable to MariaDB"
+		fi
 	fi
 }
 
