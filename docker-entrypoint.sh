@@ -496,10 +496,6 @@ docker_mariadb_init()
 			mariadb-backup --target-dir="$DATADIR"/.init --datadir="$DATADIR"/.restore --move-back
 
 			mv "$DATADIR"/.restore/** "$DATADIR"/
-			# Waiting on MDEV-32361 fix
-			for iblogfile in "$DATADIR"/.init/iblogfile*; do
-				[ ! -f "${iblogfile/.init/}" ] && mv "$iblogfile" "$DATADIR"/
-			done
 			if [ -f "$DATADIR/.init/backup-my.cnf" ]; then
 				mv "$DATADIR/.init/backup-my.cnf" "$DATADIR/.my.cnf"
 				mysql_note "Adding startup configuration:"
