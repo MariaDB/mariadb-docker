@@ -88,7 +88,7 @@ ENV MARIADB_VERSION $MARIADB_VERSION
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-%%MARIADB_VERSION_BASIC%%/repo/ubuntu/ %%SUITE%% main"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-%%MARIADB_VERSION_BASIC%%/repo/ubuntu/ %%SUITE%% main main/debug"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
@@ -118,7 +118,7 @@ RUN set -ex; \
 	rm -f /etc/mysql/mariadb.conf.d/rocksdb.cnf; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership
-	rm -rf /var/lib/mysql; \
+	rm -rf /var/lib/mysql /etc/mysql/mariadb.conf.d/50-mysqld_safe.cnf; \
 	mkdir -p /var/lib/mysql /var/run/mysqld; \
 	chown -R mysql:mysql /var/lib/mysql /var/run/mysqld; \
 # ensure that /var/run/mysqld (used for socket and lock files) is writable regardless of the UID our mysqld instance ends up having at runtime

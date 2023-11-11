@@ -93,6 +93,9 @@ update_version()
 				sed -i -e 's/mysql_upgrade_info/mariadb_upgrade_info/' \
 					"$version/docker-entrypoint.sh" "$version/healthcheck.sh"
 			fi
+			if [[ $version =~ 11.[01] ]]; then
+				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$version/Dockerfile"
+			fi
 			;&
 		esac
 
