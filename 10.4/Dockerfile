@@ -112,8 +112,10 @@ RUN set -ex; \
 # postinst script creates a datadir, so avoid creating it by faking its existance.
 	mkdir -p /var/lib/mysql/mysql ; touch /var/lib/mysql/mysql/user.frm ; \
 # mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
-	apt-get install -y --no-install-recommends mariadb-server="$MARIADB_VERSION" mariadb-backup socat \
+# mariadb-plugin-rocksdb gets installed, and plugin auto loading gets disabled
+	apt-get install -y --no-install-recommends mariadb-server="$MARIADB_VERSION" mariadb-backup mariadb-plugin-rocksdb socat \
 	; \
+	rm -f /etc/mysql/mariadb.conf.d/rocksdb.cnf; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership
 	rm -rf /var/lib/mysql /etc/mysql/mariadb.conf.d/50-mysqld_safe.cnf; \
