@@ -1,10 +1,10 @@
 {
   "11.3": {
     "milestone": "11.3",
-    "version": "11.3.0",
-    "fullVersion": "1:11.3.0+maria~ubu2204",
-    "releaseStatus": "Alpha",
-    "supportType": "Unknown",
+    "version": "11.3.1",
+    "fullVersion": "1:11.3.1+maria~ubu2204",
+    "releaseStatus": "RC",
+    "supportType": "Short Term Support",
     "base": "ubuntu:jammy",
     "arches": [
       "amd64",
@@ -15,9 +15,9 @@
   },
   "11.2": {
     "milestone": "11.2",
-    "version": "11.2.1",
-    "fullVersion": "1:11.2.1+maria~ubu2204",
-    "releaseStatus": "RC",
+    "version": "11.2.2",
+    "fullVersion": "1:11.2.2+maria~ubu2204",
+    "releaseStatus": "Stable",
     "supportType": "Short Term Support",
     "base": "ubuntu:jammy",
     "arches": [
