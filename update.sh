@@ -29,6 +29,27 @@ declare -A suffix=(
 # For testing with https://downloads.dev.mariadb.org/rest-api
 typeset -r DOWNLOADS_REST_API="https://downloads.mariadb.org/rest-api"
 
+update_cs_version()
+{
+	echo "Creating column store specific directory for mariadb version $version: $mariaVersion ($releaseStatus)"
+
+	mkdir "$cs_dir"
+	cp Dockerfile.cs.template "$cs_dir/Dockerfile"
+
+	cp docker-entrypoint-cs.sh healthcheck.sh "$cs_dir/"
+	chmod a+x "$cs_dir"/healthcheck.sh
+	sed -i \
+		-e 's!%%MARIADB_VERSION%%!'"$mariaVersion"'!g' \
+		"$cs_dir/Dockerfile"
+}
+
+createCSImage() {
+	cs_dir="cs-$version"
+	if [ "${#versions[@]}" -gt 0 ] && [ "${versions[0]}" == "--cs" ] && [ ! -d "$cs_dir" ]; then
+		update_cs_version
+	fi
+}
+
 update_version()
 {
 	echo "$version: $mariaVersion ($releaseStatus)"
@@ -112,6 +133,8 @@ update_version()
 			--arg milestone "$version" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "ubuntu:$suite" --arg arches "$arches" \
 			'.[$milestone] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
 		printf '%s\n' "$versionJson" > versions.json
+
+		createCSImage
 }
 
 update_version_array()
@@ -159,18 +182,24 @@ in_development()
 	version=$development_version
 	mariaVersion=${development_version}.0
 	[ -d "$development_version" ] && update_version
+	if  [ "${#versions[@]}" -gt 0 ] && [ "${versions[0]}" == "--cs" ]; then
+		createCSImage
+	fi
 }
 
+versions=( "$@" )
 
-if [ $# -eq 0 ]; then
+if [ $# -eq 0 ] || ( [ "${versions[0]}" == "--cs" ] && [ "$#" -eq 1 ] ); then
 	all
 	in_development
 	exit 0
 fi
 
-versions=( "$@" )
 
 for version in "${versions[@]}"; do
+	if [ "${version}" == "--cs" ]; then
+		continue
+	fi
 	if [ "$version" == $development_version ]; then
 		in_development
 		continue
@@ -188,3 +217,4 @@ for version in "${versions[@]}"; do
 
 	update_version
 done
+
