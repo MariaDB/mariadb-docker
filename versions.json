@@ -69,20 +69,6 @@
       "s390x"
     ]
   },
-  "10.10": {
-    "milestone": "10.10",
-    "version": "10.10.7",
-    "fullVersion": "1:10.10.7+maria~ubu2204",
-    "releaseStatus": "Stable",
-    "supportType": "Short Term Support",
-    "base": "ubuntu:jammy",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
   "10.6": {
     "milestone": "10.6",
     "version": "10.6.16",

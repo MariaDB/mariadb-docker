@@ -80,7 +80,7 @@ update_version()
 			       -e 's/mysql_install_db/mariadb-install-db/' \
 			       -e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
 			       "$version/docker-entrypoint.sh"
-			if [ "$version" = 10.6 ] || [ "$version" = 10.10 ]; then
+			if [ "$version" = 10.6 ]; then
 				# my_print_defaults didn't recognise --mysqld until 10.11
 				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\([^-]\)mysqld/\1mariadbd/g' \
 					"$version/docker-entrypoint.sh"
