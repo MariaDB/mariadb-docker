@@ -1,0 +1,60 @@
+version: "3"
+x-common-variables: &common-variables
+  MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+  MARIADB_REPLICATION_USER: ${MARIADB_REPLICATION_USER}
+  MARIADB_REPLICATION_PASSWORD: ${MARIADB_REPLICATION_PASSWORD}
+
+x-common-attributes: &common-attributes
+  env_file:
+    - .env
+  image: mariadb:lts
+  environment: *common-variables
+  healthcheck:
+    test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+    start_period: 10s
+    interval: 10s
+    timeout: 5s
+    retries: 3
+
+x-common-replication: &common-replication
+  healthcheck:
+    test: ["CMD", "healthcheck.sh", "--connect", "--replication_io", "--replication_sql", "--replication_seconds_behind_master=1", "--replication"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+  depends_on:
+    master:
+      condition: service_healthy
+
+services:
+  master:
+    <<: *common-attributes
+    container_name: ${PRIMARY_name}
+    command: --log-bin --log-basename=mariadb --rpl_semi_sync_master_enabled
+    environment:
+      - MARIADB_USER=testuser
+      - MARIADB_PASSWORD=password
+      - MARIADB_DATABASE=testdb
+
+  replica1:
+    <<:
+      - *common-attributes
+      - *common-replication
+    container_name: ${REPLICATION_name_1}
+    command: --server-id=2 --log-basename=mariadb --rpl_semi_sync_slave_enabled
+    environment:
+      - MARIADB_MASTER_HOST=${PRIMARY_name}
+      - MARIADB_HEALTHCHECK_GRANTS=REPLICA MONITOR
+
+  replica2:
+    <<:
+      - *common-attributes
+      - *common-replication
+    container_name: ${REPLICATION_name_2}
+    command: --server-id=3 --log-basename=mariadb --rpl_semi_sync_slave_enabled
+    environment:
+      - MARIADB_MASTER_HOST=${PRIMARY_name}
+      - MARIADB_HEALTHCHECK_GRANTS=REPLICA MONITOR
+
+networks:
+  backend:
