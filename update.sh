@@ -61,25 +61,25 @@ update_version()
 		10.4)
 			sed -i -e '/--old-mode/d' \
 				-e 's/REPLICATION REPLICA/REPLICATION SLAVE/' \
-			       	-e 's/START REPLICA/START SLAVE/' \
+				-e 's/START REPLICA/START SLAVE/' \
 				"$version/docker-entrypoint.sh"
 			sed -i -e 's/ REPLICA\$/ SLAVE$/' "$version"/healthcheck.sh
 			sed -i -e 's/\/run/\/var\/run\//g' "$version/Dockerfile"
-		       	;; # almost nothing to see/do here
+			;; # almost nothing to see/do here
 		10.5)
 			sed -i -e '/--old-mode/d' "$version/docker-entrypoint.sh"
 			sed -i '/backwards compat/d' "$version/Dockerfile"
 			;;
 		*)
 			sed -i -e '/^CMD/s/mysqld/mariadbd/' \
-			       -e '/backwards compat/d' "$version/Dockerfile"
+				-e '/backwards compat/d' "$version/Dockerfile"
 			sed -i -e 's/mysql_upgrade\([^_]\)/mariadb-upgrade\1/' \
-			       -e 's/mysqldump/mariadb-dump/' \
-			       -e 's/mysqladmin/mariadb-admin/' \
-			       -e 's/\bmysql --protocol\b/mariadb --protocol/' \
-			       -e 's/mysql_install_db/mariadb-install-db/' \
-			       -e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
-			       "$version/docker-entrypoint.sh"
+				-e 's/mysqldump/mariadb-dump/' \
+				-e 's/mysqladmin/mariadb-admin/' \
+				-e 's/\bmysql --protocol\b/mariadb --protocol/' \
+				-e 's/mysql_install_db/mariadb-install-db/' \
+				-e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
+				"$version/docker-entrypoint.sh"
 			if [ "$version" = 10.6 ]; then
 				# my_print_defaults didn't recognise --mysqld until 10.11
 				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\([^-]\)mysqld/\1mariadbd/g' \
@@ -105,13 +105,13 @@ update_version()
 				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$version/Dockerfile"
 			fi
 			;&
-		esac
+	esac
 
-		# Add version to versions.json
-		versionJson="$(jq -e \
-			--arg milestone "$version" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "ubuntu:$suite" --arg arches "$arches" \
-			'.[$milestone] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
-		printf '%s\n' "$versionJson" > versions.json
+	# Add version to versions.json
+	versionJson="$(jq -e \
+		--arg milestone "$version" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "ubuntu:$suite" --arg arches "$arches" \
+		'.[$milestone] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
+	printf '%s\n' "$versionJson" > versions.json
 }
 
 update_version_array()
@@ -137,9 +137,10 @@ update_version_array()
 	update_version
 }
 
-mariaversion() {
-  mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version}" |
-    jq -r 'first(.releases[]).release_id')
+mariaversion()
+{
+	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version}" \
+		| jq -r 'first(.releases[]).release_id')
 }
 
 all()
