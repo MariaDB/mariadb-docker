@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  mysql:
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    container_name: ${MYSQL_name}
+    image: mysql:5.7
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 2
+      start_period: 0s
+    volumes:
+      # Preload files for MySQL data
+      - ./mysql:/docker-entrypoint-initdb.d:z
+      # We have to save MySQL volume that will be used in upgrade
+      - dbdata:/var/lib/mysql
+volumes:
+  dbdata: {}
+
+networks:
+  backend:

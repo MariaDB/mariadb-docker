@@ -1,0 +1,16 @@
+version: "3"
+services:
+  mariadb-from-mysql57:
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MARIADB_AUTO_UPGRADE: 1
+    container_name: ${MYSQL_MIGRATE_name}
+    image: mariadb:lts
+    volumes:
+      # MySQL data that we want to migrate
+      - dbdata:/var/lib/mysql
+
+volumes:
+  dbdata: {}
