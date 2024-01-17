@@ -4,16 +4,22 @@ set -Eeuo pipefail
 # Usage ./update.sh [version(multiple)...]
 #
 
-defaultSuite='jammy'
+defaultSuite='noble'
 declare -A suites=(
 	[10.4]='focal'
 	[10.5]='focal'
 	[10.6]='focal'
+	[10.11]='jammy'
+	[11.0]='jammy'
+	[11.1]='jammy'
+	[11.2]='jammy'
+	[11.3]='jammy'
 )
 
 declare -A suffix=(
 	['focal']='ubu2004'
 	['jammy']='ubu2204'
+	['noble']='ubu2404'
 )
 
 #declare -A dpkgArchToBashbrew=(
