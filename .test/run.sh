@@ -887,9 +887,12 @@ zstd "${initdb}"/*zst*
 		"$cname" \
 		mariabackup --prepare --target-dir=/backup/d
 
+	# purge this out, in the server we may end up saving it, but the test here
+	# is the user password is reset and file recreated on restore.
 	docker exec \
+		--workdir /backup/d \
 		"$cname" \
-		sh -c '[ ! -f /backup/d/.my-healthcheck.cnf ] && cp /var/lib/mysql/.my-healthcheck.cnf /backup/d'
+		rm -f .my-healthcheck.cnf
 
 	docker exec \
 		--workdir /backup/d \
