@@ -318,7 +318,7 @@ create_replica_user() {
 	else
 		# SQL escape the user password, \ followed by '
 		local userPasswordEscaped
-		userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}" )
+		userPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}")
 		echo "CREATE USER '$MARIADB_REPLICATION_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';"
 	fi
 	echo "GRANT REPLICATION REPLICA ON *.* TO '$MARIADB_REPLICATION_USER'@'%';"
@@ -330,7 +330,7 @@ create_healthcheck_users() {
 	local healthCheckConnectPass
 	local healthCheckConnectPassEscaped
 	healthCheckConnectPass="$(pwgen --numerals --capitalize --symbols --remove-chars="=#'\\" -1 32)"
-	healthCheckConnectPassEscaped=$( docker_sql_escape_string_literal "${healthCheckConnectPass}" )
+	healthCheckConnectPassEscaped=$(docker_sql_escape_string_literal "${healthCheckConnectPass}")
 	if [ -n "$MARIADB_HEALTHCHECK_GRANTS" ]; then
 		healthCheckGrant="$MARIADB_HEALTHCHECK_GRANTS"
 	fi
@@ -370,7 +370,7 @@ docker_setup_db() {
 	local rootPasswordEscaped=
 	if [ -n "$MARIADB_ROOT_PASSWORD" ]; then
 		# Sets root password and creates root users for non-localhost hosts
-		rootPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}" )
+		rootPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}")
 	fi
 
 	# default root to listen for connections from anywhere
@@ -432,7 +432,7 @@ docker_setup_db() {
 		else
 			# SQL escape the user password, \ followed by '
 			local userPasswordEscaped
-			userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
+			userPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_PASSWORD}")
 			createUser="CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';"
 		fi
 
@@ -454,7 +454,7 @@ docker_setup_db() {
 		else
 			# on replica
 			local rplPasswordEscaped
-			rplPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}" )
+			rplPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}")
 			# SC cannot follow how MARIADB_MASTER_PORT is assigned a default value.
 			# shellcheck disable=SC2153
 			changeMasterTo="CHANGE MASTER TO MASTER_HOST='$MARIADB_MASTER_HOST', MASTER_USER='$MARIADB_REPLICATION_USER', MASTER_PASSWORD='$rplPasswordEscaped', MASTER_PORT=$MARIADB_MASTER_PORT, MASTER_CONNECT_RETRY=10;"
