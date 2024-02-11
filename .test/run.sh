@@ -318,7 +318,7 @@ killoff
 		-e "show create user")
 	# shellcheck disable=SC2016,SC2076
 	[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`::1` IDENTIFIED' ]] || \
-		[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`127.0.0.1` IDENTIFIED' ]] || die "healtheck wasn't created how I was expected"
+		[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`127.0.0.1` IDENTIFIED' ]] || die "healthcheck wasn't created how I was expected"
 
 	grants="$(docker exec --user mysql -i \
 		"$cname" \
@@ -333,7 +333,7 @@ killoff
 	;&
 	mysql_random_password_is_complex)
 
-echo -e "Test: MYSQL_RANDOM_ROOT_PASSWORD, needs to satisfy minimium complexity of simple-password-check plugin and old-mode=''\n"
+echo -e "Test: MYSQL_RANDOM_ROOT_PASSWORD, needs to satisfy minimum complexity of simple-password-check plugin and old-mode=''\n"
 
 runandwait -e MYSQL_RANDOM_ROOT_PASSWORD=1 -e MARIADB_MYSQL_LOCALHOST_USER=1 -e MARIADB_MYSQL_LOCALHOST_GRANTS="RELOAD, PROCESS, LOCK TABLES" \
 	"${image}" --plugin-load-add=simple_password_check --old-mode=""
@@ -371,7 +371,7 @@ newpass=${newpass#*GENERATED ROOT PASSWORD: }
 mariadbclient -u root -p"${newpass}" -e 'select current_user()'
 killoff
 
-[ "$pass" = "$newpass" ] && die "highly improbable - two consequitive passwords are the same"
+[ "$pass" = "$newpass" ] && die "highly improbable - two consecutive passwords are the same"
 
 	;&
 	mysql_root_host_sets_host)
@@ -537,7 +537,7 @@ killoff
 	;&
 	mariadb_root_password_is_complex)
 
-echo -e "Test: MARIADB_RANDOM_ROOT_PASSWORD, needs to satisfy minimium complexity of simple-password-check plugin\n"
+echo -e "Test: MARIADB_RANDOM_ROOT_PASSWORD, needs to satisfy minimum complexity of simple-password-check plugin\n"
 
 runandwait -e MARIADB_RANDOM_ROOT_PASSWORD=1 "${image}" --plugin-load-add=simple_password_check
 pass=$(docker logs "$cid"  2>&1 | grep 'GENERATED ROOT PASSWORD')
@@ -553,12 +553,12 @@ echo -e "Test: second instance of MARIADB_RANDOM_ROOT_PASSWORD has a different p
 
 runandwait -e MARIADB_RANDOM_ROOT_PASSWORD=1 "${image}" --plugin-load-add=simple_password_check
 newpass=$(docker logs "$cid"  2>&1 | grep 'GENERATED ROOT PASSWORD')
-# trim up until passwod
+# trim up until password
 newpass=${newpass#*GENERATED ROOT PASSWORD: }
 mariadbclient -u root -p"${newpass}" -e 'select current_user()'
 killoff
 
-[ "$pass" = "$newpass" ] && die "highly improbable - two consequitive random passwords are the same"
+[ "$pass" = "$newpass" ] && die "highly improbable - two consecutive random passwords are the same"
 
 	;&
 	mariadb_root_host_sets_host)
@@ -577,7 +577,7 @@ echo -e "Test: MARIADB_INITDB_SKIP_TZINFO=''\n"
 
 runandwait -e MARIADB_INITDB_SKIP_TZINFO= -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
 tzcount=$(mariadbclient --skip-column-names -B -u root -e "SELECT COUNT(*) FROM mysql.time_zone")
-[ "${tzcount}" = '0' ] && die "should exist timezones"
+[ "${tzcount}" = '0' ] && die "should exist time zones"
 
 # note uses previous instance
 echo -e "Test: default configuration items are present\n"
@@ -647,7 +647,7 @@ fi
 
 	version=$(mariadbclient --skip-column-names -B -u root -pbob -e "SELECT VERSION()")
 
-	docker exec "$cid" ls -la /var/lib/mysql/system_mysql_backup_unknown_version.sql.zst || die "hopeing for backup file"
+	docker exec "$cid" ls -la /var/lib/mysql/system_mysql_backup_unknown_version.sql.zst || die "hoping for backup file"
 
 	echo "Did the upgrade run?"
 	docker logs "$cid" 2>&1 | grep -A 15 'Starting mariadb-upgrade' || die "missing upgrade message"
@@ -723,7 +723,7 @@ fi
 	;&
         binlog)
 
-	echo -e "Test: Ensure timezoneinfo isn't written to binary log\n"
+	echo -e "Test: Ensure time zone info isn't written to binary log\n"
 
 	runandwait \
 		-v "${dir}"/initdb.d:/docker-entrypoint-initdb.d:Z \
@@ -849,21 +849,21 @@ zstd "${initdb}"/*zst*
 	;&
 	galera_mariadbbackup)
 
-	echo -e "Test: Galera SST mechnism mariadb-backup\n"
+	echo -e "Test: Galera SST mechanism mariadb-backup\n"
 
 	galera_sst mariabackup
 
 	;&
 	galera_sst_rsync)
 
-	echo -e "Test: Galera SST mechnism rsync\n"
+	echo -e "Test: Galera SST mechanism rsync\n"
 
 	galera_sst rsync
 
 	# TODO fix - failing to do the authentication correctly of wsrep_sst_auth - Access denied on mysql usage within SST script
 	#;&
 	#galera_sst_mariadbdump)
-	#echo -e "Test: Galera SST mechnism mariadb-dump\n"
+	#echo -e "Test: Galera SST mechanism mariadb-dump\n"
 	#
 	#galera_sst mysqldump
 
