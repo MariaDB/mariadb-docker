@@ -205,6 +205,7 @@ docker_create_db_directories() {
 		find "$DATADIR" \! -user mysql -exec chown mysql: '{}' +
 		# See https://github.com/MariaDB/mariadb-docker/issues/363
 		find "${SOCKET%/*}" -maxdepth 0 \! -user mysql -exec chown mysql: '{}' \;
+
 	fi
 }
 
@@ -309,10 +310,33 @@ create_replica_user() {
 	else
 		# SQL escape the user password, \ followed by '
 		local userPasswordEscaped
-		userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}" )
+		userPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}")
 		echo "CREATE USER '$MARIADB_REPLICATION_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';"
 	fi
 	echo "GRANT REPLICATION REPLICA ON *.* TO '$MARIADB_REPLICATION_USER'@'%';"
+}
+
+# Create healthcheck users
+create_healthcheck_users() {
+	local healthCheckGrant=USAGE
+	local healthCheckConnectPass
+	local healthCheckConnectPassEscaped
+	healthCheckConnectPass="$(pwgen --numerals --capitalize --symbols --remove-chars="=#'\\" -1 32)"
+	healthCheckConnectPassEscaped=$(docker_sql_escape_string_literal "${healthCheckConnectPass}")
+	if [ -n "$MARIADB_HEALTHCHECK_GRANTS" ]; then
+		healthCheckGrant="$MARIADB_HEALTHCHECK_GRANTS"
+	fi
+	for host in 127.0.0.1 ::1 localhost; do
+		echo "CREATE USER IF NOT EXISTS healthcheck@'$host' IDENTIFIED BY '$healthCheckConnectPassEscaped';"
+		# doing this so if the users exists, we're just setting the password, and not replacing the existing grants
+		echo "SET PASSWORD FOR healthcheck@'$host' = PASSWORD('$healthCheckConnectPassEscaped');"
+		echo "GRANT $healthCheckGrant ON *.* TO healthcheck@'$host';"
+	done
+	local maskPreserve
+	maskPreserve=$(umask -p)
+	umask 0077
+	echo -e "[mariadb-client]\\nport=$PORT\\nsocket=$SOCKET\\nuser=healthcheck\\npassword=$healthCheckConnectPass\\nprotocol=tcp\\n" > "$DATADIR"/.my-healthcheck.cnf
+	$maskPreserve
 }
 
 # Initializes database with timezone info and root password, plus optional extra db/user
@@ -338,7 +362,7 @@ docker_setup_db() {
 	local rootPasswordEscaped=
 	if [ -n "$MARIADB_ROOT_PASSWORD" ]; then
 		# Sets root password and creates root users for non-localhost hosts
-		rootPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}" )
+		rootPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_ROOT_PASSWORD}")
 	fi
 
 	# default root to listen for connections from anywhere
@@ -375,28 +399,8 @@ docker_setup_db() {
 		fi
 	fi
 
-	local healthCheckUser
-	local healthCheckGrant=USAGE
-	local healthCheckConnectPass
-	local healthCheckConnectPassEscaped
-	healthCheckConnectPass="$(pwgen --numerals --capitalize --symbols --remove-chars="=#'\\" -1 32)"
-	healthCheckConnectPassEscaped=$( docker_sql_escape_string_literal "${healthCheckConnectPass}" )
-	if [ -n "$MARIADB_HEALTHCHECK_GRANTS" ]; then
-		healthCheckGrant="$MARIADB_HEALTHCHECK_GRANTS"
-	fi
-	read -r -d '' healthCheckUser <<-EOSQL || true
-	CREATE USER healthcheck@'127.0.0.1' IDENTIFIED BY '$healthCheckConnectPassEscaped';
-	CREATE USER healthcheck@'::1' IDENTIFIED BY '$healthCheckConnectPassEscaped';
-	CREATE USER healthcheck@localhost IDENTIFIED BY '$healthCheckConnectPassEscaped';
-	GRANT $healthCheckGrant ON *.* TO healthcheck@'127.0.0.1';
-	GRANT $healthCheckGrant ON *.* TO healthcheck@'::1';
-	GRANT $healthCheckGrant ON *.* TO healthcheck@localhost;
-	EOSQL
-	local maskPreserve
-	maskPreserve=$(umask -p)
-	umask 0077
-	echo -e "[mariadb-client]\\nport=$PORT\\nsocket=$SOCKET\\nuser=healthcheck\\npassword=$healthCheckConnectPass\\nprotocol=tcp\\n" > "$DATADIR"/.my-healthcheck.cnf
-	$maskPreserve
+	local createHealthCheckUsers
+	createHealthCheckUsers=$(create_healthcheck_users)
 
 	local rootLocalhostPass=
 	if [ -z "$MARIADB_ROOT_PASSWORD_HASH" ]; then
@@ -420,7 +424,7 @@ docker_setup_db() {
 		else
 			# SQL escape the user password, \ followed by '
 			local userPasswordEscaped
-			userPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_PASSWORD}" )
+			userPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_PASSWORD}")
 			createUser="CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';"
 		fi
 
@@ -442,7 +446,7 @@ docker_setup_db() {
 		else
 			# on replica
 			local rplPasswordEscaped
-			rplPasswordEscaped=$( docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}" )
+			rplPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_REPLICATION_PASSWORD}")
 			# SC cannot follow how MARIADB_MASTER_PORT is assigned a default value.
 			# shellcheck disable=SC2153
 			changeMasterTo="CHANGE MASTER TO MASTER_HOST='$MARIADB_MASTER_HOST', MASTER_USER='$MARIADB_REPLICATION_USER', MASTER_PASSWORD='$rplPasswordEscaped', MASTER_PORT=$MARIADB_MASTER_PORT, MASTER_CONNECT_RETRY=10;"
@@ -467,7 +471,7 @@ docker_setup_db() {
 		${rootCreate}
 		${mysqlAtLocalhost}
 		${mysqlAtLocalhostGrants}
-		${healthCheckUser}
+		${createHealthCheckUsers}
 		-- end of securing system users, rest of init now...
 		SET @@SESSION.SQL_LOG_BIN=@orig_sql_log_bin;
 		-- create users/databases
@@ -568,7 +572,7 @@ docker_mariadb_backup_system()
 docker_mariadb_upgrade() {
 	if [ -z "$MARIADB_AUTO_UPGRADE" ] \
 		|| [ "$MARIADB_AUTO_UPGRADE" = 0 ]; then
-		mysql_note "MariaDB upgrade (mariadb-upgrade) required, but skipped due to \$MARIADB_AUTO_UPGRADE setting"
+		mysql_note "MariaDB upgrade (mariadb-upgrade or creating healthcheck users) required, but skipped due to \$MARIADB_AUTO_UPGRADE setting"
 		return
 	fi
 	mysql_note "Starting temporary server"
@@ -578,6 +582,33 @@ docker_mariadb_upgrade() {
 	mysql_note "Temporary server started."
 
 	docker_mariadb_backup_system
+
+	if [ ! -f "$DATADIR"/.my-healthcheck.cnf ]; then
+		mysql_note "Creating healthcheck users"
+		local createHealthCheckUsers
+		createHealthCheckUsers=$(create_healthcheck_users)
+		docker_process_sql --dont-use-mysql-root-password --binary-mode <<-EOSQL
+		-- Healthcheck users shouldn't be replicated
+		SET @@SESSION.SQL_LOG_BIN=0;
+                -- we need the SQL_MODE NO_BACKSLASH_ESCAPES mode to be clear for the password to be set
+		SET @@SESSION.SQL_MODE=REPLACE(@@SESSION.SQL_MODE, 'NO_BACKSLASH_ESCAPES', '');
+		FLUSH PRIVILEGES;
+		$createHealthCheckUsers
+EOSQL
+		mysql_note "Stopping temporary server"
+		docker_temp_server_stop
+		mysql_note "Temporary server stopped"
+
+		if _check_if_upgrade_is_needed; then
+			# need a restart as FLUSH PRIVILEGES isn't reversable
+			mysql_note "Restarting temporary server for upgrade"
+			docker_temp_server_start "$@" --skip-grant-tables \
+				--loose-innodb_buffer_pool_dump_at_shutdown=0 \
+				--skip-slave-start
+		else
+			return 0
+		fi
+	fi
 
 	mysql_note "Starting mariadb-upgrade"
 	mariadb-upgrade --upgrade-system-tables
@@ -602,6 +633,10 @@ _check_if_upgrade_is_needed() {
 	if [[ ${#newversion[@]} -lt 2 ]] || [[ ${#oldversion[@]} -lt 2 ]] \
 		|| [[ ${oldversion[0]} -lt ${newversion[0]} ]] \
 		|| [[ ${oldversion[0]} -eq ${newversion[0]} && ${oldversion[1]} -lt ${newversion[1]} ]]; then
+		return 0
+	fi
+	if [ ! -f "$DATADIR"/.my-healthcheck.cnf ]; then
+		mysql_note "MariaDB heathcheck configation file missing, assuming desirable"
 		return 0
 	fi
 	mysql_note "MariaDB upgrade not required"
