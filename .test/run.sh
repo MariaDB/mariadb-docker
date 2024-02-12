@@ -713,7 +713,7 @@ fi
 
 	echo -e "Test: Startup using encryption \n"
 	runandwait -v "${dir}"/encryption_conf/:/etc/mysql/conf.d/:z -v "${dir}"/encryption:/etc/encryption/:z -v "${dir}"/initenc:/docker-entrypoint-initdb.d/:z \
-		-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 -e MARIADB_DATABASE=bob -e MARIADB_USER=bob -e MARIADB_PASSWORD=hope "${image}"
+		-e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 -e MARIADB_DATABASE=123-databasename-456 -e MARIADB_USER=123-username-456 -e MARIADB_PASSWORD=hope "${image}"
 	mariadbclient -u root -e 'SELECT * FROM information_schema.innodb_tablespaces_encryption' || die 'Failed to start container'
 
 
