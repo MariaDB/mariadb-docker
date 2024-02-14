@@ -29,6 +29,8 @@ services:
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DB: ${DB_DATABASE}
+      MYSQL_CONT_NAME: ${MYSQL_name}
     container_name: ${MARIADB_DUMP_name}
     image: mariadb:lts
     depends_on:
@@ -40,28 +42,11 @@ services:
       interval: 20s
       timeout: 20s
       retries: 3
-    # command: >
-    #   bash -c "
-    #   echo 'MariaDB service started. Dump MySQL data ...'
-    #   mariadb-dump -h mysql-container -uroot -psecret testdb > /etc/dump/mysql-dump-data.sql"
-    # user: ${UID}:${EUID}
     volumes:
       - mysqldump:/etc/dump/
-     # This will not exit container, but command: will
       - ./dump-mysql.sh:/docker-entrypoint-initdb.d/dump-mysql.sh
     networks:
       - backend
-    # entrypoint: ["/docker-entrypoint-initdb.d/dump-mysql.sh"]
-
-# We cannot share the same dump directory, we need to stop mariadb-dump
-  stopper:
-    image: docker:20.10
-    depends_on:
-     mariadb-dump:
-      condition: service_healthy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: ["sh", "-c", "docker stop mariadb-container-dump"]
 
 # Sidecar for insert dump file
   mariadb-migrated-from-mysql8:
@@ -69,11 +54,13 @@ services:
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DB: ${DB_DATABASE}
     container_name: ${MARIADB_MIGRATED_name}
     image: mariadb:lts
     depends_on:
      mariadb-dump:
-       condition: service_completed_successfully
+       condition: service_healthy
+      #  restart: true
     volumes:
       - mysqldump:/etc/dump/
       - ./migrate-mariadb.sh:/docker-entrypoint-initdb.d/migrate-mariadb.sh
@@ -82,7 +69,7 @@ services:
 
 volumes:
   dbdata: {}
-  # sudo chown -R 999:999 ${PWD}/dump-data # host
+  # sudo chown -R 999:999 ${PWD}/dump-data # on host before running this file
   mysqldump:
     driver: local
     driver_opts:

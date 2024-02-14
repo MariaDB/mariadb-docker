@@ -1,14 +1,13 @@
 #!/bin/bash
 
-echo 'MariaDB service started. Dump MySQL data ...'
+echo 'MariaDB service started.'
 # Run your commands and exit container
-whoami # mysql"
+whoami # mysql
 # sh -c "chown -R mysql:mysql /etc/dump" # Operation permitted
-# sh -c "ls -la /etc/dump"
-sh -c "mariadb-dump -h mysql-container -uroot -psecret testdb > /etc/dump/mysql-dump-data.sql"
-sh -c "ls -la /etc/dump/"
-echo "List before"
-sh -c "cp /etc/dump/mysql-dump-data.sql /etc/dump/mysql-dump-data-utf8mb4_unicode_ci.sql"
-sh -c "ls -la /etc/dump/"
-echo "List after"
-sh -c "sed -i 's/utf8mb4_0900_ai_ci/utf8mb4_unicode_ci/g' /etc/dump/mysql-dump-data-utf8mb4_unicode_ci.sql"
+echo 'Dump and compress MySQL data with changed collation ...'
+fileName="mysql-dump-data.sql.zst"
+if [ -f "$fileName" ]; then
+    echo "File ${fileName} exists. Remove it ... "
+    rm "$fileName"
+fi
+sh -c "mariadb-dump -h${MYSQL_CONT_NAME} -uroot -p${MARIADB_ROOT_PASSWORD} ${MARIADB_DB} | sed 's/utf8mb4_0900/uca1400/g' | zstd > /etc/dump/${fileName}"
