@@ -3,7 +3,7 @@
     "milestone": "11.4",
     "version": "11.4.1",
     "fullVersion": "1:11.4.1+maria~ubu2204",
-    "releaseStatus": "Alpha",
+    "releaseStatus": "RC",
     "supportType": "Short Term Support",
     "base": "ubuntu:jammy",
     "arches": [
