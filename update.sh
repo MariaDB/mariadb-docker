@@ -168,8 +168,8 @@ in_development()
 
 
 if [ $# -eq 0 ]; then
-	all
 	in_development
+	all
 	exit 0
 fi
 
