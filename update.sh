@@ -78,7 +78,7 @@ update_version()
 		*)
 			sed -i -e '/^CMD/s/mysqld/mariadbd/' \
 				-e '/backwards compat/d' "$version/Dockerfile"
-			sed -i -e 's/mysql_upgrade\([^_]\)/mariadb-upgrade\1/' \
+			sed -i -e 's/\([\t (]\)mysql_upgrade/\1mariadb-upgrade/' \
 				-e 's/mysqldump/mariadb-dump/' \
 				-e 's/mysqladmin/mariadb-admin/' \
 				-e 's/\bmysql --protocol\b/mariadb --protocol/' \

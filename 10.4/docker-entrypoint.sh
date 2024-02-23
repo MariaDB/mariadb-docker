@@ -610,7 +610,7 @@ EOSQL
 	fi
 
 	mysql_note "Starting mariadb-upgrade"
-	mysql_upgrade --upgrade-system-tables
+	mysql_upgrade
 	mysql_note "Finished mariadb-upgrade"
 
 	mysql_note "Stopping temporary server"
