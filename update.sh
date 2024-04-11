@@ -65,10 +65,7 @@ update_version()
 				-e '/memory\.pressure/,+7d' \
 				"$version/docker-entrypoint.sh"
 			sed -i -e 's/ REPLICA\$/ SLAVE$/' "$version"/healthcheck.sh
-			sed -i -e 's/\/run/\/var\/run\//g' \
-				-e '/character-set-collations/d' \
-				-e '/^# Issue #560/d' \
-				"$version/Dockerfile"
+			sed -i -e 's/\/run/\/var\/run\//g' "$version/Dockerfile"
 			;; # almost nothing to see/do here
 		10.5)
 			sed -i -e '/--old-mode/d' \
