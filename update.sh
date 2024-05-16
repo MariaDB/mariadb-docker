@@ -128,9 +128,14 @@ update_version()
 			;&
 	esac
 
+	if [ -z "$suite" ]; then
+		base=ubi9
+	else
+		base=ubuntu:$suite
+	fi
 	# Add version to versions.json
 	versionJson="$(jq -e \
-		--arg milestone "$version" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "ubuntu:$suite" --arg arches "$arches" \
+		--arg milestone "${version}" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "$base" --arg arches "${arches# }" \
 		'.[$milestone] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
 	printf '%s\n' "$versionJson" > versions.json
 }

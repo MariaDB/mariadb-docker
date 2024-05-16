@@ -123,5 +123,19 @@
       "arm64v8",
       "ppc64le"
     ]
+  },
+  "10.6-ubi": {
+    "milestone": "10.6-ubi",
+    "version": "10.6.17",
+    "fullVersion": "",
+    "releaseStatus": "Stable",
+    "supportType": "Long Term Support",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
   }
 }
