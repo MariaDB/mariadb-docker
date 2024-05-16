@@ -6,7 +6,7 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # missing pwgen, and libboost_program_options.so.1.66.0 hence centos hack
 RUN dnf update -y && \
 	dnf install -y MariaDB-backup socat wget tzdata xz && \
-	wget http://mirror.centos.org/centos/8/AppStream/x86_64/os/Packages/boost-program-options-1.66.0-10.el8.x86_64.rpm && \
+	wget https://repo.almalinux.org/almalinux/9/AppStream/x86_64/os/Packages/boost-program-options-1.75.0-8.el9.x86_64.rpm && \
 	dnf localinstall -y *rpm && \
 	rm *rpm && \
 	dnf install -y MariaDB-server-%%MARIADB_VERSION_BASIC%% && \
