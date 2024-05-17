@@ -22,18 +22,21 @@ RUN curl --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/
 
 COPY MariaDB.repo /etc/yum.repos.d/
 
-# missing pwgen (epel), and liburing (10.6+), libboost_program_options.so.1.66.0 hence Alma hack
-# pmem - removed in next release dev only.
-RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+# missing pwgen, pv (epel),
+# procps - missing dependency of galera sst script
+# liburing-2.5-1 (10.6+) - requested https://issues.redhat.com/browse/RHEL-36705
+# libboost_program_options.so.1.66.0 only used by garb - should fix upstream
+ARG MARIADB_VERSION=%%MARIADB_VERSION%%
+ENV MARIADB_VERSION $MARIADB_VERSION
+RUN gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys FF8AD1344597106ECE813B918A3872BF3228467C && \
+	rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
 	dnf update -y && \
-	dnf install -y zstd jemalloc pwgen socat lsof rsync tzdata xz && \
-        for pkg in daxctl-libs-71.1-8 kmod-libs-28-9 ndctl-libs-71.1-8; do \
-		rpm -ivh https://repo.almalinux.org/almalinux/9/BaseOS/$(arch)/os/Packages/${pkg}.el9.$(arch).rpm ; \
-        done ; \
-        for pkg in libpmem-1.12.1-1 liburing-2.5-1 boost-program-options-1.75.0-8; do \
+	dnf install -y procps-ng zstd xz jemalloc pwgen tzdata && \
+        for pkg in boost-program-options-1.75.0-8; do \
 		rpm -ivh https://repo.almalinux.org/almalinux/9/AppStream/$(arch)/os/Packages/${pkg}.el9.$(arch).rpm ; \
         done ; \
 	dnf install -y MariaDB-backup-%%MARIADB_VERSION_BASIC%% MariaDB-server-%%MARIADB_VERSION_BASIC%% && \
+	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so && \
 	dnf clean all
 
 RUN rm -rf /var/lib/mysql; \
@@ -45,16 +48,13 @@ COPY docker.cnf /etc/my.cnf.d/
 
 VOLUME /var/lib/mysql
 
-RUN wget -O /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/1.12/gosu-$TARGETARCH && \
-	chmod a+x /usr/local/bin/gosu; \
-	gosu --version; \
-	gosu nobody true
 
 RUN mkdir /docker-entrypoint-initdb.d
 
+COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY /docker-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 3306
-CMD ["mysqld"]
+CMD ["mariadbd"]
