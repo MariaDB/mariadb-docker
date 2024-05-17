@@ -1,15 +1,35 @@
 FROM redhat/ubi9
 
 RUN groupadd -r mysql && useradd -r -g mysql mysql
+
+ARG TARGETARCH
+ENV GOSU_VERSION 1.17
+RUN curl --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-$TARGETARCH && \
+	curl --location --output /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$TARGETARCH.asc"; \
+	GNUPGHOME="$(mktemp -d)"; \
+	export GNUPGHOME; \
+	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
+	chmod a+x /usr/local/bin/gosu; \
+	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
+	gpgconf --kill all; \
+	rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc; \
+	gosu --version; \
+	gosu nobody true
+
 COPY MariaDB.repo /etc/yum.repos.d/
 
-# missing pwgen, and libboost_program_options.so.1.66.0 hence centos hack
-RUN dnf update -y && \
-	dnf install -y MariaDB-backup socat wget tzdata xz && \
-	wget https://repo.almalinux.org/almalinux/9/AppStream/x86_64/os/Packages/boost-program-options-1.75.0-8.el9.x86_64.rpm && \
-	dnf localinstall -y *rpm && \
-	rm *rpm && \
-	dnf install -y MariaDB-server-%%MARIADB_VERSION_BASIC%% && \
+# missing pwgen (epel), and liburing (10.6+), libboost_program_options.so.1.66.0 hence Alma hack
+# pmem - removed in next release dev only.
+RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+	dnf update -y && \
+	dnf install -y zstd jemalloc pwgen socat lsof rsync tzdata xz && \
+        for pkg in daxctl-libs-71.1-8 kmod-libs-28-9 ndctl-libs-71.1-8; do \
+		rpm -ivh https://repo.almalinux.org/almalinux/9/BaseOS/$(arch)/os/Packages/${pkg}.el9.$(arch).rpm ; \
+        done ; \
+        for pkg in libpmem-1.12.1-1 liburing-2.5-1 boost-program-options-1.75.0-8; do \
+		rpm -ivh https://repo.almalinux.org/almalinux/9/AppStream/$(arch)/os/Packages/${pkg}.el9.$(arch).rpm ; \
+        done ; \
+	dnf install -y MariaDB-backup-%%MARIADB_VERSION_BASIC%% MariaDB-server-%%MARIADB_VERSION_BASIC%% && \
 	dnf clean all
 
 RUN rm -rf /var/lib/mysql; \
