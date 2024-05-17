@@ -317,7 +317,8 @@ killoff
 		--silent \
 		-e "show create user")
 	# shellcheck disable=SC2016,SC2076
-	[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`::1` IDENTIFIED' ]] || \
+	[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`localhost` IDENTIFIED' ]] || \
+		[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`::1` IDENTIFIED' ]] || \
 		[[ "${createuser//\'/\`}" =~ 'CREATE USER `healthcheck`@`127.0.0.1` IDENTIFIED' ]] || die "healthcheck wasn't created how I was expected"
 
 	grants="$(docker exec --user mysql -i \
@@ -326,7 +327,8 @@ killoff
 		--silent \
 		-e show\ grants)"
 
-	[[ "${grants//\'/\`}" =~ GRANT\ USAGE\ ON\ *.*\ TO\ \`healthcheck\`@\`::1\` ]] || \
+	[[ "${grants//\'/\`}" =~ GRANT\ USAGE\ ON\ *.*\ TO\ \`healthcheck\`@\`localhost\` ]] || \
+		[[ "${grants//\'/\`}" =~ GRANT\ USAGE\ ON\ *.*\ TO\ \`healthcheck\`@\`::1\` ]] || \
 		[[ "${grants//\'/\`}" =~ GRANT\ USAGE\ ON\ *.*\ TO\ \`healthcheck\`@\`127.0.0.1\` ]] || die "healthcheck wasn't granted what I was expected"
 	killoff
 
