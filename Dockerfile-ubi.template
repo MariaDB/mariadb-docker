@@ -1,6 +1,10 @@
 FROM redhat/ubi9
 
-RUN groupadd -r mysql && useradd -r -g mysql mysql
+# systemd-coredump has the uid 999, input has group 999, that we want to use for compatibility with the ubuntu image.
+RUN groupdel input && \
+	userdel systemd-coredump && \
+	groupadd --gid 999 -r mysql && \
+	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999
 
 ARG TARGETARCH
 ENV GOSU_VERSION 1.17
