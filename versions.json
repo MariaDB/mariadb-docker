@@ -126,8 +126,8 @@
   },
   "10.6-ubi": {
     "milestone": "10.6-ubi",
-    "version": "10.6.17",
-    "fullVersion": "",
+    "version": "10.6.18",
+    "fullVersion": "10.6.18",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubi9",
