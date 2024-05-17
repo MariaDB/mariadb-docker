@@ -81,7 +81,7 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
 ARG MARIADB_VERSION=1:11.5.0+maria~ubu2404
 ENV MARIADB_VERSION $MARIADB_VERSION
-# release-status:Alpha
+# release-status:RC
 # release-support-type:Short Term Support
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
@@ -125,8 +125,6 @@ RUN set -ex; \
 		| xargs -rt -0 sed -Ei 's/^(bind-address|log|user\s)/#&/'; \
 # don't reverse lookup hostnames, they are usually another container
 	printf "[mariadb]\nhost-cache-size=0\nskip-name-resolve\n" > /etc/mysql/mariadb.conf.d/05-skipcache.cnf; \
-# Issue #560
-	sed -i -e '/character-set-collations/d' /etc/mysql/mariadb.conf.d/50-server.cnf; \
 # Issue #327 Correct order of reading directories /etc/mysql/mariadb.conf.d before /etc/mysql/conf.d (mount-point per documentation)
 	if [ -L /etc/mysql/my.cnf ]; then \
 # 10.5+
