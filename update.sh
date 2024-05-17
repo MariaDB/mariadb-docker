@@ -44,7 +44,7 @@ update_version()
 		fullVersion=1:${mariaVersion}+maria~${suffix[${suite}]}
 	else
 		suite=
-		fullVersion=
+		fullVersion=$mariaVersion
 		cp docker.cnf "$version"
 		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$version"/MariaDB.repo
 	fi
