@@ -1,3 +1,10 @@
 # Ubuntu container compatibility
 
+[mariadb]
+host-cache-size=0
+skip-name-resolve
+
+[client-server]
+socket=/run/mysqld/mariadb.sock
+
 !includedir /etc/mysql/conf.d
