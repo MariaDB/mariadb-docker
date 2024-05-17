@@ -224,10 +224,10 @@ docker_init_database_dir() {
 	local mariadbdArgs=()
 	for arg in "${@:2}"; do
 		# Check if the argument contains whitespace
-		if [[ ! "$arg" =~ [[:space:]] ]]; then
-			mariadbdArgs+=("$arg")
+		if [[ "$arg" =~ [[:space:]] ]]; then
+			mysql_warn "Not passing argument \'$arg\' to mariadb-install-db because mariadb-install-db does not support arguments with whitespace."
 		else
-			mysql_warn Not passing argument \'$arg\' to mariadb-install-db because mariadb-install-db does not support arguments with whitespace.
+			mariadbdArgs+=("$arg")
 		fi
 	done
 	mariadb-install-db "${installArgs[@]}" "${mariadbdArgs[@]}" \
