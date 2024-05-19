@@ -62,6 +62,10 @@ update_version()
 		-e 's!%%ARCHES%%! '"$arches"'!g' \
 		"$version/Dockerfile"
 
+	sed -i \
+		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
+		"$version/docker-entrypoint.sh"
+
 	# Start using the new executable names
 	case "$version" in
 		10.4)
