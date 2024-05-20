@@ -16,10 +16,10 @@
   "11.4": {
     "milestone": "11.4",
     "version": "11.4.1",
-    "fullVersion": "1:11.4.1+maria~ubu2404",
+    "fullVersion": "1:11.4.1+maria~ubu2204",
     "releaseStatus": "RC",
     "supportType": "Long Term Support",
-    "base": "ubuntu:noble",
+    "base": "ubuntu:jammy",
     "arches": [
       "amd64",
       "arm64v8",
@@ -122,6 +122,20 @@
       "amd64",
       "arm64v8",
       "ppc64le"
+    ]
+  },
+  "11.3": {
+    "milestone": "11.3",
+    "version": "11.3.2",
+    "fullVersion": "1:11.3.2+maria~ubu2204",
+    "releaseStatus": "Stable",
+    "supportType": "Short Term Support",
+    "base": "ubuntu:jammy",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
     ]
   }
 }

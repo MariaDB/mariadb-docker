@@ -14,6 +14,7 @@ declare -A suites=(
 	[11.1]='jammy'
 	[11.2]='jammy'
 	[11.3]='jammy'
+	[11.4]='jammy'
 )
 
 declare -A suffix=(
