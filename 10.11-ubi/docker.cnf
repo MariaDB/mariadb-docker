@@ -7,4 +7,5 @@ skip-name-resolve
 [client-server]
 socket=/run/mysqld/mariadb.sock
 
+!includedir /etc/mysql/mariadb.conf.d
 !includedir /etc/mysql/conf.d
