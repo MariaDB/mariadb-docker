@@ -73,8 +73,9 @@ update_version()
 		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
 		"$version/docker-entrypoint.sh"
 
+	vmin=${version%-ubi}
 	# Start using the new executable names
-	case "$version" in
+	case "$vmin" in
 		10.4)
 			sed -i -e '/--old-mode/d' \
 				-e 's/REPLICATION REPLICA/REPLICATION SLAVE/' \
@@ -99,7 +100,7 @@ update_version()
 				-e 's/mysql_install_db/mariadb-install-db/' \
 				-e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
 				"$version/docker-entrypoint.sh"
-			if [ "$version" = 10.6 ]; then
+			if [ "$vmin" = 10.6 ]; then
 				# my_print_defaults didn't recognise --mysqld until 10.11
 				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\([^-]\)mysqld/\1mariadbd/g' \
 					"$version/docker-entrypoint.sh"
@@ -108,7 +109,7 @@ update_version()
 					"$version/docker-entrypoint.sh"
 			fi
 			sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\bmysql\b/mariadb/' "$version/healthcheck.sh"
-			if [[ ! "${version%-ubi}" =~ 10.[678] ]]; then
+			if [[ ! "${vmin}" =~ 10.[678] ]]; then
 				# quoted $ intentional
 				# shellcheck disable=SC2016
 				sed -i -e '/^ARG MARIADB_MAJOR/d' \
@@ -118,11 +119,11 @@ update_version()
 			else
 				sed -i -e '/memory\.pressure/,+7d' "$version/docker-entrypoint.sh"
 			fi
-			if [[ $version =~ 11.[012345] ]]; then
+			if [[ $vmin =~ 11.[012345] ]]; then
 				sed -i -e 's/mysql_upgrade_info/mariadb_upgrade_info/' \
 					"$version/docker-entrypoint.sh" "$version/healthcheck.sh"
 			fi
-			if [[ $version =~ 11.[01] ]]; then
+			if [[ $vmin =~ 11.[01] ]]; then
 				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$version/Dockerfile"
 			fi
 			;&
