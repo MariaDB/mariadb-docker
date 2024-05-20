@@ -26,8 +26,6 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # procps - missing dependency of galera sst script
 # liburing-2.5-1 (10.6+) - requested https://issues.redhat.com/browse/RHEL-36705
 # libboost_program_options.so.1.66.0 only used by garb - should fix upstream
-ARG MARIADB_VERSION=%%MARIADB_VERSION%%
-ENV MARIADB_VERSION $MARIADB_VERSION
 RUN gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys FF8AD1344597106ECE813B918A3872BF3228467C && \
 	rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
 	dnf update -y && \
