@@ -1,9 +1,7 @@
-FROM redhat/ubi9
+FROM redhat/ubi9-minimal
 
-# systemd-coredump has the uid 999, input has group 999, that we want to use for compatibility with the ubuntu image.
-RUN groupdel input && \
-	userdel systemd-coredump && \
-	groupadd --gid 999 -r mysql && \
+# user 999/ group 999, that we want to use for compatibility with the ubuntu image.
+RUN groupadd --gid 999 -r mysql && \
 	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999
 
 ARG TARGETARCH
@@ -27,13 +25,15 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # libboost_program_options.so.1.66.0 only used by garb - should fix upstream
 RUN gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys FF8AD1344597106ECE813B918A3872BF3228467C && \
 	rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-	dnf update -y && \
-	dnf install -y procps-ng zstd xz jemalloc pwgen tzdata && \
+	rpmkeys --import https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY && \
+	microdnf update -y && \
+	microdnf install -y procps-ng zstd xz jemalloc pwgen tzdata && \
         for pkg in boost-program-options-1.75.0-8; do \
 		rpm -ivh https://repo.almalinux.org/almalinux/9/AppStream/$(arch)/os/Packages/${pkg}.el9.$(arch).rpm ; \
         done ; \
-	dnf install -y MariaDB-backup-10.6.18 MariaDB-server-10.6.18 && \
+	microdnf install -y MariaDB-backup-10.6.18 MariaDB-server-10.6.18 && \
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so && \
+	microdnf clean all
 	rm -rf /var/lib/mysql; \
 	mkdir -p /var/lib/mysql /var/run/mysqld /etc/mysql/conf.d/ /etc/mysql/mariadb.conf.d/; \
 	chown -R mysql:mysql /var/lib/mysql /var/run/mysqld; \
