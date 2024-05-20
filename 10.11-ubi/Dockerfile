@@ -32,13 +32,13 @@ RUN gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys FF8AD1344597106E
         for pkg in boost-program-options-1.75.0-8; do \
 		rpm -ivh https://repo.almalinux.org/almalinux/9/AppStream/$(arch)/os/Packages/${pkg}.el9.$(arch).rpm ; \
         done ; \
-	dnf install -y MariaDB-backup-10.6.18 MariaDB-server-10.6.18 && \
+	dnf install -y MariaDB-backup-10.11.8 MariaDB-server-10.11.8 && \
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so && \
 	rm -rf /var/lib/mysql; \
 	mkdir -p /var/lib/mysql /var/run/mysqld /etc/mysql/conf.d/ /etc/mysql/mariadb.conf.d/; \
 	chown -R mysql:mysql /var/lib/mysql /var/run/mysqld; \
 	chmod 777 /var/run/mysqld ; \
-	mkdir  /licenses && ln -s /usr/share/doc/MariaDB-server-10.6.18/COPYING /licenses/GPL-2
+	mkdir  /licenses && ln -s /usr/share/doc/MariaDB-server-10.11.8/COPYING /licenses/GPL-2
 
 COPY docker.cnf /etc/my.cnf.d/
 

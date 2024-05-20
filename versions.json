@@ -137,5 +137,33 @@
       "ppc64le",
       "s390x"
     ]
+  },
+  "10.11-ubi": {
+    "milestone": "10.11-ubi",
+    "version": "10.11.8",
+    "fullVersion": "10.11.8",
+    "releaseStatus": "Stable",
+    "supportType": "Long Term Support",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "11.4-ubi": {
+    "milestone": "11.4-ubi",
+    "version": "11.4.1",
+    "fullVersion": "11.4.1",
+    "releaseStatus": "RC",
+    "supportType": "Long Term Support",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
   }
 }

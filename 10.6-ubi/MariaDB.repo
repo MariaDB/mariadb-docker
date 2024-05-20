@@ -1,6 +1,6 @@
 [mariadb]
 name = MariaDB
-baseurl = https://rpm.mariadb.org/10.6/rhel9-amd64/
-module_hotfixes=1
-gpgkey=https://rpm.mariadb.org/yum/RPM-GPG-KEY-MariaDB_v2
+#baseurl = https://rpm.mariadb.org/10.6/rhel/$releasever/$basearch
+baseurl = https://archive.mariadb.org/mariadb-10.6/yum/rhel/$releasever/$basearch
+gpgkey=https://archive.mariadb.org/PublicKey
 gpgcheck=1

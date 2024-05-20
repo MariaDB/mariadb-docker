@@ -1,0 +1,6 @@
+[mariadb]
+name = MariaDB
+#baseurl = https://rpm.mariadb.org/10.11/rhel/$releasever/$basearch
+baseurl = https://archive.mariadb.org/mariadb-10.11/yum/rhel/$releasever/$basearch
+gpgkey=https://archive.mariadb.org/PublicKey
+gpgcheck=1
