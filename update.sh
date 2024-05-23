@@ -76,12 +76,16 @@ update_version()
 				-e '/memory\.pressure/,+7d' \
 				"$version/docker-entrypoint.sh"
 			sed -i -e 's/ REPLICA\$/ SLAVE$/' "$version"/healthcheck.sh
-			sed -i -e 's/\/run/\/var\/run\//g' "$version/Dockerfile"
+			sed -i -e 's/\/run/\/var\/run\//g' \
+				-e '/^# Issue #560/,+1d' \
+				"$version/Dockerfile"
 			;; # almost nothing to see/do here
 		10.5)
 			sed -i -e '/--old-mode/d' \
 				-e '/memory\.pressure/,+7d' "$version/docker-entrypoint.sh"
-			sed -i '/backwards compat/d' "$version/Dockerfile"
+			sed -i -e '/backwards compat/d' \
+				-e '/^# Issue #560/,+1d' \
+				"$version/Dockerfile"
 			;;
 		*)
 			sed -i -e '/^CMD/s/mysqld/mariadbd/' \
@@ -97,6 +101,8 @@ update_version()
 				# my_print_defaults didn't recognise --mysqld until 10.11
 				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\([^-]\)mysqld/\1mariadbd/g' \
 					"$version/docker-entrypoint.sh"
+				sed -i -e '/^# Issue #560/,+1d' \
+					"$version/Dockerfile"
 			else
 				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\mysqld/mariadbd/g' \
 					"$version/docker-entrypoint.sh"
@@ -118,6 +124,10 @@ update_version()
 			fi
 			if [[ $version =~ 11.[01] ]]; then
 				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$version/Dockerfile"
+			fi
+			if [[ $version =~ 11.[012] ]] || [ "$version" = 10.11 ]; then
+				sed -i -e '/^# Issue #560/,+1d' \
+					"$version/Dockerfile"
 			fi
 			;&
 	esac
