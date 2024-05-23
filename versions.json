@@ -27,20 +27,6 @@
       "s390x"
     ]
   },
-  "11.3": {
-    "milestone": "11.3",
-    "version": "11.3.2",
-    "fullVersion": "1:11.3.2+maria~ubu2204",
-    "releaseStatus": "Stable",
-    "supportType": "Short Term Support",
-    "base": "ubuntu:jammy",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
   "11.2": {
     "milestone": "11.2",
     "version": "11.2.4",
@@ -136,6 +122,20 @@
       "amd64",
       "arm64v8",
       "ppc64le"
+    ]
+  },
+  "11.3": {
+    "milestone": "11.3",
+    "version": "11.3.2",
+    "fullVersion": "1:11.3.2+maria~ubu2204",
+    "releaseStatus": "Stable",
+    "supportType": "Short Term Support",
+    "base": "ubuntu:jammy",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
     ]
   }
 }
