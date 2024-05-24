@@ -192,6 +192,7 @@ in_development()
 
 
 if [ $# -eq 0 ]; then
+	ubi=
 	in_development
 	ubi=-ubi in_development
 	all
