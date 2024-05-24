@@ -5,7 +5,7 @@ host-cache-size=0
 skip-name-resolve
 
 [client-server]
-socket=/run/mysqld/mariadb.sock
+socket=/run/mariadb/mariadb.sock
 
 !includedir /etc/mysql/mariadb.conf.d
 !includedir /etc/mysql/conf.d
