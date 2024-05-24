@@ -22,27 +22,23 @@ COPY docker.cnf /etc/my.cnf.d/
 
 COPY MariaDB.repo /etc/yum.repos.d/
 
-# missing pwgen, pv (epel),
-# procps - missing dependency of galera sst script
-# libboost_program_options.so.1.66.0 only used by garb - should fix upstream
-# tzdata re-installed as only a fake verion is part of base image.
-RUN gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys FF8AD1344597106ECE813B918A3872BF3228467C && \
+# missing pwgen(epel), jemalloc (as entrypoint/user extensions)
+# procps, pv(epel) - missing dependencies of galera sst script
+# tzdata re-installed as only a fake version is part of the ubi-minimal base image.
+# FF8AD1344597106ECE813B918A3872BF3228467C is the fedora RPM key
+RUN \
+	rpmkeys --import <(curl https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/static/keys/FF8AD1344597106ECE813B918A3872BF3228467C.txt) && \
 	rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
 	rpmkeys --import https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY && \
 	microdnf update -y && \
 	microdnf reinstall -y tzdata && \
 	microdnf install -y procps-ng zstd xz jemalloc pwgen && \
-        for pkg in boost-program-options-1.75.0-8; do \
-		rpm -ivh https://repo.almalinux.org/almalinux/9/AppStream/$(arch)/os/Packages/${pkg}.el9.$(arch).rpm ; \
-        done ; \
-	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ && \
+	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql && \
 	microdnf install -y MariaDB-backup-10.11.8 MariaDB-server-10.11.8 && \
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so && \
 	microdnf clean all && \
-	rm -rf /var/lib/mysql; \
-	mkdir -p /var/lib/mysql /var/run/mysqld /etc/mysql/conf.d/ /etc/mysql/mariadb.conf.d/; \
-	chown -R mysql:mysql /var/lib/mysql /var/run/mysqld; \
-	chmod 777 /var/run/mysqld ; \
+	rmdir /var/lib/mysql/mysql && \
+	chown -R mysql:mysql /var/lib/mysql && \
 	mkdir  /licenses && ln -s /usr/share/doc/MariaDB-server-10.11.8/COPYING /licenses/GPL-2
 
 VOLUME /var/lib/mysql
