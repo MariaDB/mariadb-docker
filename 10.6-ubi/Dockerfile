@@ -6,8 +6,9 @@ RUN groupadd --gid 999 -r mysql && \
 
 ARG TARGETARCH
 ENV GOSU_VERSION 1.17
-RUN curl --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-$TARGETARCH && \
-	curl --location --output /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$TARGETARCH.asc"; \
+RUN ARCH=$TARGETARCH && if [ $TARGETARCH = ppc64le ]; then ARCH=ppc64el ; fi ; \
+	curl --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${ARCH} && \
+	curl --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${ARCH}.asc; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
@@ -22,7 +23,7 @@ COPY docker.cnf /etc/my.cnf.d/
 
 COPY MariaDB.repo /etc/yum.repos.d/
 
-# missing pwgen(epel), jemalloc (as entrypoint/user extensions)
+# missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
 # FF8AD1344597106ECE813B918A3872BF3228467C is the fedora RPM key
@@ -33,7 +34,7 @@ RUN curl https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/
 	rpmkeys --import https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY && \
 	microdnf update -y && \
 	microdnf reinstall -y tzdata && \
-	microdnf install -y procps-ng zstd xz jemalloc pwgen && \
+	microdnf install -y procps-ng zstd xz jemalloc pwgen pv && \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb && \
 	microdnf install -y MariaDB-backup-10.6.18 MariaDB-server-10.6.18 && \
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so && \
