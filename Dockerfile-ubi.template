@@ -6,8 +6,9 @@ RUN groupadd --gid 999 -r mysql && \
 
 ARG TARGETARCH
 ENV GOSU_VERSION 1.17
-RUN curl --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-$TARGETARCH && \
-	curl --location --output /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$TARGETARCH.asc"; \
+RUN ARCH=$TARGETARCH && if [ $TARGETARCH = ppc64le ]; then ARCH=ppc64el ; fi ; \
+	curl --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${ARCH} && \
+	curl --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${ARCH}.asc; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
