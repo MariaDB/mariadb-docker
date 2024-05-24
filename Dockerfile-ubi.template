@@ -22,9 +22,9 @@ COPY docker.cnf /etc/my.cnf.d/
 
 COPY MariaDB.repo /etc/yum.repos.d/
 
-# missing pwgen, pv (epel),
-# procps - missing dependency of galera sst script
-# tzdata re-installed as only a fake verion is part of base image.
+# missing pwgen(epel),
+# procps, pv(epel) - missing dependency of galera sst script
+# tzdata re-installed as only a fake version is part of base image.
 RUN gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys FF8AD1344597106ECE813B918A3872BF3228467C && \
 	rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
 	rpmkeys --import https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY && \
