@@ -37,7 +37,12 @@ typeset -r DOWNLOADS_REST_API="https://downloads.mariadb.org/rest-api"
 
 update_version()
 {
-	echo "$version: $mariaVersion ($releaseStatus)"
+	local dir=$version$ubi
+	if [ ! -d "$dir" ]; then
+		echo "Directory $dir missing"
+		return
+	fi
+	echo "$version: $mariaVersion($ubi) ($releaseStatus)"
 
 	if [ -z "$ubi" ]; then
 		suite="${suites[$version]:-$defaultSuite}"
@@ -45,20 +50,20 @@ update_version()
 	else
 		suite=
 		fullVersion=$mariaVersion
-		cp docker.cnf "$version"
-		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$version"/MariaDB.repo
+		cp docker.cnf "$dir"
+		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$dir"/MariaDB.repo
 	fi
 
 	if [[ $version = 10.[234]* ]]; then
-		arches=" amd64 arm64v8 ppc64le"
+		arches="amd64 arm64v8 ppc64le"
 	else
-		arches=" amd64 arm64v8 ppc64le s390x"
+		arches="amd64 arm64v8 ppc64le s390x"
 	fi
 
-	cp "Dockerfile${ubi}.template" "${version}/Dockerfile"
+	cp "Dockerfile${ubi}.template" "${dir}/Dockerfile"
 
-	cp docker-entrypoint.sh healthcheck.sh "$version/"
-	chmod a+x "$version"/healthcheck.sh
+	cp docker-entrypoint.sh healthcheck.sh "$dir/"
+	chmod a+x "$dir"/healthcheck.sh
 	sed -i \
 		-e 's!%%MARIADB_VERSION%%!'"$fullVersion"'!g' \
 		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
@@ -67,11 +72,11 @@ update_version()
 		-e 's!%%MARIADB_SUPPORT_TYPE%%!'"$supportType"'!g' \
 		-e 's!%%SUITE%%!'"$suite"'!g' \
 		-e 's!%%ARCHES%%! '"$arches"'!g' \
-		"$version/Dockerfile"
+		"$dir/Dockerfile"
 
 	sed -i \
 		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
-		"$version/docker-entrypoint.sh"
+		"$dir/docker-entrypoint.sh"
 
 	vmin=${version%-ubi}
 	# Start using the new executable names
@@ -82,49 +87,49 @@ update_version()
 			       	-e 's/START REPLICA/START SLAVE/' \
 				-e '/memory\.pressure/,+7d' \
 				"$version/docker-entrypoint.sh"
-			sed -i -e 's/ REPLICA\$/ SLAVE$/' "$version"/healthcheck.sh
-			sed -i -e 's/\/run/\/var\/run\//g' "$version/Dockerfile"
+			sed -i -e 's/ REPLICA\$/ SLAVE$/' "$dir"/healthcheck.sh
+			sed -i -e 's/\/run/\/var\/run\//g' "$dir/Dockerfile"
 			;; # almost nothing to see/do here
 		10.5)
 			sed -i -e '/--old-mode/d' \
-				-e '/memory\.pressure/,+7d' "$version/docker-entrypoint.sh"
-			sed -i '/backwards compat/d' "$version/Dockerfile"
+				-e '/memory\.pressure/,+7d' "$dir/docker-entrypoint.sh"
+			sed -i '/backwards compat/d' "$dir/Dockerfile"
 			;;
 		*)
 			sed -i -e '/^CMD/s/mysqld/mariadbd/' \
-				-e '/backwards compat/d' "$version/Dockerfile"
+				-e '/backwards compat/d' "$dir/Dockerfile"
 			sed -i -e 's/mysql_upgrade\([^_]\)/mariadb-upgrade\1/' \
 				-e 's/mysqldump/mariadb-dump/' \
 				-e 's/mysqladmin/mariadb-admin/' \
 				-e 's/\bmysql --protocol\b/mariadb --protocol/' \
 				-e 's/mysql_install_db/mariadb-install-db/' \
 				-e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
-				"$version/docker-entrypoint.sh"
+				"$dir/docker-entrypoint.sh"
 			if [ "$vmin" = 10.6 ]; then
 				# my_print_defaults didn't recognise --mysqld until 10.11
 				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\([^-]\)mysqld/\1mariadbd/g' \
-					"$version/docker-entrypoint.sh"
+					"$dir/docker-entrypoint.sh"
 			else
 				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\mysqld/mariadbd/g' \
-					"$version/docker-entrypoint.sh"
+					"$dir/docker-entrypoint.sh"
 			fi
-			sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\bmysql\b/mariadb/' "$version/healthcheck.sh"
+			sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\bmysql\b/mariadb/' "$dir/healthcheck.sh"
 			if [[ ! "${vmin}" =~ 10.[678] ]]; then
 				# quoted $ intentional
 				# shellcheck disable=SC2016
 				sed -i -e '/^ARG MARIADB_MAJOR/d' \
 					-e '/^ENV MARIADB_MAJOR/d' \
 					-e 's/-\$MARIADB_MAJOR//' \
-					"$version/Dockerfile"
+					"$dir/Dockerfile"
 			else
-				sed -i -e '/memory\.pressure/,+7d' "$version/docker-entrypoint.sh"
+				sed -i -e '/memory\.pressure/,+7d' "$dir/docker-entrypoint.sh"
 			fi
 			if [[ $vmin =~ 11.[012345] ]]; then
 				sed -i -e 's/mysql_upgrade_info/mariadb_upgrade_info/' \
-					"$version/docker-entrypoint.sh" "$version/healthcheck.sh"
+					"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
 			fi
 			if [[ $vmin =~ 11.[01] ]]; then
-				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$version/Dockerfile"
+				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$dir/Dockerfile"
 			fi
 			;&
 	esac
@@ -136,8 +141,8 @@ update_version()
 	fi
 	# Add version to versions.json
 	versionJson="$(jq -e \
-		--arg milestone "${version}" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "$base" --arg arches "${arches# }" \
-		'.[$milestone] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
+		--arg milestone "${version}" --arg milestoneversion "${version}${ubi}" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "$base" --arg arches "${arches# }" \
+		'.[$milestoneversion] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
 	printf '%s\n' "$versionJson" > versions.json
 }
 
@@ -162,6 +167,7 @@ update_version_array()
 	supportType=$2
 
 	update_version
+	ubi=-ubi update_version
 }
 
 mariaversion()
@@ -185,9 +191,9 @@ in_development()
 {
 	releaseStatus=Alpha
 	supportType=Unknown
-	version=$development_version$ubi
+	version=$development_version
 	mariaVersion=${development_version}.0
-	[ -d "$development_version" ] && update_version
+	update_version
 }
 
 
@@ -204,6 +210,7 @@ versions=( "$@" )
 for version in "${versions[@]}"; do
 	if [ "${version#*-}" = "ubi" ]; then
 		ubi=-ubi
+		version=${version%-ubi}
 	else
 		ubi=
 	fi
