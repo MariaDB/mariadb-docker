@@ -36,11 +36,12 @@ RUN curl https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/
 	microdnf reinstall -y tzdata && \
 	microdnf install -y procps-ng zstd xz jemalloc pwgen pv && \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera && \
+	chmod ugo+rwx,o+t /run/mariadb && \
 	microdnf install -y MariaDB-backup-10.6.18 MariaDB-server-10.6.18 && \
-  # compatibility with Ubuntu images
-  ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so && \
-  # compatibility with UBI 8
-  ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib64/galera/libgalera_smm.so && \
+	# compatibility with DEB Galera packaging
+	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so && \
+	# compatibility with RPM Galera packaging
+	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib64/galera/libgalera_smm.so && \
 	microdnf clean all && \
 	rmdir /var/lib/mysql/mysql && \
 	chown -R mysql:mysql /var/lib/mysql /run/mariadb && \
