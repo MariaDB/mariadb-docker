@@ -4,11 +4,20 @@ FROM redhat/ubi9-minimal
 RUN groupadd --gid 999 -r mysql && \
 	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999
 
-ARG TARGETARCH
 ENV GOSU_VERSION 1.17
-RUN ARCH=$TARGETARCH && if [ $TARGETARCH = ppc64le ]; then ARCH=ppc64el ; fi ; \
-	curl --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${ARCH} && \
-	curl --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${ARCH}.asc; \
+RUN set -eux; \
+	rpmArch="$(rpm --query --queryformat='%{ARCH}' rpm)"; \
+	case "$rpmArch" in \
+		aarch64) dpkgArch='arm64' ;; \
+		armv7*) dpkgArch='armhf' ;; \
+		i686) dpkgArch='i386' ;; \
+		ppc64le) dpkgArch='ppc64el' ;; \
+		s390x|riscv64) dpkgArch=$rpmArch ;; \
+		x86_64) dpkgArch='amd64' ;; \
+		*) echo >&2 "error: unknown/unsupported architecture '$rpmArch'"; exit 1 ;; \
+	esac; \
+	curl --fail --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch} ; \
+	curl --fail --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}.asc; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
