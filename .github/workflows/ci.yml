@@ -104,7 +104,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/MariaDB/mariadb:${{ matrix.name }}
+          tags: ghcr.io/mariadb/mariadb:${{ matrix.name }}
       - name: MariaDB Operator Test
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
         run: gh workflow run test-image.yaml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
