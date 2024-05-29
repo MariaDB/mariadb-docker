@@ -52,7 +52,7 @@ VOLUME /var/lib/mysql
 RUN mkdir /docker-entrypoint-initdb.d
 
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
-COPY /docker-entrypoint.sh /usr/local/bin/
+COPY docker-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
