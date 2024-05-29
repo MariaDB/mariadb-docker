@@ -104,6 +104,6 @@ jobs:
         run: docker push ghcr.io/mariadb/mariadb:${{ matrix.name }}
       - name: MariaDB Operator Test
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: gh workflow run test-image.yaml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
+        run: gh workflow run test-image.yml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
         env:
           GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
