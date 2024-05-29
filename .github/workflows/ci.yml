@@ -98,7 +98,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: tag
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: docker tag ${{ matrix.name }} ghcr.io/mariadb/mariadb:${{ matrix.name }}
+        run: docker tag mariadb:${{ matrix.name }} ghcr.io/mariadb/mariadb:${{ matrix.name }}
       - name: push
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
         uses: docker/build-push-action@v5
