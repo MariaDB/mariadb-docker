@@ -151,5 +151,19 @@
       "arm64v8",
       "ppc64le"
     ]
+  },
+  "11.4-ubi": {
+    "milestone": "11.4",
+    "version": "11.4.2",
+    "fullVersion": "11.4.2",
+    "releaseStatus": "Stable",
+    "supportType": "Long Term Support",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
   }
 }
