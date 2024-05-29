@@ -32,6 +32,27 @@ COPY docker.cnf /etc/my.cnf.d/
 
 COPY MariaDB.repo /etc/yum.repos.d/
 
+# HasRequiredLabel requirement from Red Hat OpenShift Software Certification
+# https://access.redhat.com/documentation/en-us/red_hat_software_certification/2024/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction#con-image-metadata-requirements_openshift-sw-cert-policy-container-images
+LABEL name="MariaDB Server" \
+	vendor="MariaDB Community" \
+	version="10.6.18" \
+	release="Refer to Annotations org.opencontainers.image.{revision,source}" \
+	summary="MariaDB Database" \
+	description="MariaDB Database for relational SQL"
+
+# OCI annotations to image
+LABEL org.opencontainers.image.authors="MariaDB Community" \
+      org.opencontainers.image.title="MariaDB Database" \
+      org.opencontainers.image.description="MariaDB Database for relational SQL" \
+      org.opencontainers.image.documentation="https://hub.docker.com/_/mariadb/" \
+      org.opencontainers.image.base.name="docker.io/redhat/ubi9-minimal" \
+      org.opencontainers.image.licenses="GPL-2.0" \
+      org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
+      org.opencontainers.image.vendor="MariaDB Community" \
+      org.opencontainers.image.version="10.6.18" \
+      org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
+
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
@@ -62,7 +83,9 @@ RUN set -eux ; \
 	rmdir /var/lib/mysql/mysql ; \
 	chown -R mysql:mysql /var/lib/mysql /run/mariadb ; \
 	mkdir /licenses ; \
-	ln -s /usr/share/doc/MariaDB-server-10.6.18/COPYING /licenses/GPL-2
+	ln -s /usr/share/doc/MariaDB-server-10.6.18/COPYING /licenses/GPL-2 ; \
+	ln -s /usr/share/licenses /licenses/package-licenses ; \
+	ln -s Apache-2.0-license /licenses/gosu
 
 VOLUME /var/lib/mysql
 
