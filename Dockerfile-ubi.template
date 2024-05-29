@@ -62,7 +62,9 @@ RUN set -eux ; \
 	rmdir /var/lib/mysql/mysql ; \
 	chown -R mysql:mysql /var/lib/mysql /run/mariadb ; \
 	mkdir /licenses ; \
-	ln -s /usr/share/doc/MariaDB-server-%%MARIADB_VERSION_BASIC%%/COPYING /licenses/GPL-2
+	ln -s /usr/share/doc/MariaDB-server-%%MARIADB_VERSION_BASIC%%/COPYING /licenses/GPL-2 ; \
+	ln -s /usr/share/licenses /licenses/package-licenses ; \
+	ln -s Apache-2.0-license /licenses/gosu
 
 VOLUME /var/lib/mysql
 
