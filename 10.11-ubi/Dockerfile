@@ -4,11 +4,20 @@ FROM redhat/ubi9-minimal
 RUN groupadd --gid 999 -r mysql && \
 	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999
 
-ARG TARGETARCH
 ENV GOSU_VERSION 1.17
-RUN ARCH=$TARGETARCH && if [ $TARGETARCH = ppc64le ]; then ARCH=ppc64el ; fi ; \
-	curl --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${ARCH} && \
-	curl --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${ARCH}.asc; \
+RUN set -eux; \
+	rpmArch="$(rpm --query --queryformat='%{ARCH}' rpm)"; \
+	case "$rpmArch" in \
+		aarch64) dpkgArch='arm64' ;; \
+		armv7*) dpkgArch='armhf' ;; \
+		i686) dpkgArch='i386' ;; \
+		ppc64le) dpkgArch='ppc64el' ;; \
+		s390x|riscv64) dpkgArch=$rpmArch ;; \
+		x86_64) dpkgArch='amd64' ;; \
+		*) echo >&2 "error: unknown/unsupported architecture '$rpmArch'"; exit 1 ;; \
+	esac; \
+	curl --fail --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch} ; \
+	curl --fail --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}.asc; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
@@ -26,33 +35,41 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
-# FF8AD1344597106ECE813B918A3872BF3228467C is the fedora RPM key
-RUN curl https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/static/keys/FF8AD1344597106ECE813B918A3872BF3228467C.txt --output /tmp/epelkey.txt && \
-	rpmkeys --import /tmp/epelkey.txt && \
-	rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-	rm /tmp/epelkey.txt && \
-	rpmkeys --import https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY && \
-	microdnf update -y && \
-	microdnf reinstall -y tzdata && \
-	microdnf install -y procps-ng zstd xz jemalloc pwgen pv && \
-	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera && \
-	chmod ugo+rwx,o+t /run/mariadb && \
-	microdnf install -y MariaDB-backup-10.11.8 MariaDB-server-10.11.8 && \
+# FF8AD1344597106ECE813B918A3872BF3228467C is the Fedora RPM key
+RUN set -eux ; \
+	curl --fail https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/static/keys/FF8AD1344597106ECE813B918A3872BF3228467C.txt --output /tmp/epelkey.txt ; \
+	gpg --import-options show-only --import  --with-colons /tmp/epelkey.txt  | grep '^pub:-:4096:1:8A3872BF3228467C:1631033579:::-:' ; \
+	rpmkeys --import /tmp/epelkey.txt ; \
+	curl --fail https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm --output /tmp/epel-release-latest-9.noarch.rpm ; \
+	rpm -K /tmp/epel-release-latest-9.noarch.rpm ; \
+	rpm -ivh /tmp/epel-release-latest-9.noarch.rpm ; \
+	rm /tmp/epelkey.txt /tmp/epel-release-latest-9.noarch.rpm ; \
+	curl --fail https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY --output /tmp/MariaDB-Server-GPG-KEY ; \
+	gpg --import-options show-only --import  --with-colons /tmp/MariaDB-Server-GPG-KEY  | grep '^pub:-:1024:17:CBCB082A1BB943DB:1265140880:::-:::scESC::::::::0:' ; \
+	rpmkeys --import /tmp/MariaDB-Server-GPG-KEY ; \
+	rm /tmp/MariaDB-Server-GPG-KEY ; \
+	microdnf update -y ; \
+	microdnf reinstall -y tzdata ; \
+	microdnf install -y procps-ng zstd xz jemalloc pwgen pv ; \
+	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
+	chmod ugo+rwx,o+t /run/mariadb ; \
+	microdnf install -y MariaDB-backup-10.11.8 MariaDB-server-10.11.8 ; \
 	# compatibility with DEB Galera packaging
-	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so && \
+	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so ; \
 	# compatibility with RPM Galera packaging
-	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib64/galera/libgalera_smm.so && \
-	microdnf clean all && \
-	rmdir /var/lib/mysql/mysql && \
-	chown -R mysql:mysql /var/lib/mysql /run/mariadb && \
-	mkdir  /licenses && ln -s /usr/share/doc/MariaDB-server-10.11.8/COPYING /licenses/GPL-2
+	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib64/galera/libgalera_smm.so ; \
+	microdnf clean all ; \
+	rmdir /var/lib/mysql/mysql ; \
+	chown -R mysql:mysql /var/lib/mysql /run/mariadb ; \
+	mkdir /licenses ; \
+	ln -s /usr/share/doc/MariaDB-server-10.11.8/COPYING /licenses/GPL-2
 
 VOLUME /var/lib/mysql
 
 RUN mkdir /docker-entrypoint-initdb.d
 
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
-COPY /docker-entrypoint.sh /usr/local/bin/
+COPY docker-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
