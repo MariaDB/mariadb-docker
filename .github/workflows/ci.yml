@@ -98,7 +98,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: tag
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: docker tag ${{ matrix.name }} ghcr.io/MariaDB/mariadb:${{ matrix.name }}
+        run: docker tag ${{ matrix.name }} ghcr.io/mariadb/mariadb:${{ matrix.name }}
       - name: push
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
         uses: docker/build-push-action@v5
@@ -107,6 +107,6 @@ jobs:
           tags: ghcr.io/MariaDB/mariadb:${{ matrix.name }}
       - name: MariaDB Operator Test
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: gh workflow run test-image.yaml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/MariaDB/mariadb:${{ matrix.name }}
+        run: gh workflow run test-image.yaml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
         env:
           GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
