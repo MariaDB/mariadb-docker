@@ -53,6 +53,12 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.version="11.4.2" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
+# bashbrew-architectures: amd64 arm64v8 ppc64le s390x
+ARG MARIADB_VERSION=11.4.1
+# release-status:Stable
+# release-support-type:Long Term Support
+# (https://downloads.mariadb.org/rest-api/mariadb/)
+
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
