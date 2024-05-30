@@ -20,6 +20,10 @@ _generateParentRepoToArches() {
 			| sort -u \
 			| xargs bashbrew cat --format '[{{ .RepoName }}:{{ .TagName }}]="{{ join " " .TagEntry.Architectures }}"'
 	) )"
+	# could do, but returns arm64 rather than arm64v8
+	#readarray -t ubiarch < <(docker manifest inspect redhat/ubi9-minimal | jq  '.manifests[].platform.architecture')
+	local ubiarch=(amd64 arm64v8 s390x ppc64le)
+	parentRepoToArches[redhat/ubi9-minimal]=${ubiarch[@]//\"/}
 }
 _generateParentRepoToArches 'mariadb'
 
