@@ -74,7 +74,7 @@ join() {
 for version in "${versions[@]}"; do
 	commit="$(dirCommit "$version")"
 
-	fullVersion="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "ARG" && $2 ~ "MARIADB_VERSION=" { gsub(/^MARIADB_VERSION=([0-9]+:)|[+].*$/, "", $2); print $2; exit }')"
+	fullVersion="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "ARG" && $2 ~ "MARIADB_VERSION=" { gsub(/^MARIADB_VERSION=|([0-9]+:)|[+].*$/, "", $2); print $2; exit }')"
 	releaseStatus="$(grep -m1 'release-status:' "$version/Dockerfile" | cut -d':' -f2)"
 	supportType="$(grep -m1 'support-type:' "$version/Dockerfile" | cut -d':' -f2)"
 
@@ -85,7 +85,13 @@ for version in "${versions[@]}"; do
 	*)
 		suffix=-${releaseStatus,,*}
 	esac
-	versionAliases=( ${fullVersion}${suffix} )
+	# non-ubi gets full version
+	if [[ $version =~ .*ubi ]]; then
+		ubi=-ubi
+	else
+		ubi=
+	fi
+	versionAliases=( "${fullVersion}${ubi}${suffix}" )
 
 	case "${supportType}" in
 	"Long Term Support")
@@ -99,14 +105,17 @@ for version in "${versions[@]}"; do
 	esac
 
 	if [ "$version" != "$fullVersion" ]; then
-		versionAliases+=( ${version}${suffix} )
+		versionAliases+=( "${version}${suffix}" )
 	fi
 
 	versionAliases+=( ${aliases[$version]:-} )
 	if [ "$releaseStatus" = 'Stable' ]; then
-		versions=( "${version%%.*}" latest )
+		versions=( "${version%%.*}${ubi}" )
+		if [ -z "$ubi" ]; then
+			versions+=( latest )
+		fi
 		if [ "$supportType" = LTS ]; then
-			versions+=( lts )
+			versions+=( lts"${ubi}" )
 		fi
 
 		for tryAlias in "${versions[@]}"; do
@@ -118,26 +127,49 @@ for version in "${versions[@]}"; do
 	fi
 
 	from="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "FROM" { print $2; exit }')"
-	distro="${from%%:*}" # "debian", "ubuntu"
-	suite="${from#$distro:}" # "jessie-slim", "xenial"
-	suite="${suite%-slim}" # "jessie", "xenial"
+	if [[ "$from" =~ redhat/* ]]; then
+		distro="${from#redhat/}"
+		suite="${distro%%-*}" # -minimal/init...
+		variantAliases=( "${versionAliases[@]/%/${suite#ubi}}" )
+	else
+		distro="${from%%:*}" # "debian", "ubuntu"
+		suite="${from#"$distro":}" # "jessie-slim", "xenial"
+		suite="${suite%-slim}" # "jessie", "xenial"
+		variantAliases=( "${versionAliases[@]/%/-${suite}}" )
+	fi
 
-	variantAliases=( "${versionAliases[@]/%/-$suite}" )
 	versionAliases=( "${variantAliases[@]//latest-/}" "${versionAliases[@]}" )
 	arches=$(versionArches "$version")
 
 	for arch in $arches; do
-		# Debify the arch
-		case $arch in
-		arm64v8)
-			arch=arm64 ;;
-		ppc64le)
-			arch=ppc64el ;;
+		case $suite in
+		ubi*)
+			# RPMify the arch
+			case $arch in
+			arm64v8)
+				arch=aarch64 ;;
+			amd64)
+				arch=x86_64 ;;
+			esac
+			if ! curl --fail --silent --head "https://archive.mariadb.org/mariadb-${fullVersion}/yum/rhel/${suite#ubi}/${arch}/" > /dev/null 2>&1 ; then
+				echo "$arch missing for $fullVersion"
+				exit 1
+			fi
+			;;
+		*)
+			# Debify the arch
+			case $arch in
+			arm64v8)
+				arch=arm64 ;;
+			ppc64le)
+				arch=ppc64el ;;
+			esac
+			if ! curl --fail --silent --head "https://archive.mariadb.org/mariadb-${fullVersion}/repo/${distro}/dists/${suite}/main/binary-${arch}/" > /dev/null 2>&1 ; then
+				echo "$arch missing for $fullVersion"
+				exit 1
+			fi
+			;;
 		esac
-		if ! curl --fail --silent --head "https://archive.mariadb.org/mariadb-${fullVersion}/repo/ubuntu/dists/${suite}/main/binary-${arch}/" > /dev/null 2>&1 ; then
-			echo "$arch missing for $fullVersion"
-			exit 1
-		fi
 	done
 
 	echo
