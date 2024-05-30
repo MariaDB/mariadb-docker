@@ -15,9 +15,9 @@
   },
   "11.4": {
     "milestone": "11.4",
-    "version": "11.4.1",
-    "fullVersion": "1:11.4.1+maria~ubu2404",
-    "releaseStatus": "RC",
+    "version": "11.4.2",
+    "fullVersion": "1:11.4.2+maria~ubu2404",
+    "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubuntu:noble",
     "arches": [

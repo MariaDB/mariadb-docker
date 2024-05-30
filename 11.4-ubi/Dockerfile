@@ -54,7 +54,7 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=11.4.1
+ARG MARIADB_VERSION=11.4.2
 # release-status:Stable
 # release-support-type:Long Term Support
 # (https://downloads.mariadb.org/rest-api/mariadb/)
