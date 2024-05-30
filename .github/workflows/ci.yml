@@ -58,8 +58,23 @@ jobs:
     strategy: ${{ fromJson(needs.generate-jobs.outputs.strategy) }}
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    env:
+      DEPLOY_IMAGES: false
     steps:
       - uses: actions/checkout@v3
+      - name: Check for registry credentials
+        if: github.repository == 'MariaDB/mariadb-docker' && github.ref == 'refs/heads/master'
+        run: |
+          missing=()
+          [[ -n "${{ secrets.MARIADB_OPERATOR_TOKEN }}" ]] || missing+=(MARIADB_OPERATOR_TOKEN)
+          for i in "${missing[@]}"; do
+            echo "Missing github secret: $i"
+          done
+          if (( ${#missing[@]} == 0 )); then
+            echo "DEPLOY_IMAGES=true" >> $GITHUB_ENV
+          else
+            echo "Not pushing images to registry or doing operator test"
+          fi
       - name: Prepare Environment
         run: ${{ matrix.runs.prepare }}
       - name: Pull Dependencies
@@ -74,3 +89,21 @@ jobs:
         run: ${{ matrix.runs.mariadbtest }}
       - name: '"docker images"'
         run: ${{ matrix.runs.images }}
+      - name: login to registry
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: tag
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        run: docker tag mariadb:${{ matrix.name }} ghcr.io/mariadb/mariadb:${{ matrix.name }}
+      - name: push
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        run: docker push ghcr.io/mariadb/mariadb:${{ matrix.name }}
+      - name: MariaDB Operator Test
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        run: gh workflow run test-image.yml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
