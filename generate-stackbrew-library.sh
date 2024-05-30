@@ -91,7 +91,7 @@ for version in "${versions[@]}"; do
 	else
 		ubi=
 	fi
-	versionAliases=( "${fullVersion}${ubi}${suffix}" )
+	versionAliases=( "${fullVersion}${ubi}" )
 
 	case "${supportType}" in
 	"Long Term Support")
@@ -105,7 +105,7 @@ for version in "${versions[@]}"; do
 	esac
 
 	if [ "$version" != "$fullVersion" ]; then
-		versionAliases+=( "${version}${suffix}" )
+		versionAliases+=( "${version}" )
 	fi
 
 	versionAliases+=( ${aliases[$version]:-} )
@@ -139,6 +139,7 @@ for version in "${versions[@]}"; do
 	fi
 
 	versionAliases=( "${variantAliases[@]//latest-/}" "${versionAliases[@]}" )
+	versionAliases=( "${versionAliases[@]/%/${suffix}}" )
 	arches=$(versionArches "$version")
 
 	for arch in $arches; do
