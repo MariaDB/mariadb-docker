@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+GLOBIGNORE=examples/:.*/:test/:11.[45]/:11.4-ubi/
+
 err() {
   echo >&2 "ERROR: $*"
   exit 1
@@ -25,7 +27,6 @@ command -v bashbrew >/dev/null || {
 
 source '.architectures-lib'
 
-GLOBIGNORE=examples/:.*/:test/:11.[345]/
 versions=( */ )
 versions=( "${versions[@]%/}" )
 
