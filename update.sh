@@ -4,6 +4,8 @@ set -Eeuo pipefail
 # Usage ./update.sh [version(multiple)...]
 #
 
+development_version=11.6
+
 defaultSuite='noble'
 declare -A suites=(
 	[10.4]='focal'
@@ -183,8 +185,6 @@ all()
 	readarray -O 0 -c 3 -C update_version_array -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq -r '.major_releases[] | [ .release_id ], [ .release_status ], [ .release_support_type ]  | @tsv')"
 }
-
-development_version=11.5
 
 in_development()
 {
