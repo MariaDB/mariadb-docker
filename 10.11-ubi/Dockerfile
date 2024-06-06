@@ -30,6 +30,8 @@ RUN set -eux; \
 
 COPY docker.cnf /etc/my.cnf.d/
 
+RUN chown 0644 /etc/my.cnf.d/docker.cnf
+
 COPY MariaDB.repo /etc/yum.repos.d/
 
 # HasRequiredLabel requirement from Red Hat OpenShift Software Certification

@@ -30,6 +30,8 @@ RUN set -eux; \
 
 COPY docker.cnf /etc/my.cnf.d/
 
+RUN chown 0644 /etc/my.cnf.d/docker.cnf
+
 COPY MariaDB.repo /etc/yum.repos.d/
 
 # HasRequiredLabel requirement from Red Hat OpenShift Software Certification
@@ -56,7 +58,7 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
 ARG MARIADB_VERSION=11.5.1
 # release-status:RC
-# release-support-type:Short Term Support
+# release-support-type:Rolling
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)

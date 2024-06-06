@@ -49,7 +49,11 @@ update_version()
 	else
 		suite=
 		fullVersion=$mariaVersion
-		cp docker.cnf "$dir"
+		if [[ $version = 10.* ]]; then
+			sed -e '/character-set-collations/d' docker.cnf > "$dir/docker.cnf"
+		else
+			sed -e '/collation-server/d' docker.cnf > "$dir/docker.cnf"
+		fi
 		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$dir"/MariaDB.repo
 	fi
 
