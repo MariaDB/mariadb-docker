@@ -171,7 +171,7 @@
     "version": "11.5.1",
     "fullVersion": "11.5.1",
     "releaseStatus": "RC",
-    "supportType": "Short Term Support",
+    "supportType": "Rolling",
     "base": "ubi9",
     "arches": [
       "amd64",

@@ -4,6 +4,12 @@
 host-cache-size=0
 skip-name-resolve
 
+expire_logs_days=10
+character-set-server=utf8mb4
+
+character-set-collations=utf8mb4=uca1400_ai_ci # 11.3+
+collation-server=utf8mb4_general_ci # 10*
+
 [client-server]
 socket=/run/mariadb/mariadb.sock
 
