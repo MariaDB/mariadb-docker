@@ -62,6 +62,7 @@ Maintainers: Daniel Black <daniel@mariadb.org> (@grooverdan),
              Daniel Bartholomew <dbart@mariadb.com> (@dbart),
              Faustin Lammler <faustin@mariadb.org> (@fauust)
 GitRepo: https://github.com/MariaDB/mariadb-docker.git
+Builder: buildkit
 EOH
 
 # prints "$2$1$3$1...$N"
