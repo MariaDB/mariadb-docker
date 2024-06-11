@@ -42,6 +42,7 @@ _process_sql()
 		${def['file']:+--defaults-file=${def['file']}} \
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}} \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}} \
+		--skip-ssl --skip-ssl-verify-server-cert \
 		-B "$@"
 }
 
@@ -62,6 +63,7 @@ connect()
 		${def['file']:+--defaults-file=${def['file']}} \
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}}  \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}}  \
+		--skip-ssl --skip-ssl-verify-server-cert \
 		-h localhost --protocol tcp -e 'select 1' 2>&1 \
 		| grep -qF "Can't connect"
 	local ret=${PIPESTATUS[1]}
