@@ -28,7 +28,7 @@ RUN set -eux; \
 	gosu --version; \
 	gosu nobody true
 
-COPY docker.cnf /etc/my.cnf.d/
+COPY --chmod=0644 docker.cnf /etc/my.cnf.d/
 
 COPY MariaDB.repo /etc/yum.repos.d/
 
