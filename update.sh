@@ -87,11 +87,13 @@ update_version()
 		10.4)
 			sed -i -e '/--old-mode/d' \
 				-e 's/REPLICATION REPLICA/REPLICATION SLAVE/' \
-			       	-e 's/START REPLICA/START SLAVE/' \
+				-e 's/START REPLICA/START SLAVE/' \
 				-e '/memory\.pressure/,+7d' \
 				-e '/--skip-ssl/d' \
 				"$version/docker-entrypoint.sh"
-			sed -i -e 's/ REPLICA\$/ SLAVE$/' "$dir"/healthcheck.sh
+			sed -i -e 's/ REPLICA\$/ SLAVE$/' \
+				-e '/--skip-ssl/d' \
+				"$dir"/healthcheck.sh
 			sed -i -e 's/\/run/\/var\/run\//g' "$dir/Dockerfile"
 			;; # almost nothing to see/do here
 		10.5)
@@ -99,6 +101,8 @@ update_version()
 				-e '/--skip-ssl/d' \
 				-e '/memory\.pressure/,+7d' "$dir/docker-entrypoint.sh"
 			sed -i '/backwards compat/d' "$dir/Dockerfile"
+			sed -i -e '/--skip-ssl/d' \
+				"$dir"/healthcheck.sh
 			;;
 		*)
 			sed -i -e '/^CMD/s/mysqld/mariadbd/' \
@@ -130,7 +134,7 @@ update_version()
 				sed -i -e '/memory\.pressure/,+7d' "$dir/docker-entrypoint.sh"
 			fi
 			if [[ $vmin = 10.* || $vmin =~ 11.[12] ]]; then
-				sed -i -e '/--skip-ssl/d' "$dir/docker-entrypoint.sh"
+				sed -i -e '/--skip-ssl/d' "$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
 			fi
 			if [[ $vmin =~ 11.[012345] ]]; then
 				sed -i -e 's/mysql_upgrade_info/mariadb_upgrade_info/' \
