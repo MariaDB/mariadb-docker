@@ -645,9 +645,10 @@ fi
 		sleep 1
 	done
 
-	DOCKER_LIBRARY_START_TIMEOUT=$(( ${DOCKER_LIBRARY_START_TIMEOUT:-10} * 7 )) runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
+	# tls test to ensure that #592 is resolved
+	DOCKER_LIBRARY_START_TIMEOUT=$(( ${DOCKER_LIBRARY_START_TIMEOUT:-10} * 7 )) runandwait -e MARIADB_AUTO_UPGRADE=1 -v "${dir}"/tls:/etc/mysql/conf.d/:z -v m57:/var/lib/mysql:Z "${image}"
 
-	version=$(mariadbclient --skip-column-names -B -u root -pbob -e "SELECT VERSION()")
+	version=$(mariadbclient --skip-column-names --loose-skip-ssl-verify-server-cert -B -u root -pbob -e "SELECT VERSION()")
 
 	docker exec "$cid" ls -la /var/lib/mysql/system_mysql_backup_unknown_version.sql.zst || die "hoping for backup file"
 
