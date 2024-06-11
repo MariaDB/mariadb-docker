@@ -645,7 +645,7 @@ fi
 		sleep 1
 	done
 
-	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
+	DOCKER_LIBRARY_START_TIMEOUT=$(( ${DOCKER_LIBRARY_START_TIMEOUT:-10} * 7 )) runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
 
 	version=$(mariadbclient --skip-column-names -B -u root -pbob -e "SELECT VERSION()")
 
