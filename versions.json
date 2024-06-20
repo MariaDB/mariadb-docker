@@ -153,19 +153,6 @@
       "s390x"
     ]
   },
-  "10.4": {
-    "milestone": "10.4",
-    "version": "10.4.34",
-    "fullVersion": "1:10.4.34+maria~ubu2004",
-    "releaseStatus": "Stable",
-    "supportType": "Long Term Support",
-    "base": "ubuntu:focal",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le"
-    ]
-  },
   "11.6-ubi": {
     "milestone": "11.6",
     "version": "11.6.0",
