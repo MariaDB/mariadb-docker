@@ -63,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check for registry credentials
-        if: github.repository == 'MariaDB/mariadb-docker' && github.ref == 'refs/heads/master'
+        if: github.repository == 'MariaDB/mariadb-docker' && github.ref == 'refs/heads/master' && {{ matrix.directory != 10.5 }}
         run: |
           missing=()
           [[ -n "${{ secrets.MARIADB_OPERATOR_TOKEN }}" ]] || missing+=(MARIADB_OPERATOR_TOKEN)
