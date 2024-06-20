@@ -10,8 +10,8 @@
 # the --replication option. This allows a different set of replication checks
 # on different connections.
 #
-# --su{=|-mariadb} is option to run the healthcheck as a different unix user.
-# Useful if mariadb@localhost user exists with unix socket authentication
+# --su{=|-mysql} is option to run the healthcheck as a different unix user.
+# Useful if mysql@localhost user exists with unix socket authentication
 # Using this option disregards previous options set, so should usually be the
 # first option.
 #

@@ -10,8 +10,8 @@
 # the --replication option. This allows a different set of replication checks
 # on different connections.
 #
-# --su{=|-mariadb} is option to run the healthcheck as a different unix user.
-# Useful if mariadb@localhost user exists with unix socket authentication
+# --su{=|-mysql} is option to run the healthcheck as a different unix user.
+# Useful if mysql@localhost user exists with unix socket authentication
 # Using this option disregards previous options set, so should usually be the
 # first option.
 #
@@ -201,11 +201,11 @@ replication()
 
 # mariadbupgrade
 #
-# Test the lock on the file $datadir/mysql_upgrade_info
+# Test the lock on the file $datadir/mariadb_upgrade_info
 # https://jira.mariadb.org/browse/MDEV-27068
 mariadbupgrade()
 {
-	local f="$datadir/mysql_upgrade_info"
+	local f="$datadir/mariadb_upgrade_info"
 	if [ -r "$f" ]; then
 		flock --exclusive --nonblock -n 9 9<"$f"
 		return $?

@@ -221,16 +221,16 @@ docker_init_database_dir() {
 	installArgs=( --datadir="$DATADIR" --rpm --auth-root-authentication-method=normal )
 	# "Other options are passed to mysqld." (so we pass all "mysqld" arguments directly here)
 
-	local mariadbdArgs=()
+	local mysqldArgs=()
 	for arg in "${@:2}"; do
 		# Check if the argument contains whitespace
 		if [[ "$arg" =~ [[:space:]] ]]; then
-			mysql_warn "Not passing argument \'$arg\' to mariadb-install-db because mariadb-install-db does not support arguments with whitespace."
+			mysql_warn "Not passing argument \'$arg\' to mysql_install_db because mysql_install_db does not support arguments with whitespace."
 		else
-			mariadbdArgs+=("$arg")
+			mysqldArgs+=("$arg")
 		fi
 	done
-	mysql_install_db "${installArgs[@]}" "${mariadbdArgs[@]}" \
+	mysql_install_db "${installArgs[@]}" "${mysqldArgs[@]}" \
 		--skip-test-db \
 		--default-time-zone=SYSTEM --enforce-storage-engine= \
 		--skip-log-bin \

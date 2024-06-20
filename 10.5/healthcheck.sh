@@ -26,7 +26,7 @@
 # replication               REPLICATION_CLIENT (<10.5)or REPLICA MONITOR (10.5+)
 # mariadbupgrade            none, however unix user permissions on datadir
 #
-# The SQL user used is the default for the mysql client. This can be the unix user
+# The SQL user used is the default for the mariadb client. This can be the unix user
 # if no user(or password) is set in the [mariadb-client] section of a configuration
 # file. --defaults-{file,extra-file,group-suffix} can specify a file/configuration
 # different from elsewhere.
