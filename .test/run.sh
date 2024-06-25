@@ -765,7 +765,7 @@ fi
 		--network=container:"$master_host" \
 		--health-cmd='healthcheck.sh --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
 		--health-interval=3s \
-		"$image" --server-id=2 --port 3307)
+		"$image" --server-id=2 --port 3307 --require-secure-transport=1)
 
 	c="${DOCKER_LIBRARY_START_TIMEOUT:-10}"
 	until docker exec "$cid" healthcheck.sh --connect --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ "$c" -eq 0 ]
