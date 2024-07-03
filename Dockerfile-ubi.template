@@ -109,5 +109,6 @@ COPY docker-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
+USER mysql
 EXPOSE 3306
 CMD ["mariadbd"]
