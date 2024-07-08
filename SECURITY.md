@@ -8,7 +8,7 @@ See the [Docker Official Images FAQ](https://github.com/docker-library/faq#why-d
 
 ## Supported Versions
 
-Maintained versions are per [Maintaince Policy](https://mariadb.org/about/#maintenance-policy). This will correspond to the major version number directories in this repository.
+Maintained versions are per the [Maintenance Policy](https://mariadb.org/about/#maintenance-policy). This will correspond to the major version number directories in this repository.
 
 ## Reporting a Vulnerability
 
