@@ -4,7 +4,7 @@ set -Eeuo pipefail
 # Usage ./update.sh [version(multiple)...]
 #
 
-development_version=11.6
+development_version=main
 
 defaultSuite='noble'
 declare -A suites=(
