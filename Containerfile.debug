@@ -1,0 +1,12 @@
+# Containerfile for adding the debuginfo of an apt, based container
+# with some tools.
+ARG BASE
+FROM $BASE
+
+RUN apt-get update \
+       && apt-get install -y linux-tools-common gdbserver gdb curl \
+       && dpkg-query  --showformat='${Package},${Version},${Architecture}\n' --show | grep mariadb \
+       | while IFS=, read  pkg version arch; do \
+            [ $arch != all ] && apt-get install -y ${pkg}-dbgsym=${version} ; \
+          done; \
+     rm -rf /var/lib/apt/lists/*
