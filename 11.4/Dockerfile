@@ -2,7 +2,7 @@
 FROM ubuntu:noble
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
-RUN groupadd -r mysql && useradd -r -g mysql mysql --home-dir /var/lib/mysql
+RUN groupadd -r mysql && useradd -r -g mysql mysql --home-dir /var/lib/mysql && userdel --remove ubuntu
 
 # add gosu for easy step-down from root
 # https://github.com/tianon/gosu/releases
@@ -114,7 +114,7 @@ RUN set -ex; \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership
-	rm -rf /var/lib/mysql /etc/mysql/mariadb.conf.d/50-mysqld_safe.cnf; \
+	rm -rf /var/lib/mysql; \
 	mkdir -p /var/lib/mysql /run/mysqld; \
 	chown -R mysql:mysql /var/lib/mysql /run/mysqld; \
 # ensure that /run/mysqld (used for socket and lock files) is writable regardless of the UID our mysqld instance ends up having at runtime

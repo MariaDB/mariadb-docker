@@ -5,7 +5,6 @@ host-cache-size=0
 skip-name-resolve
 
 expire_logs_days=10
-character-set-server=utf8mb4
 
 
 [client-server]

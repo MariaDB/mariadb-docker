@@ -4,9 +4,10 @@ set -Eeuo pipefail
 # Usage ./update.sh [version(multiple)...]
 #
 
+development_version=main
+
 defaultSuite='noble'
 declare -A suites=(
-	[10.4]='focal'
 	[10.5]='focal'
 	[10.6]='focal'
 	[10.11]='jammy'
@@ -53,6 +54,12 @@ update_version()
 			sed -e '/character-set-collations/d' docker.cnf > "$dir/docker.cnf"
 		else
 			sed -e '/collation-server/d' docker.cnf > "$dir/docker.cnf"
+			if [[ $version != 11.4 ]]; then
+				sed -i -e '/character-set-collations/d' "$dir/docker.cnf"
+			fi
+			if [[ $version != 11.[45] ]]; then
+				sed -i -e '/character-set/d' "$dir/docker.cnf"
+			fi
 		fi
 		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$dir"/MariaDB.repo
 	fi
@@ -84,64 +91,65 @@ update_version()
 	vmin=${version%-ubi}
 	# Start using the new executable names
 	case "$vmin" in
-		10.4)
-			sed -i -e '/--old-mode/d' \
-				-e 's/REPLICATION REPLICA/REPLICATION SLAVE/' \
-				-e 's/START REPLICA/START SLAVE/' \
-				-e '/memory\.pressure/,+7d' \
-				-e '/--skip-ssl/d' \
-				"$version/docker-entrypoint.sh"
-			sed -i -e 's/ REPLICA\$/ SLAVE$/' \
-				-e '/--skip-ssl/d' \
-				"$dir"/healthcheck.sh
-			sed -i -e 's/\/run/\/var\/run\//g' "$dir/Dockerfile"
-			;; # almost nothing to see/do here
 		10.5)
 			sed -i -e '/--old-mode/d' \
 				-e '/--skip-ssl/d' \
+				-e 's/mariadb-upgrade\([^_"]\)/mysql_upgrade\1/' \
+				-e 's/mariadb-dump/mysqldump/' \
+				-e 's/mariadb-admin/mysqladmin/' \
+				-e 's/\bmariadb --protocol\b/mysql --protocol/' \
+				-e 's/mariadb-install-db/mysql_install_db/g' \
+				-e 's/--mariadbd/--mysqld/' \
+				-e 's/mariadb-tzinfo-to-sql/mysql_tzinfo_to_sql/' \
+				-e '0,/#ENDOFSUBSTITUTIONS/s/mariadbd/mysqld/g' \
 				-e '/memory\.pressure/,+7d' "$dir/docker-entrypoint.sh"
-			sed -i '/backwards compat/d' "$dir/Dockerfile"
 			sed -i -e '/--skip-ssl/d' \
-				"$dir"/healthcheck.sh
+				-e '0,/#ENDOFSUBSTITUTIONS/s/\tmariadb/\tmysql/' "$dir/healthcheck.sh"
+			sed -i -e '/^CMD/s/mariadbd/mysqld/' \
+				-e 's/ && userdel.*//' \
+				"$dir/Dockerfile"
+			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
+				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
+			;;
+		10.6)
+			sed -i -e '/memory\.pressure/,+7d' \
+				-e 's/--mariadbd/--mysqld/' \
+				"$dir/docker-entrypoint.sh"
+			sed -i -e '/--skip-ssl/d' "$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
+			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
+				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
+			sed -i -e 's/ && userdel.*//' \
+				"$dir/Dockerfile"
+			;;
+		10.11)
+			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
+				-e '/--skip-ssl/d' \
+				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
+			# quoted $ intentional
+			# shellcheck disable=SC2016
+			sed -i -e '/^ARG MARIADB_MAJOR/d' \
+				-e '/^ENV MARIADB_MAJOR/d' \
+				-e 's/-\$MARIADB_MAJOR//' \
+				-e 's/ && userdel.*//' \
+				"$dir/Dockerfile"
 			;;
 		*)
-			sed -i -e '/^CMD/s/mysqld/mariadbd/' \
-				-e '/backwards compat/d' "$dir/Dockerfile"
-			sed -i -e 's/mysql_upgrade\([^_]\)/mariadb-upgrade\1/' \
-				-e 's/mysqldump/mariadb-dump/' \
-				-e 's/mysqladmin/mariadb-admin/' \
-				-e 's/\bmysql --protocol\b/mariadb --protocol/' \
-				-e 's/mysql_install_db/mariadb-install-db/' \
-				-e 's/mysql_tzinfo_to_sql/mariadb-tzinfo-to-sql/' \
-				"$dir/docker-entrypoint.sh"
-			if [ "$vmin" = 10.6 ]; then
-				# my_print_defaults didn't recognise --mysqld until 10.11
-				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\([^-]\)mysqld/\1mariadbd/g' \
-					"$dir/docker-entrypoint.sh"
-			else
-				sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\mysqld/mariadbd/g' \
-					"$dir/docker-entrypoint.sh"
-			fi
-			sed -i -e '0,/#ENDOFSUBSTITUTIONS/s/\bmysql\b/mariadb/' "$dir/healthcheck.sh"
-			if [[ ! "${vmin}" =~ 10.[678] ]]; then
-				# quoted $ intentional
-				# shellcheck disable=SC2016
-				sed -i -e '/^ARG MARIADB_MAJOR/d' \
-					-e '/^ENV MARIADB_MAJOR/d' \
-					-e 's/-\$MARIADB_MAJOR//' \
+			# quoted $ intentional
+			# shellcheck disable=SC2016
+			sed -i -e '/^ARG MARIADB_MAJOR/d' \
+				-e '/^ENV MARIADB_MAJOR/d' \
+				-e 's/-\$MARIADB_MAJOR//' \
+				"$dir/Dockerfile"
+			if [[ $vmin =~ 11.[12] ]]; then
+				sed -i -e '/--skip-ssl/d' \
+				       	"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
+				sed -i -e 's/ && userdel.*//' \
 					"$dir/Dockerfile"
-			else
-				sed -i -e '/memory\.pressure/,+7d' "$dir/docker-entrypoint.sh"
 			fi
-			if [[ $vmin = 10.* || $vmin =~ 11.[12] ]]; then
-				sed -i -e '/--skip-ssl/d' "$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
-			fi
-			if [[ $vmin =~ 11.[012345] ]]; then
-				sed -i -e 's/mysql_upgrade_info/mariadb_upgrade_info/' \
-					"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
-			fi
-			if [[ $vmin =~ 11.[01] ]]; then
+			if [ "$vmin" == 11.1 ]; then
 				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$dir/Dockerfile"
+			else
+				sed -i -e 's/ \/[^ ]*50-mysqld_safe.cnf//' "$dir/Dockerfile"
 			fi
 			;&
 	esac
@@ -197,8 +205,6 @@ all()
 		| jq -r '.major_releases[] | [ .release_id ], [ .release_status ], [ .release_support_type ]  | @tsv')"
 }
 
-development_version=11.6
-
 in_development()
 {
 	releaseStatus=Alpha
@@ -238,8 +244,8 @@ for version in "${versions[@]}"; do
 	fi
 	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq -r --arg version "${version%-*}" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
-	releaseStatus=${release[0]}
-	supportType=${release[1]}
+	releaseStatus=${release[0]:-Unknown}
+	supportType=${release[1]:-Unknown}
 
 	update_version
 done

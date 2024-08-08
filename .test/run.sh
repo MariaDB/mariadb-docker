@@ -625,7 +625,7 @@ if [ -n "$debarch" ]
 then
 	echo -e "Test: jemalloc preload\n"
 	runandwait -e LD_PRELOAD="/usr/lib/$debarch-linux-gnu/libjemalloc.so.1 /usr/lib/$debarch-linux-gnu/libjemalloc.so.2 /usr/lib64/libjemalloc.so.2" -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
-	docker exec -i "$cid" gosu mysql /bin/grep 'jemalloc' /proc/1/maps || die "expected to preload jemalloc"
+	docker exec -i --user mysql "$cid" /bin/grep 'jemalloc' /proc/1/maps || die "expected to preload jemalloc"
 
 
 	killoff
@@ -765,7 +765,7 @@ fi
 		--network=container:"$master_host" \
 		--health-cmd='healthcheck.sh --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
 		--health-interval=3s \
-		"$image" --server-id=2 --port 3307)
+		"$image" --server-id=2 --port 3307 --require-secure-transport=1)
 
 	c="${DOCKER_LIBRARY_START_TIMEOUT:-10}"
 	until docker exec "$cid" healthcheck.sh --connect --replication_io --replication_sql --replication_seconds_behind_master=0 --replication || [ "$c" -eq 0 ]

@@ -153,17 +153,46 @@
       "s390x"
     ]
   },
-  "10.4": {
-    "milestone": "10.4",
-    "version": "10.4.34",
-    "fullVersion": "1:10.4.34+maria~ubu2004",
-    "releaseStatus": "Stable",
-    "supportType": "Long Term Support",
-    "base": "ubuntu:focal",
+  "11.6-ubi": {
+    "milestone": "11.6",
+    "version": "11.6.0",
+    "fullVersion": "11.6.0",
+    "releaseStatus": "Alpha",
+    "supportType": "Unknown",
+    "base": "ubi9",
     "arches": [
       "amd64",
       "arm64v8",
-      "ppc64le"
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "main": {
+    "milestone": "main",
+    "version": "main.0",
+    "fullVersion": "1:main.0+maria~ubu2404",
+    "releaseStatus": "Alpha",
+    "supportType": "Unknown",
+    "base": "ubuntu:noble",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "main-ubi": {
+    "milestone": "main",
+    "version": "main.0",
+    "fullVersion": "main.0",
+    "releaseStatus": "Alpha",
+    "supportType": "Unknown",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
     ]
   }
 }

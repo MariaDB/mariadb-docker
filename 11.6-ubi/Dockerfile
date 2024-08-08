@@ -36,7 +36,7 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # https://access.redhat.com/documentation/en-us/red_hat_software_certification/2024/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction#con-image-metadata-requirements_openshift-sw-cert-policy-container-images
 LABEL name="MariaDB Server" \
 	vendor="MariaDB Community" \
-	version="%%MARIADB_VERSION_BASIC%%" \
+	version="11.6.0 Vector" \
 	release="Refer to Annotations org.opencontainers.image.{revision,source}" \
 	summary="MariaDB Database" \
 	description="MariaDB Database for relational SQL"
@@ -50,15 +50,14 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="%%MARIADB_VERSION_BASIC%%" \
+      org.opencontainers.image.version="11.6.0 Vector" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
-# bashbrew-architectures:%%ARCHES%%
-ARG MARIADB_MAJOR=%%MARIADB_MAJOR%%
-ARG MARIADB_VERSION=%%MARIADB_VERSION%%
+# bashbrew-architectures: amd64 arm64v8 ppc64le s390x
+ARG MARIADB_VERSION=11.6.0 Vector
 ENV MARIADB_VERSION=$MARIADB_VERSION
-# release-status:%%MARIADB_RELEASE_STATUS%%
-# release-support-type:%%MARIADB_SUPPORT_TYPE%%
+# release-status:Unknown
+# release-support-type:Unknown
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)

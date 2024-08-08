@@ -10,8 +10,8 @@
 # the --replication option. This allows a different set of replication checks
 # on different connections.
 #
-# --su{=|-mariadb} is option to run the healthcheck as a different unix user.
-# Useful if mariadb@localhost user exists with unix socket authentication
+# --su{=|-mysql} is option to run the healthcheck as a different unix user.
+# Useful if mysql@localhost user exists with unix socket authentication
 # Using this option disregards previous options set, so should usually be the
 # first option.
 #
@@ -32,7 +32,7 @@
 # different from elsewhere.
 #
 # Note * though denied error message will result in error log without
-#      any permissions.
+#      any permissions. USAGE recommend to avoid this.
 
 set -eo pipefail
 
@@ -43,6 +43,7 @@ _process_sql()
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}} \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}} \
 		--skip-ssl --skip-ssl-verify-server-cert \
+		--protocol socket \
 		-B "$@"
 }
 
@@ -56,6 +57,16 @@ _process_sql()
 # isn't tested.
 connect()
 {
+	local s
+	# short cut mechanism, to work with --require-secure-transport
+	s=$(_process_sql --skip-column-names -e 'select @@skip_networking')
+	case "$s" in
+		0|1)
+			connect_s=$s
+			return "$s";
+			;;
+	esac
+	# falling back to this if there wasn't a connection answer.
 	set +e +o pipefail
 	# (on second extra_file)
 	# shellcheck disable=SC2086
@@ -70,9 +81,11 @@ connect()
 	set -eo pipefail
 	if (( "$ret" == 0 )); then
 		# grep Matched "Can't connect" so we fail
-		return 1
+		connect_s=1
+	else
+		connect_s=0
 	fi
-	return 0
+	return $connect_s
 }
 
 # INNODB_INITIALIZED
@@ -227,6 +240,7 @@ fi
 declare -A repl
 declare -A def
 nodefaults=
+connect_s=
 datadir=/var/lib/mysql
 if [ -f $datadir/.my-healthcheck.cnf ]; then
 	def['extra_file']=$datadir/.my-healthcheck.cnf
@@ -353,3 +367,9 @@ while [ $# -gt 0 ]; do
 	fi
 	shift
 done
+if [ -z "$connect_s" ]; then
+	# we didn't do a connnect test, so the current success status is suspicious
+	# return what connect thinks.
+	connect
+	exit $?
+fi

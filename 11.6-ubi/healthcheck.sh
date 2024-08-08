@@ -26,22 +26,24 @@
 # replication               REPLICATION_CLIENT (<10.5)or REPLICA MONITOR (10.5+)
 # mariadbupgrade            none, however unix user permissions on datadir
 #
-# The SQL user used is the default for the mysql client. This can be the unix user
+# The SQL user used is the default for the mariadb client. This can be the unix user
 # if no user(or password) is set in the [mariadb-client] section of a configuration
 # file. --defaults-{file,extra-file,group-suffix} can specify a file/configuration
 # different from elsewhere.
 #
 # Note * though denied error message will result in error log without
-#      any permissions.
+#      any permissions. USAGE recommend to avoid this.
 
 set -eo pipefail
 
 _process_sql()
 {
-	mysql ${nodefaults:+--no-defaults} \
+	mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}} \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}} \
+		--skip-ssl --skip-ssl-verify-server-cert \
+		--protocol socket \
 		-B "$@"
 }
 
@@ -55,22 +57,35 @@ _process_sql()
 # isn't tested.
 connect()
 {
+	local s
+	# short cut mechanism, to work with --require-secure-transport
+	s=$(_process_sql --skip-column-names -e 'select @@skip_networking')
+	case "$s" in
+		0|1)
+			connect_s=$s
+			return "$s";
+			;;
+	esac
+	# falling back to this if there wasn't a connection answer.
 	set +e +o pipefail
 	# (on second extra_file)
 	# shellcheck disable=SC2086
-	mysql ${nodefaults:+--no-defaults} \
+	mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}}  \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}}  \
+		--skip-ssl --skip-ssl-verify-server-cert \
 		-h localhost --protocol tcp -e 'select 1' 2>&1 \
 		| grep -qF "Can't connect"
 	local ret=${PIPESTATUS[1]}
 	set -eo pipefail
 	if (( "$ret" == 0 )); then
 		# grep Matched "Can't connect" so we fail
-		return 1
+		connect_s=1
+	else
+		connect_s=0
 	fi
-	return 0
+	return $connect_s
 }
 
 # INNODB_INITIALIZED
@@ -145,7 +160,7 @@ replication()
 	# SHOW REPLICA available 10.5+
 	# https://github.com/koalaman/shellcheck/issues/2383
 	# shellcheck disable=SC2016,SC2026
-	_process_sql -e "SHOW ${repl['all']:+all} SLAVE${repl['all']:+S} ${repl['name']:+'${repl['name']}'} STATUS\G" | \
+	_process_sql -e "SHOW ${repl['all']:+all} REPLICA${repl['all']:+S} ${repl['name']:+'${repl['name']}'} STATUS\G" | \
 		{
 		# required for trim of leading space.
 		shopt -s extglob
@@ -199,11 +214,11 @@ replication()
 
 # mariadbupgrade
 #
-# Test the lock on the file $datadir/mysql_upgrade_info
+# Test the lock on the file $datadir/mariadb_upgrade_info
 # https://jira.mariadb.org/browse/MDEV-27068
 mariadbupgrade()
 {
-	local f="$datadir/mysql_upgrade_info"
+	local f="$datadir/mariadb_upgrade_info"
 	if [ -r "$f" ]; then
 		flock --exclusive --nonblock -n 9 9<"$f"
 		return $?
@@ -225,6 +240,7 @@ fi
 declare -A repl
 declare -A def
 nodefaults=
+connect_s=
 datadir=/var/lib/mysql
 if [ -f $datadir/.my-healthcheck.cnf ]; then
 	def['extra_file']=$datadir/.my-healthcheck.cnf
@@ -351,3 +367,9 @@ while [ $# -gt 0 ]; do
 	fi
 	shift
 done
+if [ -z "$connect_s" ]; then
+	# we didn't do a connnect test, so the current success status is suspicious
+	# return what connect thinks.
+	connect
+	exit $?
+fi

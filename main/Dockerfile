@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM ubuntu:%%SUITE%%
+FROM ubuntu:noble
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql --home-dir /var/lib/mysql && userdel --remove ubuntu
@@ -71,24 +71,22 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.title="MariaDB Database" \
       org.opencontainers.image.description="MariaDB Database for relational SQL" \
       org.opencontainers.image.documentation="https://hub.docker.com/_/mariadb/" \
-      org.opencontainers.image.base.name="docker.io/library/ubuntu:%%SUITE%%" \
+      org.opencontainers.image.base.name="docker.io/library/ubuntu:noble" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="%%MARIADB_VERSION_BASIC%%" \
+      org.opencontainers.image.version="main.0" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
-# bashbrew-architectures:%%ARCHES%%
-ARG MARIADB_MAJOR=%%MARIADB_MAJOR%%
-ENV MARIADB_MAJOR $MARIADB_MAJOR
-ARG MARIADB_VERSION=%%MARIADB_VERSION%%
+# bashbrew-architectures: amd64 arm64v8 ppc64le s390x
+ARG MARIADB_VERSION=1:main.0+maria~ubu2404
 ENV MARIADB_VERSION $MARIADB_VERSION
-# release-status:%%MARIADB_RELEASE_STATUS%%
-# release-support-type:%%MARIADB_SUPPORT_TYPE%%
+# release-status:Alpha
+# release-support-type:Unknown
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-%%MARIADB_VERSION_BASIC%%/repo/ubuntu/ %%SUITE%% main main/debug"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-main.0/repo/ubuntu/ noble main main/debug"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
@@ -105,8 +103,8 @@ RUN set -e;\
 # hadolint ignore=DL3015
 RUN set -ex; \
 	{ \
-		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password password 'unused'; \
-		echo "mariadb-server-$MARIADB_MAJOR" mysql-server/root_password_again password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password_again password 'unused'; \
 	} | debconf-set-selections; \
 	apt-get update; \
 # postinst script creates a datadir, so avoid creating it by faking its existance.
@@ -116,7 +114,7 @@ RUN set -ex; \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership
-	rm -rf /var/lib/mysql /etc/mysql/mariadb.conf.d/50-mysqld_safe.cnf; \
+	rm -rf /var/lib/mysql; \
 	mkdir -p /var/lib/mysql /run/mysqld; \
 	chown -R mysql:mysql /var/lib/mysql /run/mysqld; \
 # ensure that /run/mysqld (used for socket and lock files) is writable regardless of the UID our mysqld instance ends up having at runtime
