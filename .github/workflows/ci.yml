@@ -102,8 +102,13 @@ jobs:
       - name: push
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
         run: docker push ghcr.io/mariadb/mariadb:${{ matrix.name }}
-      - name: MariaDB Operator Test
-        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+      - name: MariaDB Operator Test (non-UBI)
+        if: ${{ env.DEPLOY_IMAGES == 'true' && !endsWith( matrix.name, 'ubi') }}
         run: gh workflow run test-image.yml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
+      - name: MariaDB Operator Test (UBI)
+        if: ${{ env.DEPLOY_IMAGES == 'true' && endsWith( matrix.name, 'ubi') }}
+        run: gh workflow run test-image-ent.yml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
         env:
           GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
