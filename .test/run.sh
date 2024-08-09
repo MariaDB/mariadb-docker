@@ -882,6 +882,12 @@ zstd "${initdb}"/*zst*
 		--env MARIADB_ROOT_PASSWORD=soverysecret \
 		"$image"
 
+	# docker ubi volume compat
+	docker exec \
+		--user root \
+		"$cname" \
+		chmod ugo+rwt /backup
+
 	docker exec \
 		"$cname" \
 		mariabackup --backup --target-dir=/backup/d --user root --password soverysecret
