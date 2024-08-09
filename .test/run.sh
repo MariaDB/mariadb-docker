@@ -447,7 +447,7 @@ echo '*D87991C62A9CAEDC4AE0F608F19173AC7E614952' > "$secretdir"/p
 tmpvol=v$RANDOM
 docker volume create "$tmpvol"
 # any container will work with tar in it, we may well use the image we have
-(cd "$secretdir" ; tar -cf - .) | docker run --rm --volume "$tmpvol":/v -i "${image}" tar -xf - -C /v
+(cd "$secretdir" ; tar -cf - .) | docker run --rm --volume "$tmpvol":/v --user root -i "${image}" tar -xf - -C /v
 rm -rf "${secretdir}"
 
 runandwait \
