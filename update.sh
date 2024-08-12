@@ -244,8 +244,8 @@ for version in "${versions[@]}"; do
 	fi
 	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq -r --arg version "${version%-*}" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
-	releaseStatus=${release[0]:-RC}
-	supportType=${release[1]:-Short Term Support}
+	releaseStatus=${release[0]:-Unknown}
+	supportType=${release[1]:-Unknown}
 
 	update_version
 done
