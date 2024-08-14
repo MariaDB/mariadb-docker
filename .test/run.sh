@@ -890,11 +890,11 @@ zstd "${initdb}"/*zst*
 
 	docker exec \
 		"$cname" \
-		mariabackup --backup --target-dir=/backup/d --user root --password soverysecret
+		mariadb-backup --backup --target-dir=/backup/d --user root --password=soverysecret
 
 	docker exec \
 		"$cname" \
-		mariabackup --prepare --target-dir=/backup/d
+		mariadb-backup --prepare --target-dir=/backup/d
 
 	# purge this out, in the server we may end up saving it, but the test here
 	# is the user password is reset and file recreated on restore.
