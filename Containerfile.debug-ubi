@@ -4,5 +4,5 @@ ARG BASE
 FROM $BASE
 
 USER root
-RUN microdnf install MariaDB-server-debug-${MARIADB_VERSION} MariaDB-backup-debug-${MARIADB_VERSION}
+RUN microdnf install -y MariaDB-server-debuginfo-${MARIADB_VERSION} MariaDB-backup-debuginfo-${MARIADB_VERSION}
 USER mysql
