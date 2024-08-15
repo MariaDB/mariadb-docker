@@ -113,8 +113,8 @@
   },
   "11.5": {
     "milestone": "11.5",
-    "version": "11.5.1",
-    "fullVersion": "1:11.5.1+maria~ubu2404",
+    "version": "11.5.2",
+    "fullVersion": "1:11.5.2+maria~ubu2404",
     "releaseStatus": "Stable",
     "supportType": "Short Term Support",
     "base": "ubuntu:noble",
@@ -127,8 +127,8 @@
   },
   "11.5-ubi": {
     "milestone": "11.5",
-    "version": "11.5.1",
-    "fullVersion": "11.5.1",
+    "version": "11.5.2",
+    "fullVersion": "11.5.2",
     "releaseStatus": "Stable",
     "supportType": "Short Term Support",
     "base": "ubi9",
@@ -141,8 +141,8 @@
   },
   "11.6": {
     "milestone": "11.6",
-    "version": "11.6.0",
-    "fullVersion": "1:11.6.0+maria~ubu2404",
+    "version": "11.6.1",
+    "fullVersion": "1:11.6.1+maria~ubu2404",
     "releaseStatus": "RC",
     "supportType": "Short Term Support",
     "base": "ubuntu:noble",
@@ -155,8 +155,8 @@
   },
   "11.6-ubi": {
     "milestone": "11.6",
-    "version": "11.6.0",
-    "fullVersion": "11.6.0",
+    "version": "11.6.1",
+    "fullVersion": "11.6.1",
     "releaseStatus": "RC",
     "supportType": "Short Term Support",
     "base": "ubi9",
