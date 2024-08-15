@@ -56,8 +56,8 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
 ARG MARIADB_VERSION=11.6.0
 ENV MARIADB_VERSION=$MARIADB_VERSION
-# release-status:Unknown
-# release-support-type:Unknown
+# release-status:RC
+# release-support-type:Short Term Support
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)

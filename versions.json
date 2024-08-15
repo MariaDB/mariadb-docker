@@ -115,7 +115,7 @@
     "milestone": "11.5",
     "version": "11.5.1",
     "fullVersion": "1:11.5.1+maria~ubu2404",
-    "releaseStatus": "RC",
+    "releaseStatus": "Stable",
     "supportType": "Short Term Support",
     "base": "ubuntu:noble",
     "arches": [
@@ -129,6 +129,34 @@
     "milestone": "11.5",
     "version": "11.5.1",
     "fullVersion": "11.5.1",
+    "releaseStatus": "Stable",
+    "supportType": "Short Term Support",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "11.6": {
+    "milestone": "11.6",
+    "version": "11.6.0",
+    "fullVersion": "1:11.6.0+maria~ubu2404",
+    "releaseStatus": "RC",
+    "supportType": "Short Term Support",
+    "base": "ubuntu:noble",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "11.6-ubi": {
+    "milestone": "11.6",
+    "version": "11.6.0",
+    "fullVersion": "11.6.0",
     "releaseStatus": "RC",
     "supportType": "Short Term Support",
     "base": "ubi9",
