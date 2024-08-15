@@ -214,7 +214,7 @@ docker_create_db_directories() {
 }
 
 _mariadb_version() {
-	echo -n "10.6.18-MariaDB"
+	echo -n "10.6.19-MariaDB"
 }
 
 # initializes the database directory
