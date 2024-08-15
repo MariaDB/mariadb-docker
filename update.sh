@@ -255,20 +255,6 @@ for version in "${versions[@]}"; do
 		| jq -r --arg version "${version%-*}" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
 	releaseStatus=${release[0]:-Unknown}
 	supportType=${release[1]:-Unknown}
-	if [ "$releaseStatus" == Unknown ]; then
-		case "$version" in
-			11.5*)
-				releaseStatus=Stable
-				;;
-			11.6*)
-				releaseStatus=RC
-				;;
-			main*)
-				releaseStatus=Alpha
-				;;
-		esac
-		supportType="Short Term Support"
-	fi
 
 	update_version
 done
