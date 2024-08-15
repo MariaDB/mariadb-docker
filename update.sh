@@ -193,7 +193,7 @@ update_version_array()
 mariaversion()
 {
 	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
-		| jq -r 'first(.releases[]).release_id')
+		| jq -r 'first(.releases[] | .release_id | select(. | test("[0-9]+.[0-9]+.[0-9]+$")))')
 	mariaVersion=${mariaVersion//\"}
 }
 
