@@ -240,16 +240,7 @@ for version in "${versions[@]}"; do
 	if [ ! -d "$version" ]; then
 		version=${version%.[[:digit:]]*}
 	else
-		case "$version" in
-			11.5*)
-				mariaVersion=11.5.2
-				;;
-			11.6*)
-				mariaVersion=11.6.1
-				;;
-			*)
-				mariaversion
-		esac
+		mariaversion
 	fi
 	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq -r --arg version "${version%-*}" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
