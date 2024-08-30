@@ -233,6 +233,7 @@ docker_init_database_dir() {
 		fi
 	done
 	mysql_install_db "${installArgs[@]}" "${mysqldArgs[@]}" \
+		--cross-bootstrap \
 		--skip-test-db \
 		--default-time-zone=SYSTEM --enforce-storage-engine= \
 		--skip-log-bin \

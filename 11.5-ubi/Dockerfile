@@ -1,52 +1,77 @@
-FROM redhat/ubi9-minimal
+# vim:set ft=dockerfile:
+FROM ubuntu:noble
 
-# user 999/ group 999, that we want to use for compatibility with the ubuntu image.
-RUN groupadd --gid 999 -r mysql && \
-	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999
+# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
+RUN groupadd -r mysql && useradd -r -g mysql mysql --home-dir /var/lib/mysql && userdel --remove ubuntu
 
+# add gosu for easy step-down from root
+# https://github.com/tianon/gosu/releases
+# gosu key is B42F6819007F00F88E364FD4036A9C25BF357DD4
 ENV GOSU_VERSION 1.17
+
+ARG GPG_KEYS=177F4010FE56CA3336300305F1656F24C74CD1D8
+# pub   rsa4096 2016-03-30 [SC]
+#         177F 4010 FE56 CA33 3630  0305 F165 6F24 C74C D1D8
+# uid           [ unknown] MariaDB Signing Key <signing-key@mariadb.org>
+# sub   rsa4096 2016-03-30 [E]
+# install "libjemalloc2" as it offers better performance in some cases. Use with LD_PRELOAD
+# install "pwgen" for randomizing passwords
+# install "tzdata" for /usr/share/zoneinfo/
+# install "xz-utils" for .sql.xz docker-entrypoint-initdb.d files
+# install "zstd" for .sql.zst docker-entrypoint-initdb.d files
+# hadolint ignore=SC2086
 RUN set -eux; \
-	rpmArch="$(rpm --query --queryformat='%{ARCH}' rpm)"; \
-	case "$rpmArch" in \
-		aarch64) dpkgArch='arm64' ;; \
-		armv7*) dpkgArch='armhf' ;; \
-		i686) dpkgArch='i386' ;; \
-		ppc64le) dpkgArch='ppc64el' ;; \
-		s390x|riscv64) dpkgArch=$rpmArch ;; \
-		x86_64) dpkgArch='amd64' ;; \
-		*) echo >&2 "error: unknown/unsupported architecture '$rpmArch'"; exit 1 ;; \
-	esac; \
-	curl --fail --location --output /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch} ; \
-	curl --fail --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}.asc; \
+	apt-get update; \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+		ca-certificates \
+		gpg \
+		gpgv \
+		libjemalloc2 \
+		pwgen \
+		tzdata \
+		xz-utils \
+		zstd ; \
+	savedAptMark="$(apt-mark showmanual)"; \
+	apt-get install -y --no-install-recommends \
+		dirmngr \
+		gpg-agent \
+		wget; \
+	rm -rf /var/lib/apt/lists/*; \
+	dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')"; \
+	wget -q -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch"; \
+	wget -q -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc"; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
-	chmod a+x /usr/local/bin/gosu; \
+	for key in $GPG_KEYS; do \
+		gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
+	done; \
+	gpg --batch --export "$GPG_KEYS" > /etc/apt/trusted.gpg.d/mariadb.gpg; \
+	if command -v gpgconf >/dev/null; then \
+		gpgconf --kill all; \
+	fi; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
 	gpgconf --kill all; \
 	rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc; \
+	apt-mark auto '.*' > /dev/null; \
+	[ -z "$savedAptMark" ] ||	apt-mark manual $savedAptMark >/dev/null; \
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	chmod +x /usr/local/bin/gosu; \
 	gosu --version; \
 	gosu nobody true
 
-COPY --chmod=0644 docker.cnf /etc/my.cnf.d/
+RUN mkdir /docker-entrypoint-initdb.d
 
-COPY MariaDB.repo /etc/yum.repos.d/
-
-# HasRequiredLabel requirement from Red Hat OpenShift Software Certification
-# https://access.redhat.com/documentation/en-us/red_hat_software_certification/2024/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction#con-image-metadata-requirements_openshift-sw-cert-policy-container-images
-LABEL name="MariaDB Server" \
-	vendor="MariaDB Community" \
-	version="11.5.2" \
-	release="Refer to Annotations org.opencontainers.image.{revision,source}" \
-	summary="MariaDB Database" \
-	description="MariaDB Database for relational SQL"
+# Ensure the container exec commands handle range of utf8 characters based of
+# default locales in base image (https://github.com/docker-library/docs/blob/135b79cc8093ab02e55debb61fdb079ab2dbce87/ubuntu/README.md#locales)
+ENV LANG C.UTF-8
 
 # OCI annotations to image
 LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.title="MariaDB Database" \
       org.opencontainers.image.description="MariaDB Database for relational SQL" \
       org.opencontainers.image.documentation="https://hub.docker.com/_/mariadb/" \
-      org.opencontainers.image.base.name="docker.io/redhat/ubi9-minimal" \
+      org.opencontainers.image.base.name="docker.io/library/ubuntu:noble" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
@@ -54,60 +79,64 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=11.5.2
-ENV MARIADB_VERSION=$MARIADB_VERSION
-# release-status:Stable
-# release-support-type:Short Term Support
+ARG MARIADB_VERSION=1:11.5.2+maria~ubu2404
+ENV MARIADB_VERSION $MARIADB_VERSION
+# release-status:Unknown
+# release-support-type:Unknown
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
-# missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
-# procps, pv(epel) - missing dependencies of galera sst script
-# tzdata re-installed as only a fake version is part of the ubi-minimal base image.
-# FF8AD1344597106ECE813B918A3872BF3228467C is the Fedora RPM key
-# 177F4010FE56CA3336300305F1656F24C74CD1D8 is the MariaDB Server RPM key
-RUN set -eux ; \
-	curl --fail https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/static/keys/FF8AD1344597106ECE813B918A3872BF3228467C.txt --output /tmp/epelkey.txt ; \
-	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME ; \
-	gpg --batch --import /tmp/epelkey.txt ; \
-	gpg --batch --armor --export FF8AD1344597106ECE813B918A3872BF3228467C > /tmp/epelkey.txt ; \
-	rpmkeys --import /tmp/epelkey.txt ; \
-	curl --fail https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm --output /tmp/epel-release-latest-9.noarch.rpm ; \
-	rpm -K /tmp/epel-release-latest-9.noarch.rpm ; \
-	rpm -ivh /tmp/epel-release-latest-9.noarch.rpm ; \
-	rm /tmp/epelkey.txt /tmp/epel-release-latest-9.noarch.rpm ; \
-	curl --fail https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY --output /tmp/MariaDB-Server-GPG-KEY ; \
-	gpg --batch --import /tmp/MariaDB-Server-GPG-KEY; \
-	gpg --batch --armor --export 177F4010FE56CA3336300305F1656F24C74CD1D8 > /tmp/MariaDB-Server-GPG-KEY ; \
-	rpmkeys --import /tmp/MariaDB-Server-GPG-KEY ; \
-	rm -rf "$GNUPGHOME" /tmp/MariaDB-Server-GPG-KEY ; \
-	unset GNUPGHOME ; \
-	microdnf update -y ; \
-	microdnf reinstall -y tzdata ; \
-	microdnf install -y procps-ng zstd xz jemalloc pwgen pv ; \
-	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
-	chmod ugo+rwx,o+t /run/mariadb ; \
-	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} ; \
-	# compatibility with DEB Galera packaging
-	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so ; \
-	# compatibility with RPM Galera packaging
-	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib64/galera/libgalera_smm.so ; \
-	microdnf clean all ; \
-	rmdir /var/lib/mysql/mysql ; \
-	chown -R mysql:mysql /var/lib/mysql /run/mariadb ; \
-	mkdir /licenses ; \
-	ln -s /usr/share/doc/MariaDB-server-${MARIADB_VERSION}/COPYING /licenses/GPL-2 ; \
-	ln -s /usr/share/licenses /licenses/package-licenses ; \
-	ln -s Apache-2.0-license /licenses/gosu
+# Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-11.5.2/repo/ubuntu/ noble main main/debug"
+
+RUN set -e;\
+	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
+	{ \
+		echo 'Package: *'; \
+		echo 'Pin: release o=MariaDB'; \
+		echo 'Pin-Priority: 999'; \
+	} > /etc/apt/preferences.d/mariadb
+# add repository pinning to make sure dependencies from this MariaDB repo are preferred over Debian dependencies
+#  libmariadbclient18 : Depends: libmysqlclient18 (= 5.5.42+maria-1~wheezy) but 5.5.43-0+deb7u1 is to be installed
+
+# the "/var/lib/mysql" stuff here is because the mysql-server postinst doesn't have an explicit way to disable the mysql_install_db codepath besides having a database already "configured" (ie, stuff in /var/lib/mysql/mysql)
+# also, we set debconf keys to make APT a little quieter
+# hadolint ignore=DL3015
+RUN set -ex; \
+	{ \
+		echo "mariadb-server" mysql-server/root_password password 'unused'; \
+		echo "mariadb-server" mysql-server/root_password_again password 'unused'; \
+	} | debconf-set-selections; \
+	apt-get update; \
+# postinst script creates a datadir, so avoid creating it by faking its existance.
+	mkdir -p /var/lib/mysql/mysql ; touch /var/lib/mysql/mysql/user.frm ; \
+# mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
+	apt-get install -y --no-install-recommends mariadb-server="$MARIADB_VERSION" mariadb-backup socat \
+	; \
+	rm -rf /var/lib/apt/lists/*; \
+# purge and re-create /var/lib/mysql with appropriate ownership
+	rm -rf /var/lib/mysql; \
+	mkdir -p /var/lib/mysql /run/mysqld; \
+	chown -R mysql:mysql /var/lib/mysql /run/mysqld; \
+# ensure that /run/mysqld (used for socket and lock files) is writable regardless of the UID our mysqld instance ends up having at runtime
+	chmod 1777 /run/mysqld; \
+# comment out a few problematic configuration values
+	find /etc/mysql/ -name '*.cnf' -print0 \
+		| xargs -0 grep -lZE '^(bind-address|log|user\s)' \
+		| xargs -rt -0 sed -Ei 's/^(bind-address|log|user\s)/#&/'; \
+# don't reverse lookup hostnames, they are usually another container
+	printf "[mariadb]\nhost-cache-size=0\nskip-name-resolve\n" > /etc/mysql/mariadb.conf.d/05-skipcache.cnf; \
+# Issue #327 Correct order of reading directories /etc/mysql/mariadb.conf.d before /etc/mysql/conf.d (mount-point per documentation)
+	if [ -L /etc/mysql/my.cnf ]; then \
+# 10.5+
+		sed -i -e '/includedir/ {N;s/\(.*\)\n\(.*\)/\n\2\n\1/}' /etc/mysql/mariadb.cnf; \
+	fi
+
 
 VOLUME /var/lib/mysql
 
-RUN mkdir /docker-entrypoint-initdb.d
-
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY docker-entrypoint.sh /usr/local/bin/
-
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-USER mysql
 EXPOSE 3306
 CMD ["mariadbd"]
