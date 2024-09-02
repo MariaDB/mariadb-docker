@@ -65,24 +65,39 @@ connect()
 			return "$s";
 			;;
 	esac
-	# falling back to this if there wasn't a connection answer.
-	set +e +o pipefail
-	# (on second extra_file)
-	# shellcheck disable=SC2086
-	mariadb ${nodefaults:+--no-defaults} \
+	# falling back to tcp if there wasn't a connection answer.
+	s=$(mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
 		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}}  \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}}  \
-		-h localhost --protocol tcp -e 'select 1' 2>&1 \
-		| grep -qF "Can't connect"
-	local ret=${PIPESTATUS[1]}
-	set -eo pipefail
-	if (( "$ret" == 0 )); then
-		# grep Matched "Can't connect" so we fail
-		connect_s=1
-	else
-		connect_s=0
-	fi
+		-h localhost --protocol tcp \
+		--skip-column-names --batch --skip-print-query-on-error \
+		-e 'select @@skip_networking' 2>&1)
+
+	case "$s" in
+		1)      # skip-networking=1 (no network)
+			;&
+		ERROR\ 2002\ \(HY000\):*)
+			# cannot connect
+			connect_s=1
+			;;
+		0)      # skip-networking=0
+			;&
+		ERROR\ 1820\ \(HY000\)*) # password expire
+			;&
+		ERROR\ 4151\ \(HY000\):*) # account locked
+			;&
+		ERROR\ 1226\ \(42000\)*) # resource limit exceeded
+			;&
+		ERROR\ 1[0-9][0-9][0-9]\ \(28000\):*)
+			# grep access denied and other 28000 client errors - we did connect
+			connect_s=0
+			;;
+		*)
+			>&2 echo "Unknown error $s"
+			connect_s=1
+			;;
+	esac
 	return $connect_s
 }
 
@@ -365,8 +380,8 @@ while [ $# -gt 0 ]; do
 	fi
 	shift
 done
-if [ -z "$connect_s" ]; then
-	# we didn't do a connnect test, so the current success status is suspicious
+if [ "$connect_s" != "0" ]; then
+	# we didn't pass a connnect test, so the current success status is suspicious
 	# return what connect thinks.
 	connect
 	exit $?
