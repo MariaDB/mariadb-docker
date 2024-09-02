@@ -72,7 +72,7 @@ runandwait()
 		)"
 		port_int=$port
 	fi
-	waiting=${DOCKER_LIBRARY_START_TIMEOUT:-10}
+	waiting=${DOCKER_LIBRARY_START_TIMEOUT:-15}
 	echo "waiting to start..."
 	set +e +o pipefail +x
 	while [ "$waiting" -gt 0 ]
