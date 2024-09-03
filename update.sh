@@ -11,8 +11,6 @@ declare -A suites=(
 	[10.5]='focal'
 	[10.6]='focal'
 	[10.11]='jammy'
-	[11.0]='jammy'
-	[11.1]='jammy'
 	[11.2]='jammy'
 )
 
@@ -140,17 +138,13 @@ update_version()
 				-e '/^ENV MARIADB_MAJOR/d' \
 				-e 's/-\$MARIADB_MAJOR//' \
 				"$dir/Dockerfile"
-			if [[ $vmin =~ 11.[12] ]]; then
+			if [ "$vmin" = 11.2 ]; then
 				sed -i -e '/--skip-ssl/d' \
 				       	"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
 				sed -i -e 's/ && userdel.*//' \
 					"$dir/Dockerfile"
 			fi
-			if [ "$vmin" == 11.1 ]; then
-				sed -i -e 's/50-mysqld_safe.cnf/50-mariadb_safe.cnf/' "$dir/Dockerfile"
-			else
-				sed -i -e 's/ \/[^ ]*50-mysqld_safe.cnf//' "$dir/Dockerfile"
-			fi
+			sed -i -e 's/ \/[^ ]*50-mysqld_safe.cnf//' "$dir/Dockerfile"
 			;&
 	esac
 
