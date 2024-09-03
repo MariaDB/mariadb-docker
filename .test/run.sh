@@ -72,7 +72,7 @@ runandwait()
 		)"
 		port_int=$port
 	fi
-	waiting=${DOCKER_LIBRARY_START_TIMEOUT:-10}
+	waiting=${DOCKER_LIBRARY_START_TIMEOUT:-15}
 	echo "waiting to start..."
 	set +e +o pipefail +x
 	while [ "$waiting" -gt 0 ]
@@ -921,6 +921,51 @@ zstd "${initdb}"/*zst*
 	mariadbclient -u root -psoverysecret -e 'select current_user() as connected_ok'
 
 	docker exec "$cname" healthcheck.sh --connect --innodb_initialized
+	# healthcheck shouldn't return true on insufficient connection information
+
+	# Enforce fallback to tcp in healthcheck.
+	docker exec "$cname" sed -i -e 's/\(socket=\)/\1breakpath/' /var/lib/mysql/.my-healthcheck.cnf
+
+	# select @@skip-networking via tcp successful
+	docker exec "$cname" healthcheck.sh --connect
+
+	# shellcheck disable=SC2016
+	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`127.0.0.1` ACCOUNT LOCK'
+	# shellcheck disable=SC2016
+	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`::1` ACCOUNT LOCK'
+
+	# ERROR 4151 (HY000): Access denied, this account is locked
+	docker exec "$cname" healthcheck.sh --connect
+
+	# shellcheck disable=SC2016
+	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`127.0.0.1` WITH MAX_QUERIES_PER_HOUR 1 ACCOUNT UNLOCK'
+	# shellcheck disable=SC2016
+	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`::1` WITH MAX_QUERIES_PER_HOUR 1 ACCOUNT UNLOCK'
+
+	# ERROR 1226 (42000) at line 1: User '\''healthcheck'\'' has exceeded the '\''max_queries_per_hour'\'' resource (current value: 1)'
+	docker exec "$cname" healthcheck.sh --connect
+	docker exec "$cname" healthcheck.sh --connect
+
+	# shellcheck disable=SC2016
+	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`127.0.0.1` WITH MAX_QUERIES_PER_HOUR 2000 PASSWORD EXPIRE'
+	# shellcheck disable=SC2016
+	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`::1` WITH MAX_QUERIES_PER_HOUR 2000 PASSWORD EXPIRE'
+	# ERROR 1820 (HY000) at line 1: You must SET PASSWORD before executing this statement
+	docker exec "$cname" healthcheck.sh --connect
+
+	# shellcheck disable=SC2016
+	mariadbclient -u root -psoverysecret -e 'set password for healthcheck@`127.0.0.1` = PASSWORD("mismatch")'
+	# shellcheck disable=SC2016
+	mariadbclient -u root -psoverysecret -e 'set password for healthcheck@`::1` = PASSWORD("mismatch")'
+
+	# ERROR 1045 (28000): Access denied
+	docker exec "$cname" healthcheck.sh --connect
+
+
+	# break port
+	docker exec "$cname" sed -i -e 's/\(port=\)/\14/' /var/lib/mysql/.my-healthcheck.cnf
+
+	docker exec "$cname" healthcheck.sh --connect || echo "ok, broken port is a connection failure"
 
 	killoff
 
