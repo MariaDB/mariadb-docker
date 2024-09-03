@@ -929,25 +929,33 @@ zstd "${initdb}"/*zst*
 	# select @@skip-networking via tcp successful
 	docker exec "$cname" healthcheck.sh --connect
 
+	# shellcheck disable=SC2016
 	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`127.0.0.1` ACCOUNT LOCK'
+	# shellcheck disable=SC2016
 	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`::1` ACCOUNT LOCK'
 
 	# ERROR 4151 (HY000): Access denied, this account is locked
 	docker exec "$cname" healthcheck.sh --connect
 
+	# shellcheck disable=SC2016
 	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`127.0.0.1` WITH MAX_QUERIES_PER_HOUR 1 ACCOUNT UNLOCK'
+	# shellcheck disable=SC2016
 	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`::1` WITH MAX_QUERIES_PER_HOUR 1 ACCOUNT UNLOCK'
 
 	# ERROR 1226 (42000) at line 1: User '\''healthcheck'\'' has exceeded the '\''max_queries_per_hour'\'' resource (current value: 1)'
 	docker exec "$cname" healthcheck.sh --connect
 	docker exec "$cname" healthcheck.sh --connect
 
+	# shellcheck disable=SC2016
 	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`127.0.0.1` WITH MAX_QUERIES_PER_HOUR 2000 PASSWORD EXPIRE'
+	# shellcheck disable=SC2016
 	mariadbclient -u root -psoverysecret -e 'alter user healthcheck@`::1` WITH MAX_QUERIES_PER_HOUR 2000 PASSWORD EXPIRE'
 	# ERROR 1820 (HY000) at line 1: You must SET PASSWORD before executing this statement
 	docker exec "$cname" healthcheck.sh --connect
 
+	# shellcheck disable=SC2016
 	mariadbclient -u root -psoverysecret -e 'set password for healthcheck@`127.0.0.1` = PASSWORD("mismatch")'
+	# shellcheck disable=SC2016
 	mariadbclient -u root -psoverysecret -e 'set password for healthcheck@`::1` = PASSWORD("mismatch")'
 
 	# ERROR 1045 (28000): Access denied
