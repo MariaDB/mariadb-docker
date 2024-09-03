@@ -961,11 +961,13 @@ zstd "${initdb}"/*zst*
 	# ERROR 1045 (28000): Access denied
 	docker exec "$cname" healthcheck.sh --connect
 
-
 	# break port
 	docker exec "$cname" sed -i -e 's/\(port=\)/\14/' /var/lib/mysql/.my-healthcheck.cnf
-
 	docker exec "$cname" healthcheck.sh --connect || echo "ok, broken port is a connection failure"
+
+	# break config file
+	docker exec "$cname" sed -i -e 's/-client]$//' /var/lib/mysql/.my-healthcheck.cnf
+	docker exec "$cname" healthcheck.sh --connect || echo "ok, broken config file is a failure"
 
 	killoff
 
