@@ -5,6 +5,7 @@ set -Eeuo pipefail
 #
 
 development_version=main
+development_version_real=11.7
 
 defaultSuite='noble'
 declare -A suites=(
@@ -204,7 +205,7 @@ in_development()
 	releaseStatus=Alpha
 	supportType=Unknown
 	version=$development_version
-	mariaVersion=${development_version}.0
+	mariaVersion=${development_version_real}.0
 	update_version
 }
 
