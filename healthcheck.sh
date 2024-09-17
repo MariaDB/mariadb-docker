@@ -363,6 +363,11 @@ while [ $# -gt 0 ]; do
 			fi
 			nodefaults=
 			;;
+		--no-connect)
+			# used for /docker-entrypoint-initdb.d scripts
+			# where you definately don't want a connection test
+			connect_s=0
+			;;
 		--*)
 			test=${1#--}
 			;;
