@@ -55,8 +55,6 @@ update_version()
 			sed -e '/collation-server/d' docker.cnf > "$dir/docker.cnf"
 			if [[ $version != 11.4 ]]; then
 				sed -i -e '/character-set-collations/d' "$dir/docker.cnf"
-			fi
-			if [[ $version != 11.[45] ]]; then
 				sed -i -e '/character-set/d' "$dir/docker.cnf"
 			fi
 		fi
