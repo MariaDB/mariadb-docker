@@ -219,6 +219,7 @@ fi
 versions=( "$@" )
 
 for version in "${versions[@]}"; do
+	version="${version%/}"
 	if [ "${version#*-}" = "ubi" ]; then
 		ubi=-ubi
 		version=${version%-ubi}
