@@ -133,7 +133,7 @@ RUN set -ex; \
 		sed -i -e '/includedir/ {N;s/\(.*\)\n\(.*\)/\n\2\n\1/}' /etc/mysql/mariadb.cnf; \
 	fi
 
-
+USER mysql
 VOLUME /var/lib/mysql
 
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
