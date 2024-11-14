@@ -115,8 +115,8 @@
     "milestone": "11.5",
     "version": "11.5.2",
     "fullVersion": "1:11.5.2+maria~ubu2404",
-    "releaseStatus": "Stable",
-    "supportType": "Short Term Support",
+    "releaseStatus": "Unknown",
+    "supportType": "Unknown",
     "base": "ubuntu:noble",
     "arches": [
       "amd64",
@@ -129,8 +129,8 @@
     "milestone": "11.5",
     "version": "11.5.2",
     "fullVersion": "11.5.2",
-    "releaseStatus": "Stable",
-    "supportType": "Short Term Support",
+    "releaseStatus": "Unknown",
+    "supportType": "Unknown",
     "base": "ubi9",
     "arches": [
       "amd64",
