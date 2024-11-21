@@ -138,5 +138,33 @@
       "ppc64le",
       "s390x"
     ]
+  },
+  "main-ubi": {
+    "milestone": "main",
+    "version": "11.7.1",
+    "fullVersion": "11.7.1",
+    "releaseStatus": "RC",
+    "supportType": "Short Term Support",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "main": {
+    "milestone": "main",
+    "version": "11.7.1",
+    "fullVersion": "1:11.7.1+maria~ubu2404",
+    "releaseStatus": "RC",
+    "supportType": "Short Term Support",
+    "base": "ubuntu:noble",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
   }
 }
