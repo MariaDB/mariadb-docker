@@ -185,6 +185,11 @@ update_version_array()
 
 mariaversion()
 {
+	if [ "$version" = main ]; then
+		#version=11.7
+		mariaVersion=11.7.1;
+		return
+	fi
 	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
 		| jq -r 'first(.releases[] | .release_id | select(. | test("[0-9]+.[0-9]+.[0-9]+$")))')
 	mariaVersion=${mariaVersion//\"}
@@ -228,10 +233,6 @@ for version in "${versions[@]}"; do
 		ubi=
 	fi
 
-	if [ "${version%-*}" == $development_version ]; then
-		in_development
-		continue
-	fi
 	if [ ! -d "$version" ]; then
 		version=${version%.[[:digit:]]*}
 	else
@@ -239,8 +240,13 @@ for version in "${versions[@]}"; do
 	fi
 	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq -r --arg version "${version%-*}" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
-	releaseStatus=${release[0]:-Stable}
-	supportType=${release[1]:-Short Term Support}
+	if [ "$version" = 'main' ]; then
+		releaseStatus=${release[0]:-RC}
+		supportType=${release[1]:-Short Term Support}
+	else
+		releaseStatus=${release[0]:-Stable}
+		supportType=${release[1]:-Short Term Support}
+	fi
 
 	update_version
 done
