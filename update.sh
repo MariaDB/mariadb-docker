@@ -188,6 +188,7 @@ mariaversion()
 	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
 		| jq -r 'first(.releases[] | .release_id | select(. | test("[0-9]+.[0-9]+.[0-9]+$")))')
 	mariaVersion=${mariaVersion//\"}
+	if [ "$mariaVersion" = 11.6.1 ]; then mariaVersion=11.6.2; fi
 }
 
 all()
@@ -238,8 +239,8 @@ for version in "${versions[@]}"; do
 	fi
 	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq -r --arg version "${version%-*}" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
-	releaseStatus=${release[0]:-Unknown}
-	supportType=${release[1]:-Unknown}
+	releaseStatus=${release[0]:-Stable}
+	supportType=${release[1]:-Short Term Support}
 
 	update_version
 done
