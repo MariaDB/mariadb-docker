@@ -5,7 +5,7 @@ set -Eeuo pipefail
 #
 
 development_version=main
-development_version_real=11.7
+development_version_real=11.8
 
 defaultSuite='noble'
 declare -A suites=(
