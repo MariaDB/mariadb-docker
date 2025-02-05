@@ -97,20 +97,6 @@
       "s390x"
     ]
   },
-  "11.4-ubi/": {
-    "milestone": "11.4-ubi/",
-    "version": "11.4.3",
-    "fullVersion": "1:11.4.3+maria~ubu2404",
-    "releaseStatus": "Stable",
-    "supportType": "Long Term Support",
-    "base": "ubuntu:noble",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
   "11.6": {
     "milestone": "11.6",
     "version": "11.6.1",
