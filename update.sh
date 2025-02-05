@@ -5,7 +5,7 @@ set -Eeuo pipefail
 #
 
 development_version=main
-development_version_real=11.7
+development_version_real=11.8
 
 defaultSuite='noble'
 declare -A suites=(
@@ -185,9 +185,15 @@ update_version_array()
 
 mariaversion()
 {
+	if [ "$version" = 11.7 ]; then
+		#version=11.7
+		mariaVersion=11.7.1;
+		return
+	fi
 	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
 		| jq -r 'first(.releases[] | .release_id | select(. | test("[0-9]+.[0-9]+.[0-9]+$")))')
 	mariaVersion=${mariaVersion//\"}
+	if [ "$mariaVersion" = 11.6.1 ]; then mariaVersion=11.6.2; fi
 }
 
 all()
@@ -238,8 +244,21 @@ for version in "${versions[@]}"; do
 	fi
 	readarray -t release <<< "$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/" \
 		| jq -r --arg version "${version%-*}" '.major_releases[] | select(.release_id == $version) | [ .release_status ] , [ .release_support_type ] | @tsv')"
-	releaseStatus=${release[0]:-Unknown}
-	supportType=${release[1]:-Unknown}
+
+	case "$version" in
+	11.7)
+		releaseStatus=${release[0]:-RC}
+		supportType=${release[1]:-Short Term Support}
+		;;
+        11.6)
+		releaseStatus=${release[0]:-Stable}
+		supportType=${release[1]:-Short Term Support}
+		;;
+	*)
+		releaseStatus=${release[0]:-Unknown}
+		supportType=${release[1]:-Unknown}
+		;;
+	esac
 
 	update_version
 done

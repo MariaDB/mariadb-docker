@@ -80,6 +80,9 @@ for version in "${versions[@]}"; do
 	supportType="$(grep -m1 'support-type:' "$version/Dockerfile" | cut -d':' -f2)"
 
 	case $releaseStatus in
+	Unknown)
+		releaseStatus=Stable
+		;&
 	Stable)
 		suffix=
 		;;
@@ -103,6 +106,7 @@ for version in "${versions[@]}"; do
 		;;
 	*)
 		supportType=Unknown
+		supportType=STS
 	esac
 
 	if [ "$version" != "$fullVersion" ]; then
