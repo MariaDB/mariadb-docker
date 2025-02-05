@@ -109,6 +109,6 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
       - name: MariaDB Operator Test (UBI)
         if: ${{ env.DEPLOY_IMAGES == 'true' && contains( matrix.name, 'ubi') }}
-        run: gh workflow run test-image-ent.yml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
+        run: gh workflow run test-image-ubi.yml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
         env:
           GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
