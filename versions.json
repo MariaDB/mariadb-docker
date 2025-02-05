@@ -101,8 +101,8 @@
     "milestone": "11.6",
     "version": "11.6.1",
     "fullVersion": "1:11.6.1+maria~ubu2404",
-    "releaseStatus": "Unknown",
-    "supportType": "Unknown",
+    "releaseStatus": "RC",
+    "supportType": "Short Term Support",
     "base": "ubuntu:noble",
     "arches": [
       "amd64",
