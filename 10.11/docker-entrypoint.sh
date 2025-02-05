@@ -357,7 +357,7 @@ create_healthcheck_users() {
 	local maskPreserve
 	maskPreserve=$(umask -p)
 	umask 0077
-	echo -e "[mariadb-client]\\nport=$PORT\\nsocket=$SOCKET\\nuser=healthcheck\\npassword=$healthCheckConnectPass\\n" > "$DATADIR"/.my-healthcheck.cnf
+	echo -e "[mariadb-client]\\nuser=healthcheck\\npassword=$healthCheckConnectPass\\n" > "$DATADIR"/.my-healthcheck.cnf
 	$maskPreserve
 }
 
