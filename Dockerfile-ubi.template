@@ -84,7 +84,7 @@ RUN set -eux ; \
 	unset GNUPGHOME ; \
 	microdnf update -y ; \
 	microdnf reinstall -y tzdata ; \
-	microdnf install -y procps-ng zstd xz jemalloc pwgen pv util-linux-core \
+	microdnf install -y procps-ng zstd xz jemalloc pwgen pv util-linux-core ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
 	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} ; \
