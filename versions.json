@@ -155,9 +155,9 @@
   },
   "11.7": {
     "milestone": "11.7",
-    "version": "11.7.1",
-    "fullVersion": "1:11.7.1+maria~ubu2404",
-    "releaseStatus": "RC",
+    "version": "11.7.2",
+    "fullVersion": "1:11.7.2+maria~ubu2404",
+    "releaseStatus": "Stable",
     "supportType": "Short Term Support",
     "base": "ubuntu:noble",
     "arches": [
@@ -169,9 +169,9 @@
   },
   "11.7-ubi": {
     "milestone": "11.7",
-    "version": "11.7.1",
-    "fullVersion": "11.7.1",
-    "releaseStatus": "RC",
+    "version": "11.7.2",
+    "fullVersion": "11.7.2",
+    "releaseStatus": "Stable",
     "supportType": "Short Term Support",
     "base": "ubi9",
     "arches": [
