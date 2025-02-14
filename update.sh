@@ -187,7 +187,7 @@ mariaversion()
 {
 	if [ "$version" = 11.7 ]; then
 		#version=11.7
-		mariaVersion=11.7.1;
+		mariaVersion=11.7.2;
 		return
 	fi
 	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
@@ -247,7 +247,7 @@ for version in "${versions[@]}"; do
 
 	case "$version" in
 	11.7)
-		releaseStatus=${release[0]:-RC}
+		releaseStatus=${release[0]:-Stable}
 		supportType=${release[1]:-Short Term Support}
 		;;
         11.6)
