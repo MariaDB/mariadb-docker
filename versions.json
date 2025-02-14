@@ -1,4 +1,32 @@
 {
+  "11.8": {
+    "milestone": "11.8",
+    "version": "11.8.1",
+    "fullVersion": "1:11.8.1+maria~ubu2404",
+    "releaseStatus": "RC",
+    "supportType": "Long Term Support",
+    "base": "ubuntu:noble",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "11.8-ubi": {
+    "milestone": "11.8",
+    "version": "11.8.1",
+    "fullVersion": "11.8.1",
+    "releaseStatus": "RC",
+    "supportType": "Long Term Support",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
   "11.4": {
     "milestone": "11.4",
     "version": "11.4.5",
