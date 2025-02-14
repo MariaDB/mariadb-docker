@@ -1,7 +1,0 @@
-[mariadb]
-name = MariaDB
-#baseurl = https://rpm.mariadb.org/11.6/rhel/$releasever/$basearch
-baseurl = https://archive.mariadb.org/mariadb-11.6/yum/rhel/$releasever/$basearch
-#microdnf cannot read to the second key here.
-#gpgkey=https://archive.mariadb.org/PublicKey
-gpgcheck=1
