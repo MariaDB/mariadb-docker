@@ -34,7 +34,7 @@
 # Note * though denied error message will result in error log without
 #      any permissions. USAGE recommend to avoid this.
 
-set -eo pipefail
+set -Eeuo pipefail
 
 _process_sql()
 {

@@ -1,5 +1,6 @@
 #!/bin/bash
-set -eo pipefail
+
+set -Eeuo pipefail
 shopt -s nullglob
 
 # logging functions

@@ -1,5 +1,6 @@
 #!/bin/bash
-set -eo pipefail
+
+set -Eeuo pipefail
 shopt -s nullglob
 
 # logging functions
@@ -225,7 +226,7 @@ docker_create_db_directories() {
 }
 
 _mariadb_version() {
-	echo -n "11.8.0-MariaDB"
+	echo -n "12.0.0-MariaDB"
 }
 
 # initializes the database directory
