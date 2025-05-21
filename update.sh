@@ -11,6 +11,7 @@ defaultSuite='noble'
 declare -A suites=(
 	[10.5]='focal'
 	[10.6]='focal'
+	['10.6-jammy']='jammy'
 	[10.11]='jammy'
 	[11.2]='jammy'
 )
@@ -108,7 +109,7 @@ update_version()
 			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
 				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
 			;;
-		10.6)
+		10.6*)
 			sed -i -e '/memory\.pressure/,+7d' \
 				-e 's/--mariadbd/--mysqld/' \
 				"$dir/docker-entrypoint.sh"
