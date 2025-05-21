@@ -186,9 +186,21 @@ update_version_array()
 
 mariaversion()
 {
+	# version hacks because our $DOWNLOADS_REST_API
+	# seems to never be right on release and has unfinshed suppport
+	# for rolling release versions.
 	if [ "$version" = 11.7 ]; then
 		#version=11.7
 		mariaVersion=11.7.2;
+		return
+	fi
+	# re-release
+	if [ "$version" = 10.11 ]; then
+		mariaVersion=10.11.13;
+		return
+	fi
+	if [ "$version" = 11.4 ]; then
+		mariaVersion=11.4.7;
 		return
 	fi
 	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
