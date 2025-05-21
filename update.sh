@@ -155,7 +155,7 @@ update_version()
 	fi
 	# Add version to versions.json
 	versionJson="$(jq -e \
-		--arg milestone "${version}" --arg milestoneversion "${version}${ubi}" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "$base" --arg arches "${arches# }" \
+		--arg milestone "${version%%-*}" --arg milestoneversion "${version}${ubi}" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "$base" --arg arches "${arches# }" \
 		'.[$milestoneversion] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
 	printf '%s\n' "$versionJson" > versions.json
 }

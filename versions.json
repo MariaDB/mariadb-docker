@@ -140,7 +140,7 @@
     ]
   },
   "10.6-jammy": {
-    "milestone": "10.6-jammy",
+    "milestone": "10.6",
     "version": "10.6.22",
     "fullVersion": "1:10.6.22+maria~ubu2204",
     "releaseStatus": "Stable",
