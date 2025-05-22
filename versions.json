@@ -114,10 +114,10 @@
   "10.6": {
     "milestone": "10.6",
     "version": "10.6.22",
-    "fullVersion": "1:10.6.22+maria~ubu2004",
+    "fullVersion": "1:10.6.22+maria~ubu2204",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
-    "base": "ubuntu:focal",
+    "base": "ubuntu:jammy",
     "arches": [
       "amd64",
       "arm64v8",
@@ -132,34 +132,6 @@
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubi9",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "10.5": {
-    "milestone": "10.5",
-    "version": "10.5.29",
-    "fullVersion": "1:10.5.29+maria~ubu2004",
-    "releaseStatus": "Stable",
-    "supportType": "Long Term Support",
-    "base": "ubuntu:focal",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "10.6-jammy": {
-    "milestone": "10.6",
-    "version": "10.6.22",
-    "fullVersion": "1:10.6.22+maria~ubu2204",
-    "releaseStatus": "Stable",
-    "supportType": "Long Term Support",
-    "base": "ubuntu:jammy",
     "arches": [
       "amd64",
       "arm64v8",
