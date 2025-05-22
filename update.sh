@@ -10,7 +10,7 @@ development_version_real=11.8
 defaultSuite='noble'
 declare -A suites=(
 	[10.5]='focal'
-	[10.6]='focal'
+	[10.6]='jammy'
 	[10.11]='jammy'
 	[11.2]='jammy'
 )
@@ -108,7 +108,7 @@ update_version()
 			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
 				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
 			;;
-		10.6)
+		10.6*)
 			sed -i -e '/memory\.pressure/,+7d' \
 				-e 's/--mariadbd/--mysqld/' \
 				"$dir/docker-entrypoint.sh"
@@ -154,7 +154,7 @@ update_version()
 	fi
 	# Add version to versions.json
 	versionJson="$(jq -e \
-		--arg milestone "${version}" --arg milestoneversion "${version}${ubi}" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "$base" --arg arches "${arches# }" \
+		--arg milestone "${version%%-*}" --arg milestoneversion "${version}${ubi}" --arg version "$mariaVersion" --arg fullVersion "$fullVersion" --arg releaseStatus "$releaseStatus" --arg supportType "$supportType" --arg base "$base" --arg arches "${arches# }" \
 		'.[$milestoneversion] = {"milestone": $milestone, "version": $version, "fullVersion": $fullVersion, "releaseStatus": $releaseStatus, "supportType": $supportType, "base": $base, "arches": $arches|split(" ")}' versions.json)"
 	printf '%s\n' "$versionJson" > versions.json
 }
@@ -185,9 +185,21 @@ update_version_array()
 
 mariaversion()
 {
+	# version hacks because our $DOWNLOADS_REST_API
+	# seems to never be right on release and has unfinshed suppport
+	# for rolling release versions.
 	if [ "$version" = 11.7 ]; then
 		#version=11.7
-		mariaVersion=11.7.1;
+		mariaVersion=11.7.2;
+		return
+	fi
+	# re-release
+	if [ "$version" = 10.11 ]; then
+		mariaVersion=10.11.13;
+		return
+	fi
+	if [ "$version" = 11.4 ]; then
+		mariaVersion=11.4.7;
 		return
 	fi
 	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
@@ -247,7 +259,7 @@ for version in "${versions[@]}"; do
 
 	case "$version" in
 	11.7)
-		releaseStatus=${release[0]:-RC}
+		releaseStatus=${release[0]:-Stable}
 		supportType=${release[1]:-Short Term Support}
 		;;
         11.6)
