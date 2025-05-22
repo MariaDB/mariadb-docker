@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM ubuntu:focal
+FROM ubuntu:jammy
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql --home-dir /var/lib/mysql
@@ -71,7 +71,7 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.title="MariaDB Database" \
       org.opencontainers.image.description="MariaDB Database for relational SQL" \
       org.opencontainers.image.documentation="https://hub.docker.com/_/mariadb/" \
-      org.opencontainers.image.base.name="docker.io/library/ubuntu:focal" \
+      org.opencontainers.image.base.name="docker.io/library/ubuntu:jammy" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
@@ -81,14 +81,14 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
 ARG MARIADB_MAJOR=10.6
 ENV MARIADB_MAJOR $MARIADB_MAJOR
-ARG MARIADB_VERSION=1:10.6.22+maria~ubu2004
+ARG MARIADB_VERSION=1:10.6.22+maria~ubu2204
 ENV MARIADB_VERSION $MARIADB_VERSION
 # release-status:Stable
 # release-support-type:Long Term Support
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.6.22/repo/ubuntu/ focal main main/debug"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.6.22/repo/ubuntu/ jammy main main/debug"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \

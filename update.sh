@@ -10,8 +10,7 @@ development_version_real=11.8
 defaultSuite='noble'
 declare -A suites=(
 	[10.5]='focal'
-	[10.6]='focal'
-	['10.6-jammy']='jammy'
+	[10.6]='jammy'
 	[10.11]='jammy'
 	[11.2]='jammy'
 )
