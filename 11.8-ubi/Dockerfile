@@ -56,7 +56,7 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
 ARG MARIADB_VERSION=11.8.2
 ENV MARIADB_VERSION=$MARIADB_VERSION
-# release-status:RC
+# release-status:Stable
 # release-support-type:Long Term Support
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 

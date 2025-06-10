@@ -1,9 +1,37 @@
 {
+  "12.0": {
+    "milestone": "12.0",
+    "version": "12.0.1",
+    "fullVersion": "1:12.0.1+maria~ubu2404",
+    "releaseStatus": "RC",
+    "supportType": "Rolling",
+    "base": "ubuntu:noble",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "12.0-ubi": {
+    "milestone": "12.0",
+    "version": "12.0.1",
+    "fullVersion": "12.0.1",
+    "releaseStatus": "RC",
+    "supportType": "Rolling",
+    "base": "ubi9",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
   "11.8": {
     "milestone": "11.8",
     "version": "11.8.2",
     "fullVersion": "1:11.8.2+maria~ubu2404",
-    "releaseStatus": "RC",
+    "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubuntu:noble",
     "arches": [
@@ -17,7 +45,7 @@
     "milestone": "11.8",
     "version": "11.8.2",
     "fullVersion": "11.8.2",
-    "releaseStatus": "RC",
+    "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubi9",
     "arches": [
@@ -125,20 +153,6 @@
       "s390x"
     ]
   },
-  "11.7": {
-    "milestone": "11.7",
-    "version": "11.7.2",
-    "fullVersion": "1:11.7.2+maria~ubu2404",
-    "releaseStatus": "Stable",
-    "supportType": "Short Term Support",
-    "base": "ubuntu:noble",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
   "10.6-jammy": {
     "milestone": "10.6",
     "version": "10.6.22",
@@ -146,34 +160,6 @@
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubuntu:jammy",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "12.0": {
-    "milestone": "12.0",
-    "version": "12.0.1",
-    "fullVersion": "1:12.0.1+maria~ubu2404",
-    "releaseStatus": "RC",
-    "supportType": "Rolling",
-    "base": "ubuntu:noble",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "12.0-ubi": {
-    "milestone": "12.0",
-    "version": "12.0.1",
-    "fullVersion": "12.0.1",
-    "releaseStatus": "RC",
-    "supportType": "Rolling",
-    "base": "ubi9",
     "arches": [
       "amd64",
       "arm64v8",
