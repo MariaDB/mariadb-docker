@@ -147,9 +147,6 @@ To change the documentation, please contribute a [pull request](https://github.c
 [![Buildbot of latest MariaDB](https://img.shields.io/badge/dynamic/json?label=buildbot%20CI%20upstream&query=$.builds[0].state_string&url=https%3A%2F%2Fbuildbot.mariadb.org%2Fapi%2Fv2%2Fbuilders%2Famd64-rhel8-dockerlibrary%2Fbuilds%3Flimit%3D1%26order%3D-number)](https://buildbot.mariadb.org/#/builders/amd64-rhel8-dockerlibrary)
 
 | Docker Library Official Images CI Status (released changes) |
-|:-:|
-| [![amd64 build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/multiarch/job/amd64/job/mariadb.svg?label=amd64)](https://doi-janky.infosiftr.net/job/multiarch/job/amd64/job/mariadb/) |
-| [![arm64v8 build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/multiarch/job/arm64v8/job/mariadb.svg?label=arm64v8)](https://doi-janky.infosiftr.net/job/multiarch/job/arm64v8/job/mariadb/) |
-| [![ppc64le build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/multiarch/job/ppc64le/job/mariadb.svg?label=ppc64le)](https://doi-janky.infosiftr.net/job/multiarch/job/ppc64le/job/mariadb/) |
-| [![s390x build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/multiarch/job/ppc64le/job/mariadb.svg?label=s390x)](https://doi-janky.infosiftr.net/job/multiarch/job/s390x/job/mariadb/) |
-| [![put-shared build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/put-shared/job/light/job/mariadb.svg?label=put-shared)](https://doi-janky.infosiftr.net/job/put-shared/job/light/job/mariadb/) |
+
+[![put-shared build status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/put-shared/job/light/job/mariadb.svg?label=put-shared)](https://doi-janky.infosiftr.net/job/put-shared/job/light/job/mariadb/)
+(3 hr based timer - after release, check the last job that includes commits that include MariaDB).

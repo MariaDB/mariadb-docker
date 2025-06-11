@@ -89,13 +89,21 @@ for version in "${versions[@]}"; do
 	*)
 		suffix=-${releaseStatus,,*}
 	esac
+        # this is for new tagged disto versions
+        # so won't attract non-distro tags
+        # Not including ubi because UBI base images have
+        # a filetime that exceeds MariaDB's releases.
+        special=
 	# non-ubi gets full version
 	if [[ $version =~ .*ubi ]]; then
 		ubi=-ubi
 	else
 		ubi=
+		if [[ "$version" == *-* ]]; then # A 10.6-jammy for instance
+			special=-${version#*-}
+		fi
 	fi
-	versionAliases=( "${fullVersion}${ubi}" )
+	versionAliases=( "${fullVersion}${ubi}${special}" )
 
 	case "${supportType}" in
 	"Long Term Support")
@@ -114,7 +122,7 @@ for version in "${versions[@]}"; do
 	fi
 
 	versionAliases+=( ${aliases[$version]:-} )
-	if [ "$releaseStatus" = 'Stable' ]; then
+	if [ "$releaseStatus" = 'Stable' ] && [ -z "$special" ]; then
 		versions=( "${version%%.*}${ubi}" )
 		if [ -z "$ubi" ]; then
 			versions+=( latest )
@@ -136,11 +144,14 @@ for version in "${versions[@]}"; do
 		distro="${from#redhat/}"
 		suite="${distro%%-*}" # -minimal/init...
 		variantAliases=( "${versionAliases[@]/%/${suite#ubi}}" )
-	else
+	elif [ -z "$special" ]; then # already added
 		distro="${from%%:*}" # "debian", "ubuntu"
 		suite="${from#"$distro":}" # "jessie-slim", "xenial"
 		suite="${suite%-slim}" # "jessie", "xenial"
 		variantAliases=( "${versionAliases[@]/%/-${suite}}" )
+	else
+		# special ones include their distro already
+		variantAliases=()
 	fi
 
 	versionAliases=( "${variantAliases[@]//latest-/}" "${versionAliases[@]}" )
