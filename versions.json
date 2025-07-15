@@ -19,7 +19,7 @@
     "fullVersion": "12.0.1",
     "releaseStatus": "RC",
     "supportType": "Rolling",
-    "base": "ubi9",
+    "base": "redhat/ubi10-minimal",
     "arches": [
       "amd64",
       "arm64v8",
@@ -47,7 +47,7 @@
     "fullVersion": "11.8.2",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
-    "base": "ubi9",
+    "base": "redhat/ubi9-minimal",
     "arches": [
       "amd64",
       "arm64v8",
@@ -75,7 +75,7 @@
     "fullVersion": "11.4.7",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
-    "base": "ubi9",
+    "base": "redhat/ubi9-minimal",
     "arches": [
       "amd64",
       "arm64v8",
@@ -103,7 +103,7 @@
     "fullVersion": "10.11.13",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
-    "base": "ubi9",
+    "base": "redhat/ubi9-minimal",
     "arches": [
       "amd64",
       "arm64v8",
@@ -131,7 +131,7 @@
     "fullVersion": "10.6.22",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
-    "base": "ubi9",
+    "base": "redhat/ubi9-minimal",
     "arches": [
       "amd64",
       "arm64v8",

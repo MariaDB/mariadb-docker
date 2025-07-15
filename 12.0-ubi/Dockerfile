@@ -1,4 +1,4 @@
-FROM redhat/ubi9-minimal
+FROM redhat/ubi10-minimal
 
 # user 999/ group 999, that we want to use for compatibility with the ubuntu image.
 RUN groupadd --gid 999 -r mysql && \
