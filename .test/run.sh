@@ -400,13 +400,13 @@ killoff
 
 echo -e "Test: complex passwords\n"
 
-runandwait -e MYSQL_USER=bob -e MYSQL_PASSWORD=$'\n \' \n' -e MYSQL_ROOT_PASSWORD=$'\n\'\\aa-\x09-zz"_%\n' \
+runandwait -e MYSQL_USER=bob -e MYSQL_PASSWORD=$'\n $\' \n' -e MYSQL_ROOT_PASSWORD=$'\n\'\\aa-\x09-zz"_%\n' \
 	-e MARIADB_REPLICATION_USER="foo" \
 	-e MARIADB_REPLICATION_PASSWORD=$'\n\'\\aa-\x09-zz"_%\n' \
 	"${image}"
 mariadbclient --skip-column-names -B -u root -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
 mariadbclient --skip-column-names -B -u foo -p$'\n\'\\aa-\x09-zz"_%\n' -e 'select 1'
-mariadbclient --skip-column-names -B -u bob -p$'\n \' \n' -e 'select 1'
+mariadbclient --skip-column-names -B -u bob -p$'\n $\' \n' -e 'select 1'
 killoff
 
 	;&

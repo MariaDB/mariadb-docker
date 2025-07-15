@@ -5,14 +5,13 @@ set -Eeuo pipefail
 #
 
 development_version=main
-development_version_real=11.8
+development_version_real=12.1
 
 defaultSuite='noble'
 declare -A suites=(
 	[10.5]='focal'
 	[10.6]='jammy'
 	[10.11]='jammy'
-	[11.2]='jammy'
 )
 
 declare -A suffix=(
@@ -188,24 +187,13 @@ mariaversion()
 	# version hacks because our $DOWNLOADS_REST_API
 	# seems to never be right on release and has unfinshed suppport
 	# for rolling release versions.
-	if [ "$version" = 11.7 ]; then
-		#version=11.7
-		mariaVersion=11.7.2;
-		return
-	fi
-	# re-release
-	if [ "$version" = 10.11 ]; then
-		mariaVersion=10.11.13;
-		return
-	fi
-	if [ "$version" = 11.4 ]; then
-		mariaVersion=11.4.7;
-		return
-	fi
+	#if [ "$version" = 11.4 ]; then
+	#	mariaVersion=11.4.7;
+	#	return
+	#fi
 	mariaVersion=$(curl -fsSL "$DOWNLOADS_REST_API/mariadb/${version%-*}" \
 		| jq -r 'first(.releases[] | .release_id | select(. | test("[0-9]+.[0-9]+.[0-9]+$")))')
 	mariaVersion=${mariaVersion//\"}
-	if [ "$mariaVersion" = 11.6.1 ]; then mariaVersion=11.6.2; fi
 }
 
 all()
