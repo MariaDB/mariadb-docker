@@ -9,6 +9,7 @@ on:
       - Dockerfile.template
       - LICENSE
       - README.md
+      - SECURITY.md
   push:
     branches-ignore:
       - next
@@ -17,6 +18,7 @@ on:
       - Dockerfile.template
       - LICENSE
       - README.md
+      - SECURITY.md
 
 defaults:
   run:
