@@ -1,8 +1,11 @@
-FROM redhat/ubi9-minimal
+FROM redhat/%%SUITE%%
 
 # user 999/ group 999, that we want to use for compatibility with the ubuntu image.
-RUN groupadd --gid 999 -r mysql && \
-	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999
+RUN microdnf install -y shadow-utils && \
+	groupadd --gid 999 -r mysql && \
+	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999 && \
+	microdnf remove -y shadow-utils && \
+	microdnf clean all
 
 ENV GOSU_VERSION 1.17
 RUN set -eux; \
@@ -20,6 +23,7 @@ RUN set -eux; \
 	curl --fail --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}.asc; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
+	microdnf install -y gnupg2; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
 	chmod a+x /usr/local/bin/gosu; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
