@@ -8,10 +8,15 @@ development_version=main
 development_version_real=12.1
 
 defaultSuite='noble'
+defaultSuiteUBI='ubi10-minimal'
 declare -A suites=(
 	[10.5]='focal'
 	[10.6]='jammy'
 	[10.11]='jammy'
+	['10.6-ubi']='ubi9-minimal'
+	['10.11-ubi']='ubi9-minimal'
+	['11.4-ubi']='ubi9-minimal'
+	['11.8-ubi']='ubi9-minimal'
 )
 
 declare -A suffix=(
@@ -46,7 +51,7 @@ update_version()
 		suite="${suites[$version]:-$defaultSuite}"
 		fullVersion=1:${mariaVersion}+maria~${suffix[${suite}]}
 	else
-		suite=
+		suite="${suites[$dir]:-$defaultSuiteUBI}"
 		fullVersion=$mariaVersion
 		if [[ $version = 10.* ]]; then
 			sed -e '/character-set-collations/d' docker.cnf > "$dir/docker.cnf"
@@ -146,8 +151,8 @@ update_version()
 			;&
 	esac
 
-	if [ -z "$suite" ]; then
-		base=ubi9
+	if [ -n "$ubi" ]; then
+		base=redhat/$suite
 	else
 		base=ubuntu:$suite
 	fi
