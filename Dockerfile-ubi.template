@@ -1,5 +1,7 @@
 FROM redhat/%%SUITE%%
 
+RUN sed -i -e '/\[ evp_properties \]/a default_properties = fips=yes'  -e '/opensslcnf.config/a .include = /etc/crypto-policies/back-ends/openssl_fips.config' -e '/\[provider_sect\]/a fips = fips_sect' /etc/pki/tls/openssl.cnf
+
 # user 999/ group 999, that we want to use for compatibility with the ubuntu image.
 RUN microdnf install -y shadow-utils && \
 	groupadd --gid 999 -r mysql && \
