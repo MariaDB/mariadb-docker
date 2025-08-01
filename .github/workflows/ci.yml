@@ -10,6 +10,8 @@ on:
       - LICENSE
       - README.md
       - SECURITY.md
+      - Containerfile.debug
+      - Containerfile.debug-ubi
   push:
     branches-ignore:
       - next
@@ -19,6 +21,8 @@ on:
       - LICENSE
       - README.md
       - SECURITY.md
+      - Containerfile.debug
+      - Containerfile.debug-ubi
 
 defaults:
   run:
