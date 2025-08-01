@@ -67,10 +67,11 @@ ENV MARIADB_VERSION=$MARIADB_VERSION
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
-# FF8AD1344597106ECE813B918A3872BF3228467C is the Fedora RPM key
+# https://fedoraproject.org/security
+# FF8AD1344597106ECE813B918A3872BF3228467C is the Fedora RPM key for EPEL-9
 # 177F4010FE56CA3336300305F1656F24C74CD1D8 is the MariaDB Server RPM key
 RUN set -eux ; \
-	curl --fail https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/static/keys/FF8AD1344597106ECE813B918A3872BF3228467C.txt --output /tmp/epelkey.txt ; \
+	curl --fail https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9 --output /tmp/epelkey.txt ; \
 	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME ; \
 	gpg --batch --import /tmp/epelkey.txt ; \
 	gpg --batch --armor --export FF8AD1344597106ECE813B918A3872BF3228467C > /tmp/epelkey.txt ; \
