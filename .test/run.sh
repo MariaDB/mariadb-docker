@@ -621,16 +621,16 @@ case "$architecture" in
 	s390x|i386|*)
 		debarch=$architecture ;;
 esac
-if [ -n "$debarch" ]
+if [ -n "$debarch" ] && docker run --rm "$image" test -f /usr/lib/$debarch-linux-gnu/libjemalloc.so.2 -o -f /usr/lib64/libjemalloc.so.2
 then
 	echo -e "Test: jemalloc preload\n"
-	runandwait -e LD_PRELOAD="/usr/lib/$debarch-linux-gnu/libjemalloc.so.1 /usr/lib/$debarch-linux-gnu/libjemalloc.so.2 /usr/lib64/libjemalloc.so.2" -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
+	runandwait -e LD_PRELOAD="/usr/lib/$debarch-linux-gnu/libjemalloc.so.2 /usr/lib64/libjemalloc.so.2" -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
 	docker exec -i --user mysql "$cid" /bin/grep 'jemalloc' /proc/1/maps || die "expected to preload jemalloc"
 
 
 	killoff
 else
-	echo -e "Test: jemalloc skipped - unknown arch '$architecture'\n"
+	echo -e "Test: jemalloc skipped - unknown arch '$architecture' or missing jemalloc\n"
 fi
 
 	;&
