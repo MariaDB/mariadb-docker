@@ -102,8 +102,7 @@ update_version()
 		# pwgen - https://bugzilla.redhat.com/show_bug.cgi?id=2370234
 		cp pwgen_alt "$dir/pwgen"
 		sed -i \
-			-e 's!jemalloc !!g' \
-			-e 's!pwgen !!g' \
+			-e 's!jemalloc pwgen !!g' \
 			"$dir/Dockerfile"
 	fi
 	vmin=${version%-ubi}
