@@ -94,16 +94,6 @@ update_version()
 			-e 's!7D8D15CBFC4E62688591FB2633D98517E37ED158!FF8AD1344597106ECE813B918A3872BF3228467C!g' \
 			-e 's!EPEL-10!EPEL-9!g' \
 			-e 's!epel-release-latest-10!epel-release-latest-9!g' \
-			-e '/COPY pwgen/d' \
-			"$dir/Dockerfile"
-	else
-		# hoping these are temporary
-		# jemalloc in EPEL 10.1 repo but isn't part of EPEL-10 that the rpm installs.
-		# pwgen - https://bugzilla.redhat.com/show_bug.cgi?id=2370234
-		cp pwgen_alt "$dir/pwgen"
-		sed -i \
-			-e 's!jemalloc !!g' \
-			-e 's!pwgen !!g' \
 			"$dir/Dockerfile"
 	fi
 	vmin=${version%-ubi}
