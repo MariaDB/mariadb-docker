@@ -108,7 +108,7 @@ VOLUME /var/lib/mysql
 
 RUN mkdir /docker-entrypoint-initdb.d
 
-COPY pwgen /usr/bin/pwgen
+COPY /usr/bin/pwgen
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY docker-entrypoint.sh /usr/local/bin/
 
