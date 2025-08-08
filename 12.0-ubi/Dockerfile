@@ -80,7 +80,7 @@ RUN set -eux ; \
 	rpm -K /tmp/epel-release-latest-10.noarch.rpm ; \
 	rpm -ivh /tmp/epel-release-latest-10.noarch.rpm ; \
 	rm /tmp/epelkey.txt /tmp/epel-release-latest-10.noarch.rpm ; \
-	curl --fail https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY --output /tmp/MariaDB-Server-GPG-KEY ; \
+	curl --fail https://archive.mariadb.org/PublicKey --output /tmp/MariaDB-Server-GPG-KEY ; \
 	gpg --batch --import /tmp/MariaDB-Server-GPG-KEY; \
 	gpg --batch --armor --export 177F4010FE56CA3336300305F1656F24C74CD1D8 > /tmp/MariaDB-Server-GPG-KEY ; \
 	rpmkeys --import /tmp/MariaDB-Server-GPG-KEY ; \
@@ -88,7 +88,7 @@ RUN set -eux ; \
 	unset GNUPGHOME ; \
 	microdnf update -y ; \
 	microdnf reinstall -y tzdata ; \
-	microdnf install --enablerepo=epel-testing --disablerepo=mariadb --releasever=10.1 -y procps-ng zstd xz jemalloc pwgen pv util-linux-core ; \
+	microdnf install --disablerepo=mariadb --releasever=10.1 -y procps-ng zstd xz jemalloc pwgen pv util-linux-core ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
 	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} ; \

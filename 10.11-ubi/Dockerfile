@@ -80,7 +80,7 @@ RUN set -eux ; \
 	rpm -K /tmp/epel-release-latest-9.noarch.rpm ; \
 	rpm -ivh /tmp/epel-release-latest-9.noarch.rpm ; \
 	rm /tmp/epelkey.txt /tmp/epel-release-latest-9.noarch.rpm ; \
-	curl --fail https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY --output /tmp/MariaDB-Server-GPG-KEY ; \
+	curl --fail https://archive.mariadb.org/PublicKey --output /tmp/MariaDB-Server-GPG-KEY ; \
 	gpg --batch --import /tmp/MariaDB-Server-GPG-KEY; \
 	gpg --batch --armor --export 177F4010FE56CA3336300305F1656F24C74CD1D8 > /tmp/MariaDB-Server-GPG-KEY ; \
 	rpmkeys --import /tmp/MariaDB-Server-GPG-KEY ; \
