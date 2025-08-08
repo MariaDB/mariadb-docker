@@ -42,7 +42,7 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # https://access.redhat.com/documentation/en-us/red_hat_software_certification/2024/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction#con-image-metadata-requirements_openshift-sw-cert-policy-container-images
 LABEL name="MariaDB Server" \
 	vendor="MariaDB Community" \
-	version="12.1.0" \
+	version="12.2.0" \
 	release="Refer to Annotations org.opencontainers.image.{revision,source}" \
 	summary="MariaDB Database" \
 	description="MariaDB Database for relational SQL"
@@ -56,11 +56,11 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="12.1.0" \
+      org.opencontainers.image.version="12.2.0" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=12.1.0
+ARG MARIADB_VERSION=12.2.0
 ENV MARIADB_VERSION=$MARIADB_VERSION
 # release-status:Alpha
 # release-support-type:Unknown
@@ -69,19 +69,20 @@ ENV MARIADB_VERSION=$MARIADB_VERSION
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
-# FF8AD1344597106ECE813B918A3872BF3228467C is the Fedora RPM key
+# https://fedoraproject.org/security
+# 7D8D15CBFC4E62688591FB2633D98517E37ED158 is the Fedora RPM key for EPEL-10
 # 177F4010FE56CA3336300305F1656F24C74CD1D8 is the MariaDB Server RPM key
 RUN set -eux ; \
-	curl --fail https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/static/keys/FF8AD1344597106ECE813B918A3872BF3228467C.txt --output /tmp/epelkey.txt ; \
+	curl --fail https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-10 --output /tmp/epelkey.txt ; \
 	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME ; \
 	gpg --batch --import /tmp/epelkey.txt ; \
-	gpg --batch --armor --export FF8AD1344597106ECE813B918A3872BF3228467C > /tmp/epelkey.txt ; \
+	gpg --batch --armor --export 7D8D15CBFC4E62688591FB2633D98517E37ED158 > /tmp/epelkey.txt ; \
 	rpmkeys --import /tmp/epelkey.txt ; \
-	curl --fail https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm --output /tmp/epel-release-latest-9.noarch.rpm ; \
-	rpm -K /tmp/epel-release-latest-9.noarch.rpm ; \
-	rpm -ivh /tmp/epel-release-latest-9.noarch.rpm ; \
-	rm /tmp/epelkey.txt /tmp/epel-release-latest-9.noarch.rpm ; \
-	curl --fail https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY --output /tmp/MariaDB-Server-GPG-KEY ; \
+	curl --fail https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm --output /tmp/epel-release-latest-10.noarch.rpm ; \
+	rpm -K /tmp/epel-release-latest-10.noarch.rpm ; \
+	rpm -ivh /tmp/epel-release-latest-10.noarch.rpm ; \
+	rm /tmp/epelkey.txt /tmp/epel-release-latest-10.noarch.rpm ; \
+	curl --fail https://archive.mariadb.org/PublicKey --output /tmp/MariaDB-Server-GPG-KEY ; \
 	gpg --batch --import /tmp/MariaDB-Server-GPG-KEY; \
 	gpg --batch --armor --export 177F4010FE56CA3336300305F1656F24C74CD1D8 > /tmp/MariaDB-Server-GPG-KEY ; \
 	rpmkeys --import /tmp/MariaDB-Server-GPG-KEY ; \
@@ -89,7 +90,7 @@ RUN set -eux ; \
 	unset GNUPGHOME ; \
 	microdnf update -y ; \
 	microdnf reinstall -y tzdata ; \
-	microdnf install -y procps-ng zstd xz jemalloc pwgen pv util-linux-core ; \
+	microdnf install --enablerepo=epel --disablerepo=mariadb --releasever=10.1 -y procps-ng zstd xz jemalloc pwgen pv util-linux-core ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
 	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} ; \

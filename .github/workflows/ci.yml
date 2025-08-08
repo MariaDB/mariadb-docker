@@ -9,6 +9,9 @@ on:
       - Dockerfile.template
       - LICENSE
       - README.md
+      - SECURITY.md
+      - Containerfile.debug
+      - Containerfile.debug-ubi
   push:
     branches-ignore:
       - next
@@ -17,6 +20,9 @@ on:
       - Dockerfile.template
       - LICENSE
       - README.md
+      - SECURITY.md
+      - Containerfile.debug
+      - Containerfile.debug-ubi
 
 defaults:
   run:

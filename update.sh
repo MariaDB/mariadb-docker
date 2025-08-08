@@ -5,7 +5,7 @@ set -Eeuo pipefail
 #
 
 development_version=main
-development_version_real=12.1
+development_version_real=12.2
 
 defaultSuite='noble'
 defaultSuiteUBI='ubi10-minimal'
@@ -89,6 +89,14 @@ update_version()
 		-e 's!%%MARIADB_VERSION_BASIC%%!'"$mariaVersion"'!g' \
 		"$dir/docker-entrypoint.sh"
 
+	if [ "$suite" = ubi9-minimal ]; then
+		sed -i \
+			-e 's!7D8D15CBFC4E62688591FB2633D98517E37ED158!FF8AD1344597106ECE813B918A3872BF3228467C!g' \
+			-e 's!EPEL-10!EPEL-9!g' \
+			-e 's!epel-release-latest-10!epel-release-latest-9!g' \
+			-e 's!--enablerepo=epel --disablerepo=mariadb --releasever=10.1 !!' \
+			"$dir/Dockerfile"
+	fi
 	vmin=${version%-ubi}
 	# Start using the new executable names
 	case "$vmin" in
