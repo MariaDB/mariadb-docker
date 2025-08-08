@@ -31,7 +31,7 @@
     "milestone": "12.0",
     "version": "12.0.2",
     "fullVersion": "1:12.0.2+maria~ubu2404",
-    "releaseStatus": "RC",
+    "releaseStatus": "Stable",
     "supportType": "Rolling",
     "base": "ubuntu:noble",
     "arches": [
@@ -45,7 +45,7 @@
     "milestone": "12.0",
     "version": "12.0.2",
     "fullVersion": "12.0.2",
-    "releaseStatus": "RC",
+    "releaseStatus": "Stable",
     "supportType": "Rolling",
     "base": "redhat/ubi10-minimal",
     "arches": [
