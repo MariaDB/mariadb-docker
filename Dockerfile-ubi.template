@@ -1,8 +1,11 @@
-FROM redhat/ubi9-minimal
+FROM redhat/%%SUITE%%
 
 # user 999/ group 999, that we want to use for compatibility with the ubuntu image.
-RUN groupadd --gid 999 -r mysql && \
-	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999
+RUN microdnf install -y shadow-utils && \
+	groupadd --gid 999 -r mysql && \
+	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999 && \
+	microdnf remove -y shadow-utils && \
+	microdnf clean all
 
 ENV GOSU_VERSION 1.17
 RUN set -eux; \
@@ -20,6 +23,7 @@ RUN set -eux; \
 	curl --fail --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}.asc; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
+	microdnf install -y gnupg2; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
 	chmod a+x /usr/local/bin/gosu; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
@@ -64,19 +68,20 @@ ENV MARIADB_VERSION=$MARIADB_VERSION
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
-# FF8AD1344597106ECE813B918A3872BF3228467C is the Fedora RPM key
+# https://fedoraproject.org/security
+# 7D8D15CBFC4E62688591FB2633D98517E37ED158 is the Fedora RPM key for EPEL-10
 # 177F4010FE56CA3336300305F1656F24C74CD1D8 is the MariaDB Server RPM key
 RUN set -eux ; \
-	curl --fail https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/static/keys/FF8AD1344597106ECE813B918A3872BF3228467C.txt --output /tmp/epelkey.txt ; \
+	curl --fail https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-10 --output /tmp/epelkey.txt ; \
 	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME ; \
 	gpg --batch --import /tmp/epelkey.txt ; \
-	gpg --batch --armor --export FF8AD1344597106ECE813B918A3872BF3228467C > /tmp/epelkey.txt ; \
+	gpg --batch --armor --export 7D8D15CBFC4E62688591FB2633D98517E37ED158 > /tmp/epelkey.txt ; \
 	rpmkeys --import /tmp/epelkey.txt ; \
-	curl --fail https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm --output /tmp/epel-release-latest-9.noarch.rpm ; \
-	rpm -K /tmp/epel-release-latest-9.noarch.rpm ; \
-	rpm -ivh /tmp/epel-release-latest-9.noarch.rpm ; \
-	rm /tmp/epelkey.txt /tmp/epel-release-latest-9.noarch.rpm ; \
-	curl --fail https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY --output /tmp/MariaDB-Server-GPG-KEY ; \
+	curl --fail https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm --output /tmp/epel-release-latest-10.noarch.rpm ; \
+	rpm -K /tmp/epel-release-latest-10.noarch.rpm ; \
+	rpm -ivh /tmp/epel-release-latest-10.noarch.rpm ; \
+	rm /tmp/epelkey.txt /tmp/epel-release-latest-10.noarch.rpm ; \
+	curl --fail https://archive.mariadb.org/PublicKey --output /tmp/MariaDB-Server-GPG-KEY ; \
 	gpg --batch --import /tmp/MariaDB-Server-GPG-KEY; \
 	gpg --batch --armor --export 177F4010FE56CA3336300305F1656F24C74CD1D8 > /tmp/MariaDB-Server-GPG-KEY ; \
 	rpmkeys --import /tmp/MariaDB-Server-GPG-KEY ; \
@@ -84,7 +89,7 @@ RUN set -eux ; \
 	unset GNUPGHOME ; \
 	microdnf update -y ; \
 	microdnf reinstall -y tzdata ; \
-	microdnf install -y procps-ng zstd xz jemalloc pwgen pv util-linux-core ; \
+	microdnf install --enablerepo=epel --disablerepo=mariadb --releasever=10.1 -y procps-ng zstd xz jemalloc pwgen pv util-linux-core ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
 	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} ; \

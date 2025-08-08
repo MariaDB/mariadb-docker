@@ -1,8 +1,11 @@
 FROM redhat/ubi9-minimal
 
 # user 999/ group 999, that we want to use for compatibility with the ubuntu image.
-RUN groupadd --gid 999 -r mysql && \
-	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999
+RUN microdnf install -y shadow-utils && \
+	groupadd --gid 999 -r mysql && \
+	useradd -r -g mysql mysql --home-dir /var/lib/mysql --uid 999 && \
+	microdnf remove -y shadow-utils && \
+	microdnf clean all
 
 ENV GOSU_VERSION 1.17
 RUN set -eux; \
@@ -20,6 +23,7 @@ RUN set -eux; \
 	curl --fail --location --output /usr/local/bin/gosu.asc https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${dpkgArch}.asc; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
+	microdnf install -y gnupg2; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
 	chmod a+x /usr/local/bin/gosu; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
@@ -36,7 +40,7 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # https://access.redhat.com/documentation/en-us/red_hat_software_certification/2024/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction#con-image-metadata-requirements_openshift-sw-cert-policy-container-images
 LABEL name="MariaDB Server" \
 	vendor="MariaDB Community" \
-	version="10.11.13" \
+	version="10.11.14" \
 	release="Refer to Annotations org.opencontainers.image.{revision,source}" \
 	summary="MariaDB Database" \
 	description="MariaDB Database for relational SQL"
@@ -50,11 +54,11 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="10.11.13" \
+      org.opencontainers.image.version="10.11.14" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=10.11.13
+ARG MARIADB_VERSION=10.11.14
 ENV MARIADB_VERSION=$MARIADB_VERSION
 # release-status:Stable
 # release-support-type:Long Term Support
@@ -63,10 +67,11 @@ ENV MARIADB_VERSION=$MARIADB_VERSION
 # missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
-# FF8AD1344597106ECE813B918A3872BF3228467C is the Fedora RPM key
+# https://fedoraproject.org/security
+# FF8AD1344597106ECE813B918A3872BF3228467C is the Fedora RPM key for EPEL-9
 # 177F4010FE56CA3336300305F1656F24C74CD1D8 is the MariaDB Server RPM key
 RUN set -eux ; \
-	curl --fail https://pagure.io/fedora-web/websites/raw/master/f/sites/getfedora.org/static/keys/FF8AD1344597106ECE813B918A3872BF3228467C.txt --output /tmp/epelkey.txt ; \
+	curl --fail https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9 --output /tmp/epelkey.txt ; \
 	GNUPGHOME="$(mktemp -d)"; export GNUPGHOME ; \
 	gpg --batch --import /tmp/epelkey.txt ; \
 	gpg --batch --armor --export FF8AD1344597106ECE813B918A3872BF3228467C > /tmp/epelkey.txt ; \
@@ -75,7 +80,7 @@ RUN set -eux ; \
 	rpm -K /tmp/epel-release-latest-9.noarch.rpm ; \
 	rpm -ivh /tmp/epel-release-latest-9.noarch.rpm ; \
 	rm /tmp/epelkey.txt /tmp/epel-release-latest-9.noarch.rpm ; \
-	curl --fail https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY --output /tmp/MariaDB-Server-GPG-KEY ; \
+	curl --fail https://archive.mariadb.org/PublicKey --output /tmp/MariaDB-Server-GPG-KEY ; \
 	gpg --batch --import /tmp/MariaDB-Server-GPG-KEY; \
 	gpg --batch --armor --export 177F4010FE56CA3336300305F1656F24C74CD1D8 > /tmp/MariaDB-Server-GPG-KEY ; \
 	rpmkeys --import /tmp/MariaDB-Server-GPG-KEY ; \

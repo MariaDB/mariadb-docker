@@ -2,6 +2,6 @@
 name = MariaDB
 #baseurl = https://rpm.mariadb.org/10.11/rhel/$releasever/$basearch
 baseurl = https://archive.mariadb.org/mariadb-10.11/yum/rhel/$releasever/$basearch
-#microdnf cannot read to the second key here.
+# In container we need to validate that this contains the right explicit key
 #gpgkey=https://archive.mariadb.org/PublicKey
 gpgcheck=1
