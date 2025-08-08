@@ -24,6 +24,7 @@ _generateParentRepoToArches() {
 	#readarray -t ubiarch < <(docker manifest inspect redhat/ubi9-minimal | jq  '.manifests[].platform.architecture')
 	local ubiarch=(amd64 arm64v8 s390x ppc64le)
 	parentRepoToArches[redhat/ubi9-minimal]=${ubiarch[@]//\"/}
+	parentRepoToArches[redhat/ubi10-minimal]=${ubiarch[@]//\"/}
 }
 _generateParentRepoToArches 'mariadb'
 
