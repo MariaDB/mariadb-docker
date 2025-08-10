@@ -98,6 +98,8 @@ RUN set -eux ; \
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so ; \
 	# compatibility with RPM Galera packaging
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib64/galera/libgalera_smm.so ; \
+	# test FIPs now that openssl is installed
+	openssl list -providers | awk '/^\s*fips/{f=1} f && /status: active/{print "FIPS is active"; found=1; exit 0} END { if (!found) { print "FIPS is not active"; exit 1} }'; \
 	microdnf clean all ; \
 	rmdir /var/lib/mysql/mysql ; \
 	chown -R mysql:mysql /var/lib/mysql /run/mariadb ; \
