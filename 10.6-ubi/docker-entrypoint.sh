@@ -645,7 +645,7 @@ _check_if_upgrade_is_needed() {
 		return 0
 	fi
 	if [ ! -f "$DATADIR"/.my-healthcheck.cnf ]; then
-		mysql_note "MariaDB heathcheck configation file missing, assuming desirable"
+		mysql_note "MariaDB healthcheck configuration file missing, assuming desirable"
 		return 0
 	fi
 	mysql_note "MariaDB upgrade not required"
