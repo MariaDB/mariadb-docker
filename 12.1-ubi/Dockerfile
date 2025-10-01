@@ -9,7 +9,7 @@ RUN microdnf install -y shadow-utils && \
 	microdnf remove -y shadow-utils && \
 	microdnf clean all
 
-ENV GOSU_VERSION 1.17
+ENV GOSU_VERSION 1.19
 RUN set -eux; \
 	rpmArch="$(rpm --query --queryformat='%{ARCH}' rpm)"; \
 	case "$rpmArch" in \
