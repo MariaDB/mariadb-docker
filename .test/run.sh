@@ -634,6 +634,21 @@ else
 fi
 
 	;&
+	tcmalloc)
+
+if [ -n "$debarch" ]
+then
+	echo -e "Test: tcmalloc preload\n"
+	runandwait -e LD_PRELOAD="/usr/lib/$debarch-linux-gnu/libtcmalloc_minimal.so.4 /usr/lib64/libtcmalloc_minimal.so.4" -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 "${image}"
+	docker exec -i --user mysql "$cid" /bin/grep 'tcmalloc' /proc/1/maps || die "expected to preload tcmalloc"
+
+
+	killoff
+else
+	echo -e "Test: tcmalloc skipped - unknown arch '$architecture'\n"
+fi
+
+	;&
 	mariadbupgrade)
 	docker volume rm m57 || echo "m57 already cleaned"
 	docker volume create m57
