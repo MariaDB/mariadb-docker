@@ -15,6 +15,7 @@ ARG GPG_KEYS=177F4010FE56CA3336300305F1656F24C74CD1D8
 # uid           [ unknown] MariaDB Signing Key <signing-key@mariadb.org>
 # sub   rsa4096 2016-03-30 [E]
 # install "libjemalloc2" as it offers better performance in some cases. Use with LD_PRELOAD
+# install "libtcmalloc-minimal4" as it may improve performance and fix memory fragmentation issues. Use with LD_PRELOAD
 # install "pwgen" for randomizing passwords
 # install "tzdata" for /usr/share/zoneinfo/
 # install "xz-utils" for .sql.xz docker-entrypoint-initdb.d files
@@ -27,6 +28,7 @@ RUN set -eux; \
 		gpg \
 		gpgv \
 		libjemalloc2 \
+		libtcmalloc-minimal4 \
 		pwgen \
 		tzdata \
 		xz-utils \
