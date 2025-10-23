@@ -92,7 +92,10 @@ jobs:
       - name: Pull Dependencies
         run: ${{ matrix.runs.pull }}
       - name: Build ${{ matrix.name }}
-        run: ${{ matrix.runs.build }}
+        run: |
+          export DOCKER_BUILDKIT=1
+          docker buildx ls
+          ${{ matrix.runs.build }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
       - name: Test ${{ matrix.name }}
