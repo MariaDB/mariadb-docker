@@ -108,12 +108,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: tag
+      - name: tag and push
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: docker tag mariadb:${{ matrix.name }} ghcr.io/mariadb/mariadb:${{ matrix.name }}
-      - name: push
-        if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: docker push ghcr.io/mariadb/mariadb:${{ matrix.name }}
+        run: |
+          echo "Expanding and pushing tags..."
+          for tag in ${{ join(matrix.meta.entries[0].tags, ' ') }}; do
+            echo "Tagging and pushing: $tag"
+            docker tag mariadb:${{ matrix.name }} ghcr.io/mariadb/mariadb:$tag
+            docker push ghcr.io/mariadb/mariadb:$tag
+          done
       - name: MariaDB Operator Test (non-UBI)
         if: ${{ env.DEPLOY_IMAGES == 'true' && !contains( matrix.name, 'ubi') }}
         run: gh workflow run test-image.yml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }}
