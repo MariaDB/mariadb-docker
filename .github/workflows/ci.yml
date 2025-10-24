@@ -94,6 +94,7 @@ jobs:
       - name: Build ${{ matrix.name }}
         run: |
           export DOCKER_BUILDKIT=1
+          export BASHBREW_BUILDKIT_SYNTAX=docker/dockerfile:1
           docker buildx ls
           docker buildx create --use --name multi-builder
           docker buildx ls
