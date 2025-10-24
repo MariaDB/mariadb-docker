@@ -95,6 +95,8 @@ jobs:
         run: |
           export DOCKER_BUILDKIT=1
           docker buildx ls
+          docker buildx create --use --name multi-builder
+          docker buildx ls
           ${{ matrix.runs.build }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
