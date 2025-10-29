@@ -58,7 +58,7 @@ jobs:
         name: Generate Jobs
         run: |
           sed -i '/"platform"/c"platform": "{{- range $index, $arch := $e.Architectures }}{{ if $index }},{{ end }}{{- if eq $arch "arm64v8" }}linux/arm64/v8{{- else }}linux/{{$arch}}{{- end }}{{- end }}"' "$BASHBREW_SCRIPTS/github-actions/generate.sh"
-          strategy="$(GITHUB_REPOSITORY='mariadb' "$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | .runs.mariadbtest = "./.test/run.sh " + $tag)')"
+          strategy="$(GITHUB_REPOSITORY='mariadb' "$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | .runs.mariadbtest = "./.test/run.sh " + $tag | del(.runs.history))')"
           echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
           jq . <<<"$strategy" # sanity check / debugging aid
 
