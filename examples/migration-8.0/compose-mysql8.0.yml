@@ -52,6 +52,7 @@ services:
      mysql:
        condition: service_healthy
     restart: "no"
+    user: root
     command: /docker-entrypoint-initdb.d/dump-mysql.sh
     volumes:
       - mysqldump:/etc/dump/
@@ -69,13 +70,7 @@ services:
 
 volumes:
   dbdata: {}
-  # sudo chown -R 999:999 ${PWD}/dump-data # on host before running this file
   mysqldump:
-    driver: local
-    driver_opts:
-      type: none
-      device: "${PWD}/dump-data"
-      o: bind
 
 networks:
   backend:
