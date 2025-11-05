@@ -49,8 +49,10 @@ services:
     <<: *common-attributes # aliases
     container_name: ${MARIADB_DUMP_name}
     depends_on:
-      mysql:
-        condition: service_healthy
+     mysql:
+       condition: service_healthy
+    restart: "no"
+    command: /docker-entrypoint-initdb.d/dump-mysql.sh
     volumes:
       - mysqldump:/etc/dump/
       - ./dump-mysql.sh:/docker-entrypoint-initdb.d/dump-mysql.sh
@@ -60,8 +62,7 @@ services:
     container_name: ${MARIADB_MIGRATED_name}
     depends_on:
      mariadb-dump:
-       condition: service_healthy
-      #  restart: true
+       condition: service_completed_successfully
     volumes:
       - mysqldump:/etc/dump/
       - ./migrate-mariadb.sh:/docker-entrypoint-initdb.d/migrate-mariadb.sh
