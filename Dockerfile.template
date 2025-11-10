@@ -7,7 +7,7 @@ RUN groupadd -r mysql && useradd -r -g mysql mysql --home-dir /var/lib/mysql && 
 # add gosu for easy step-down from root
 # https://github.com/tianon/gosu/releases
 # gosu key is B42F6819007F00F88E364FD4036A9C25BF357DD4
-ENV GOSU_VERSION 1.17
+ENV GOSU_VERSION 1.19
 
 ARG GPG_KEYS=177F4010FE56CA3336300305F1656F24C74CD1D8
 # pub   rsa4096 2016-03-30 [SC]
@@ -15,6 +15,7 @@ ARG GPG_KEYS=177F4010FE56CA3336300305F1656F24C74CD1D8
 # uid           [ unknown] MariaDB Signing Key <signing-key@mariadb.org>
 # sub   rsa4096 2016-03-30 [E]
 # install "libjemalloc2" as it offers better performance in some cases. Use with LD_PRELOAD
+# install "%%TCMALLOC_UBUNTU_PKG_NAME%%" as it may improve performance and fix memory fragmentation issues. Use with LD_PRELOAD
 # install "pwgen" for randomizing passwords
 # install "tzdata" for /usr/share/zoneinfo/
 # install "xz-utils" for .sql.xz docker-entrypoint-initdb.d files
@@ -27,6 +28,7 @@ RUN set -eux; \
 		gpg \
 		gpgv \
 		libjemalloc2 \
+		%%TCMALLOC_UBUNTU_PKG_NAME%% \
 		pwgen \
 		tzdata \
 		xz-utils \

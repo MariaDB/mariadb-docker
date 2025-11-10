@@ -71,6 +71,12 @@ update_version()
 		arches="amd64 arm64v8 ppc64le s390x"
 	fi
 
+	if [[ $suite = 'jammy' ]]; then
+		tcmallocUbuntuPkgName="libtcmalloc-minimal4"
+	else
+		tcmallocUbuntuPkgName="libtcmalloc-minimal4t64"
+	fi
+
 	cp "Dockerfile${ubi}.template" "${dir}/Dockerfile"
 
 	cp docker-entrypoint.sh healthcheck.sh "$dir/"
@@ -81,6 +87,7 @@ update_version()
 		-e 's!%%MARIADB_MAJOR%%!'"${version%-ubi}"'!g' \
 		-e 's!%%MARIADB_RELEASE_STATUS%%!'"$releaseStatus"'!g' \
 		-e 's!%%MARIADB_SUPPORT_TYPE%%!'"$supportType"'!g' \
+		-e 's!%%TCMALLOC_UBUNTU_PKG_NAME%%!'"$tcmallocUbuntuPkgName"'!g' \
 		-e 's!%%SUITE%%!'"$suite"'!g' \
 		-e 's!%%ARCHES%%! '"$arches"'!g' \
 		"$dir/Dockerfile"

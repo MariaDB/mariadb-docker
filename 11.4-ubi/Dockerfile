@@ -9,7 +9,7 @@ RUN microdnf install -y shadow-utils && \
 	microdnf remove -y shadow-utils && \
 	microdnf clean all
 
-ENV GOSU_VERSION 1.17
+ENV GOSU_VERSION 1.19
 RUN set -eux; \
 	rpmArch="$(rpm --query --queryformat='%{ARCH}' rpm)"; \
 	case "$rpmArch" in \
@@ -66,7 +66,7 @@ ENV MARIADB_VERSION=$MARIADB_VERSION
 # release-support-type:Long Term Support
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
-# missing pwgen(epel), jemalloc(epel) (as entrypoint/user extensions)
+# missing pwgen(epel), jemalloc(epel), gperftools-libs(epel) (as entrypoint/user extensions)
 # procps, pv(epel) - missing dependencies of galera sst script
 # tzdata re-installed as only a fake version is part of the ubi-minimal base image.
 # https://fedoraproject.org/security
@@ -90,7 +90,7 @@ RUN set -eux ; \
 	unset GNUPGHOME ; \
 	microdnf update -y ; \
 	microdnf reinstall -y tzdata ; \
-	microdnf install -y procps-ng zstd xz jemalloc pwgen pv util-linux-core ; \
+	microdnf install -y procps-ng zstd xz jemalloc gperftools-libs pwgen pv util-linux-core ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
 	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} ; \
