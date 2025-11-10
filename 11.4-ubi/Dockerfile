@@ -42,7 +42,7 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # https://access.redhat.com/documentation/en-us/red_hat_software_certification/2024/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction#con-image-metadata-requirements_openshift-sw-cert-policy-container-images
 LABEL name="MariaDB Server" \
 	vendor="MariaDB Community" \
-	version="11.4.8" \
+	version="11.4.9" \
 	release="Refer to Annotations org.opencontainers.image.{revision,source}" \
 	summary="MariaDB Database" \
 	description="MariaDB Database for relational SQL"
@@ -56,11 +56,11 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="11.4.8" \
+      org.opencontainers.image.version="11.4.9" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=11.4.8
+ARG MARIADB_VERSION=11.4.9
 ENV MARIADB_VERSION=$MARIADB_VERSION
 # release-status:Stable
 # release-support-type:Long Term Support
