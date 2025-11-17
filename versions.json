@@ -57,8 +57,8 @@
   },
   "11.8": {
     "milestone": "11.8",
-    "version": "11.8.4",
-    "fullVersion": "1:11.8.4+maria~ubu2404",
+    "version": "11.8.5",
+    "fullVersion": "1:11.8.5+maria~ubu2404",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubuntu:noble",
@@ -71,8 +71,8 @@
   },
   "11.8-ubi": {
     "milestone": "11.8",
-    "version": "11.8.4",
-    "fullVersion": "11.8.4",
+    "version": "11.8.5",
+    "fullVersion": "11.8.5",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "redhat/ubi9-minimal",
