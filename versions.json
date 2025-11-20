@@ -1,9 +1,9 @@
 {
   "12.1": {
     "milestone": "12.1",
-    "version": "12.1.1",
-    "fullVersion": "1:12.1.1+maria~ubu2404",
-    "releaseStatus": "RC",
+    "version": "12.1.2",
+    "fullVersion": "1:12.1.2+maria~ubu2404",
+    "releaseStatus": "Stable",
     "supportType": "Rolling",
     "base": "ubuntu:noble",
     "arches": [
@@ -15,36 +15,8 @@
   },
   "12.1-ubi": {
     "milestone": "12.1",
-    "version": "12.1.1",
-    "fullVersion": "12.1.1",
-    "releaseStatus": "RC",
-    "supportType": "Rolling",
-    "base": "redhat/ubi10-minimal",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "12.0": {
-    "milestone": "12.0",
-    "version": "12.0.2",
-    "fullVersion": "1:12.0.2+maria~ubu2404",
-    "releaseStatus": "Stable",
-    "supportType": "Rolling",
-    "base": "ubuntu:noble",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "12.0-ubi": {
-    "milestone": "12.0",
-    "version": "12.0.2",
-    "fullVersion": "12.0.2",
+    "version": "12.1.2",
+    "fullVersion": "12.1.2",
     "releaseStatus": "Stable",
     "supportType": "Rolling",
     "base": "redhat/ubi10-minimal",
