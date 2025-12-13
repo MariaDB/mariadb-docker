@@ -365,7 +365,7 @@ while [ $# -gt 0 ]; do
 			;;
 		--no-connect)
 			# used for /docker-entrypoint-initdb.d scripts
-			# where you definately don't want a connection test
+			# where you definitely don't want a connection test
 			connect_s=0
 			;;
 		--*)
@@ -388,7 +388,7 @@ while [ $# -gt 0 ]; do
 	shift
 done
 if [ "$connect_s" != "0" ]; then
-	# we didn't pass a connnect test, so the current success status is suspicious
+	# we didn't pass a connect test, so the current success status is suspicious
 	# return what connect thinks.
 	connect
 	exit $?

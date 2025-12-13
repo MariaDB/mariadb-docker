@@ -205,7 +205,7 @@ update_version_array()
 mariaversion()
 {
 	# version hacks because our $DOWNLOADS_REST_API
-	# seems to never be right on release and has unfinshed suppport
+	# seems to never be right on release and has unfinshed support
 	# for rolling release versions.
 	#if [ "$version" = 11.4 ]; then
 	#	mariaVersion=11.4.7;
