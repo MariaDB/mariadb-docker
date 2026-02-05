@@ -103,6 +103,10 @@ update_version()
 			-e 's!epel-release-latest-10!epel-release-latest-9!g' \
 			-e 's!--enablerepo=epel --disablerepo=mariadb --releasever=10.1 !!' \
 			"$dir/Dockerfile"
+	elif [ "$suite" = ubi10-minimal ]; then
+		sed -i \
+			-e 's!reinstall!install!' \
+			"$dir/Dockerfile"
 	fi
 	vmin=${version%-ubi}
 	# Start using the new executable names
