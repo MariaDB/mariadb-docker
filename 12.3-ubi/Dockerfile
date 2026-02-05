@@ -89,7 +89,7 @@ RUN set -eux ; \
 	rm -rf "$GNUPGHOME" /tmp/MariaDB-Server-GPG-KEY ; \
 	unset GNUPGHOME ; \
 	microdnf update -y ; \
-	microdnf reinstall -y tzdata ; \
+	microdnf install -y tzdata ; \
 	microdnf install --enablerepo=epel --disablerepo=mariadb --releasever=10.1 -y procps-ng zstd xz jemalloc gperftools-libs pwgen pv util-linux-core ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
