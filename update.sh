@@ -196,7 +196,7 @@ update_version_array()
 	releaseStatus=${release[$c1]}
 
 	case "$releaseStatus" in
-		Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
+		Preview | Alpha | Beta | Gamma | RC | Stable ) ;; # sanity check
 		*) echo >&2 "error: unexpected 'release status' value for $mariaVersion: $releaseStatus"; ;;
 	esac
 

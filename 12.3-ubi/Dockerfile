@@ -63,7 +63,7 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
 ARG MARIADB_VERSION=12.3.0
 ENV MARIADB_VERSION=$MARIADB_VERSION
 # release-status:Preview
-# release-support-type:Unknown
+# release-support-type:
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # missing pwgen(epel), jemalloc(epel), gperftools-libs(epel) (as entrypoint/user extensions)
