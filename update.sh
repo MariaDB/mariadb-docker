@@ -120,6 +120,7 @@ update_version()
 				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
 			sed -i -e 's/ && userdel.*//' \
 				"$dir/Dockerfile"
+			sed -i -e '/galera-4 /d' "$dir/Dockerfile"
 			;;
 		10.11)
 			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
@@ -132,7 +133,11 @@ update_version()
 				-e 's/-\$MARIADB_MAJOR//' \
 				-e 's/ && userdel.*//' \
 				"$dir/Dockerfile"
+			sed -i -e '/galera-4 /d' "$dir/Dockerfile"
 			;;
+		11.*|12.2)
+			sed -i -e '/galera-4 /d' "$dir/Dockerfile"
+			;&
 		*)
 			# quoted $ intentional
 			# shellcheck disable=SC2016

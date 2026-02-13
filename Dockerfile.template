@@ -115,6 +115,7 @@ RUN set -ex; \
 	mkdir -p /var/lib/mysql/mysql ; touch /var/lib/mysql/mysql/user.frm ; \
 # mariadb-backup is installed at the same time so that `mysql-common` is only installed once from just mariadb repos
 	apt-get install -y --no-install-recommends mariadb-server="$MARIADB_VERSION" mariadb-backup socat \
+		galera-4 gawk iproute2 lsof rsync \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 # purge and re-create /var/lib/mysql with appropriate ownership

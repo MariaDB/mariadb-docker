@@ -63,7 +63,7 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
 ARG MARIADB_VERSION=12.3.1
 ENV MARIADB_VERSION=$MARIADB_VERSION
 # release-status:RC
-# release-support-type:
+# release-support-type:Unknown
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # missing pwgen(epel), jemalloc(epel), gperftools-libs(epel) (as entrypoint/user extensions)
@@ -93,7 +93,9 @@ RUN set -eux ; \
 	microdnf install --enablerepo=epel --disablerepo=mariadb --releasever=10.1 -y procps-ng zstd xz jemalloc gperftools-libs pwgen pv util-linux-core ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
-	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} ; \
+	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} \
+		galera-4 rsync grep gawk iproute coreutils findutils tar \
+	; \
 	# compatibility with DEB Galera packaging
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so ; \
 	# compatibility with RPM Galera packaging
