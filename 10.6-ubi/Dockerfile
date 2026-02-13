@@ -60,7 +60,6 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_MAJOR=10.6
 ARG MARIADB_VERSION=10.6.25
 ENV MARIADB_VERSION=$MARIADB_VERSION
 # release-status:Stable
@@ -94,7 +93,8 @@ RUN set -eux ; \
 	microdnf install -y procps-ng zstd xz jemalloc gperftools-libs pwgen pv util-linux-core ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
-	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} ; \
+	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-${MARIADB_VERSION} \
+	; \
 	# compatibility with DEB Galera packaging
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so ; \
 	# compatibility with RPM Galera packaging
