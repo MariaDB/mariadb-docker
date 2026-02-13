@@ -111,26 +111,6 @@ update_version()
 	vmin=${version%-ubi}
 	# Start using the new executable names
 	case "$vmin" in
-		10.5)
-			sed -i -e '/--old-mode/d' \
-				-e '/--skip-ssl/d' \
-				-e 's/mariadb-upgrade\([^_"]\)/mysql_upgrade\1/' \
-				-e 's/mariadb-dump/mysqldump/' \
-				-e 's/mariadb-admin/mysqladmin/' \
-				-e 's/\bmariadb --protocol\b/mysql --protocol/' \
-				-e 's/mariadb-install-db/mysql_install_db/g' \
-				-e 's/--mariadbd/--mysqld/' \
-				-e 's/mariadb-tzinfo-to-sql/mysql_tzinfo_to_sql/' \
-				-e '0,/#ENDOFSUBSTITUTIONS/s/mariadbd/mysqld/g' \
-				-e '/memory\.pressure/,+7d' "$dir/docker-entrypoint.sh"
-			sed -i -e '/--skip-ssl/d' \
-				-e '0,/#ENDOFSUBSTITUTIONS/s/\tmariadb/\tmysql/' "$dir/healthcheck.sh"
-			sed -i -e '/^CMD/s/mariadbd/mysqld/' \
-				-e 's/ && userdel.*//' \
-				"$dir/Dockerfile"
-			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
-				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
-			;;
 		10.6*)
 			sed -i -e '/memory\.pressure/,+7d' \
 				-e 's/--mariadbd/--mysqld/' \
