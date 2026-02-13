@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-GLOBIGNORE=examples/:.*/:test/:main/:main-ubi/:12.3*
+GLOBIGNORE=examples/:.*/:test/:main/:main-ubi/
 
 err() {
   echo >&2 "ERROR: $*"
