@@ -140,12 +140,6 @@ update_version()
 				-e '/^ENV MARIADB_MAJOR/d' \
 				-e 's/-\$MARIADB_MAJOR//' \
 				"$dir/Dockerfile"
-			if [ "$vmin" = 11.2 ]; then
-				sed -i -e '/--skip-ssl/d' \
-				       	"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
-				sed -i -e 's/ && userdel.*//' \
-					"$dir/Dockerfile"
-			fi
 			sed -i -e 's/ \/[^ ]*50-mysqld_safe.cnf//' "$dir/Dockerfile"
 			;&
 	esac
