@@ -46,11 +46,7 @@ die()
 trap "killoff" EXIT
 
 mariadb=mariadb
-RPL_MONITOR="REPLICA MONITOR"
 v=$(docker run --rm "$image" mariadb --version)
-if [[ $v =~ Distrib\ 10.4 ]]; then
-	# the new age hasn't begun yet
-	RPL_MONITOR="REPLICATION CLIENT"
 fi
 
 runandwait()
@@ -174,7 +170,7 @@ checkReplication() {
 		        -e MARIADB_ROOT_PASSWORD="${rootpass}" \
 			-e MARIADB_REPLICATION_USER="$mariadb_replication_user" \
 			-e MARIADB_REPLICATION_PASSWORD="$pass" \
-			-e MARIADB_HEALTHCHECK_GRANTS="${RPL_MONITOR}" \
+			-e MARIADB_HEALTHCHECK_GRANTS="REPLICA MONITOR" \
 			--health-cmd='healthcheck.sh --connect --innodb-initialized --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
 			--health-interval=3s \
 			"$image" --server-id=3001 --port "${port}"
@@ -776,7 +772,7 @@ fi
 		-e MARIADB_REPLICATION_USER="repluser" \
 		-e MARIADB_REPLICATION_PASSWORD="replpassword" \
 		-e MARIADB_RANDOM_ROOT_PASSWORD=1 \
-		-e MARIADB_HEALTHCHECK_GRANTS="${RPL_MONITOR}" \
+		-e MARIADB_HEALTHCHECK_GRANTS="REPLICA MONITOR" \
 		--network=container:"$master_host" \
 		--health-cmd='healthcheck.sh --replication_io --replication_sql --replication_seconds_behind_master=0 --replication' \
 		--health-interval=3s \
