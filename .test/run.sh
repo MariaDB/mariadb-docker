@@ -46,7 +46,12 @@ die()
 trap "killoff" EXIT
 
 mariadb=mariadb
+
+galera=0
 v=$(docker run --rm "$image" mariadb --version)
+if [[ $v =~ Distrib\ 1[01] ]] || [[ $v =~ Distrib\ 12.2 ]]; then
+	# MDEV-38744 ends galera for 12.3+
+	galera=1
 fi
 
 runandwait()
@@ -198,6 +203,10 @@ checkReplication() {
 
 galera_sst()
 {
+	if [ $galera -eq 0 ]; then
+		echo No galera
+		return 0
+	fi
         if [ "$architecture" != amd64 ]; then
 		echo test is too slow if not run natively
 		return 0
