@@ -129,7 +129,8 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
 			sed -i -e 's/ && userdel.*//' \
 				"$dir/Dockerfile"
-			sed -i -e '/purge and re-create/{
+			sed -i -e '/microdnf.*openssl/d' \
+				-e '/purge and re-create/{
 					n
 					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
 				"$dir/Dockerfile"
@@ -139,9 +140,14 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 				-e '/--skip-ssl/d' \
 				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
 			sed -i -e 's/ && userdel.*//' \
+				-e '/microdnf.*openssl/d' \
 				-e '/purge and re-create/{
 					n
 					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
+				"$dir/Dockerfile"
+			;;
+		11*-ubi|12.2-ubi)
+			sed -i -e '/microdnf.*openssl/d' \
 				"$dir/Dockerfile"
 			;;
 		*)
