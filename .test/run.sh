@@ -994,6 +994,36 @@ zstd "${initdb}"/*zst*
 	docker volume rm "$tmpvol"
 	tmpvol=
 
+	;&
+	mariadb_user_host)
+
+	echo -e "Test: MARIADB_USER_HOST makes user host configurable at init\n"
+
+	runandwait -e MARIADB_ROOT_PASSWORD=secr3t \
+		-e MARIADB_USER=testuser \
+		-e MARIADB_PASSWORD=testpass \
+		-e MARIADB_DATABASE=testdb \
+		-e MARIADB_USER_HOST=192.168.1.0/255.255.255.0 \
+		"${image}"
+
+	uh=$(mariadbclient --skip-column-names -B -u root -p"secr3t" -e "select user,host from mysql.global_priv where user='testuser'")
+	[ "${uh}" = '' ] && die 'testuser with custom host not created'
+	host=$(mariadbclient --skip-column-names -B -u root -p"secr3t" -e "select host from mysql.global_priv where user='testuser'")
+	[ "${host}" = '192.168.1.0/255.255.255.0' ] || die "expected host '192.168.1.0/255.255.255.0' but got '${host}'"
+	killoff
+
+	echo -e "Test: MARIADB_USER_HOST defaults to '%' when not specified\n"
+
+	runandwait -e MARIADB_ROOT_PASSWORD=secr3t \
+		-e MARIADB_USER=testuser \
+		-e MARIADB_PASSWORD=testpass \
+		-e MARIADB_DATABASE=testdb \
+		"${image}"
+
+	host=$(mariadbclient --skip-column-names -B -u root -p"secr3t" -e "select host from mysql.global_priv where user='testuser'")
+	[ "${host}" = '%' ] || die "expected default host '%' but got '${host}'"
+	killoff
+
 # Insert new tests above by copying the comments below
 #	;&
 #	THE_TEST_NAME)
