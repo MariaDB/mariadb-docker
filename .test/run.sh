@@ -6,12 +6,10 @@
 #   ./run.sh <image>             — run all tests
 #   ./run.sh <image> <test>      — run a single test (function name without test_ prefix)
 #   ./run.sh <image> --list      — list available tests
+#   ./run.sh -v <image>          — run tests in verbose mode
 
 # Tests are defined as test_* functions in tests/*.sh files.
 # Shared utilities live in lib.sh.
-#
-# Options:
-#   -v, --verbose          — show full test output (trace) for all tests
 
 set -eo pipefail
 
