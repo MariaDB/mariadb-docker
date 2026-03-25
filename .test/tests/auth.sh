@@ -1,6 +1,7 @@
 #!/bin/bash
 # Tests for basic password and authentication behavior
 # Sourced by run.sh — do not execute directly
+# shellcheck disable=SC2154
 
 # Shared between test_mysql_random_password_is_complex and test_mysql_random_password_is_different
 _last_random_pass=""
@@ -53,7 +54,7 @@ test_mysql_root_password_is_set() {
 
 	createuser=$(docker exec --user mysql -i \
 		"$cname" \
-		$mariadb \
+		"$mariadb" \
 		--silent \
 		-e "show create user")
 	# shellcheck disable=SC2016
@@ -61,7 +62,7 @@ test_mysql_root_password_is_set() {
 
 	grants="$(docker exec --user mysql -i \
 		"$cname" \
-		$mariadb \
+		"$mariadb" \
 		--silent \
 		-e show\ grants)"
 
@@ -70,7 +71,7 @@ test_mysql_root_password_is_set() {
 
 	createuser=$(docker exec --user mysql -i \
 		"$cname" \
-		$mariadb --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
+		"$mariadb" --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
 		--silent \
 		-e "show create user")
 	# shellcheck disable=SC2016,SC2076
@@ -80,7 +81,7 @@ test_mysql_root_password_is_set() {
 
 	grants="$(docker exec --user mysql -i \
 		"$cname" \
-		$mariadb --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
+		"$mariadb" --defaults-file=/var/lib/mysql/.my-healthcheck.cnf \
 		--silent \
 		-e show\ grants)"
 
@@ -102,13 +103,13 @@ test_mysql_random_password_is_complex() {
 
 	docker exec --user mysql -i \
 		"$cname" \
-		$mariadb \
+		"$mariadb" \
 		--silent \
 		-e "select 'I connect therefore I am'" || die "I'd hoped to work around MDEV-24111"
 
 	grants="$(docker exec --user mysql -i \
 		"$cname" \
-		$mariadb \
+		"$mariadb" \
 		--silent \
 		-e show\ grants)"
 

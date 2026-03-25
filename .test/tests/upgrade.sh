@@ -1,6 +1,7 @@
 #!/bin/bash
 # Tests for upgrade and backup/restore flows
 # Sourced by run.sh — do not execute directly
+# shellcheck disable=SC2154
 
 test_mariadbupgrade() {
 	docker volume rm m57 || echo "m57 already cleaned"
@@ -36,13 +37,13 @@ test_mariadbupgrade() {
 	fi
 	echo
 
-	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/$upgrade_file)
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/"$upgrade_file")
 	# note VERSION() is longer
 	[[ $version =~ ^${upgradeversion} ]] || die "upgrade version didn't match"
 
 	echo "fix version to 5.x"
-	docker exec "$cid" sed -i -e 's/[0-9]*\(.*\)/5\1/' /var/lib/mysql/$upgrade_file
-	docker exec "$cid" cat /var/lib/mysql/$upgrade_file
+	docker exec "$cid" sed -i -e 's/[0-9]*\(.*\)/5\1/' /var/lib/mysql/"$upgrade_file"
+	docker exec "$cid" cat /var/lib/mysql/"$upgrade_file"
 	killoff
 
 	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
@@ -60,19 +61,19 @@ test_mariadbupgrade() {
 	echo
 
 	echo "Final upgrade info reflects current version?"
-	docker exec "$cid" cat /var/lib/mysql/$upgrade_file || die "missing mysql_upgrade_info on install"
-	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/$upgrade_file)
+	docker exec "$cid" cat /var/lib/mysql/"$upgrade_file" || die "missing mysql_upgrade_info on install"
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/"$upgrade_file")
 	[[ $version =~ ^${upgradeversion} ]] || die "upgrade version didn't match current version"
 	echo
 
 	echo "Fixing back to 0 minor version"
-	docker exec "$cid" sed -i -e 's/[0-9]*-\(MariaDB\)/0-\1/' /var/lib/mysql/$upgrade_file
-	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/$upgrade_file)
+	docker exec "$cid" sed -i -e 's/[0-9]*-\(MariaDB\)/0-\1/' /var/lib/mysql/"$upgrade_file"
+	upgradeversion=$(docker exec "$cid" cat /var/lib/mysql/"$upgrade_file")
 	killoff
 
 	runandwait -e MARIADB_AUTO_UPGRADE=1 -v m57:/var/lib/mysql:Z "${image}"
-	docker exec "$cid" cat /var/lib/mysql/$upgrade_file
-	newupgradeversion=$(docker exec "$cid" cat /var/lib/mysql/$upgrade_file)
+	docker exec "$cid" cat /var/lib/mysql/"$upgrade_file"
+	newupgradeversion=$(docker exec "$cid" cat /var/lib/mysql/"$upgrade_file")
 	[ "$upgradeversion" = "$newupgradeversion" ] || die "upgrade versions from mysql_upgrade_info should match"
 	docker logs "$cid" 2>&1 | grep -C 5 'MariaDB upgrade not required' || die 'should not have upgraded'
 

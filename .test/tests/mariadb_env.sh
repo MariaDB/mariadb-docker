@@ -1,6 +1,7 @@
 #!/bin/bash
 # Tests for MariaDB-prefixed environment variables
 # Sourced by run.sh — do not execute directly
+# shellcheck disable=SC2154
 
 # Shared between test_mariadb_root_password_is_complex and test_mariadb_root_password_is_different
 _last_mariadb_random_pass=""

@@ -4,6 +4,10 @@
 
 set -eo pipefail
 
+# Variables set by run.sh (image/dir before sourcing, architecture/galera after)
+: "${image:?}" "${dir:?}"
+declare -g image dir architecture galera
+
 # Global state
 cid=""
 cname=""
@@ -192,7 +196,7 @@ checkReplication() {
 }
 
 galera_sst() {
-	if [ $galera -eq 0 ]; then
+	if [ "$galera" -eq 0 ]; then
 		echo No galera
 		return 0
 	fi

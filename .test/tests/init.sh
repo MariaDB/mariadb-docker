@@ -1,6 +1,7 @@
 #!/bin/bash
 # Tests for initialization, timezone, secrets, and configuration
 # Sourced by run.sh — do not execute directly
+# shellcheck disable=SC2154
 
 test_mysql_initdb_skip_tzinfo_empty() {
 	echo -e "Test: MYSQL_INITDB_SKIP_TZINFO='' should still load timezones\n"
@@ -36,7 +37,7 @@ test_secrets_via_file() {
 	tmpvol=v$RANDOM
 	docker volume create "$tmpvol"
 	# any container will work with tar in it, we may well use the image we have
-	(cd "$secretdir" ; tar -cf - .) | docker run --rm --volume "$tmpvol":/v --user root -i "${image}" tar -xf - -C /v
+	(cd "$secretdir" || exit ; tar -cf - .) | docker run --rm --volume "$tmpvol":/v --user root -i "${image}" tar -xf - -C /v
 	rm -rf "${secretdir}"
 
 	runandwait \

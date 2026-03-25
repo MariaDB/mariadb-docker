@@ -1,6 +1,7 @@
 #!/bin/bash
 # Tests for memory allocators (jemalloc, tcmalloc)
 # Sourced by run.sh — do not execute directly
+# shellcheck disable=SC2154
 
 test_jemalloc() {
 	case "$architecture" in

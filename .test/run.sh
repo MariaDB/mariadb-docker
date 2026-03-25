@@ -127,6 +127,7 @@ if [ "$list_tests" -eq 1 ]; then
 	exit 0
 fi
 
+# shellcheck source=/dev/null
 source "$dir/lib.sh"
 
 # Ensure test fixtures are readable by the mysql user inside containers
@@ -139,12 +140,16 @@ done
 
 # Detect image capabilities
 
+# Used in sourced test files (e.g. tests/allocator.sh) and lib.sh
+# shellcheck disable=SC2034
 architecture=$(docker image inspect --format '{{.Architecture}}' "$image")
 
+# shellcheck disable=SC2034
 galera=0
 v=$(docker run --rm "$image" mariadb --version)
 if [[ $v =~ Distrib\ 1[01] ]] || [[ $v =~ Distrib\ 12.2 ]]; then
 	# MDEV-38744 ends galera for 12.3+
+	# shellcheck disable=SC2034
 	galera=1
 fi
 
@@ -167,7 +172,6 @@ validate_test() {
 
 passed=0
 failed=0
-skipped=0
 
 test_logfile=$(mktemp)
 trap 'rm -f "$test_logfile"; killoff' EXIT
@@ -175,7 +179,10 @@ trap 'rm -f "$test_logfile"; killoff' EXIT
 run_test() {
 	local name="$1"
 
+	# Used in sourced lib.sh functions (killoff, mariadb, etc.)
+	# shellcheck disable=SC2034
 	cname=""
+	# shellcheck disable=SC2034
 	cid=""
 	if [ "$verbose" -eq 1 ]; then
 		echo ""

@@ -1,6 +1,7 @@
 #!/bin/bash
 # Tests for replication, binlog, and Galera
 # Sourced by run.sh — do not execute directly
+# shellcheck disable=SC2154
 
 test_binlog() {
 	echo -e "Test: Ensure time zone info isn't written to binary log\n"
