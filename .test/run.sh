@@ -96,7 +96,7 @@ for f in "$dir"/tests/*.sh; do
 	source "$f"
 done
 
-#  Detect image capabilities 
+# Detect image capabilities
 
 architecture=$(docker image inspect --format '{{.Architecture}}' "$image")
 
@@ -189,8 +189,6 @@ else
 		run_test "$t"
 	done
 fi
-
-# Summary
 
 echo "══════════════════════════════════════════════════════════════"
 echo " Results: $passed passed, $failed failed"

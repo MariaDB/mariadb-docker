@@ -104,14 +104,86 @@ The "next" branch may be rebased on master occasionally and will be used in the 
 
 ### Testing Changes
 
-To build, you can use [docker build](https://docs.docker.com/engine/reference/commandline/build/), [buildah bud](https://buildah.io/), [podman build](http://docs.podman.io/en/latest/markdown/podman-build.1.html) or any other container tool that understands Dockerfiles. The only argument needed is the build directory (10.X).
+To build, you can use [docker build](https://docs.docker.com/engine/reference/commandline/build/), [buildah bud](https://buildah.io/), [podman build](http://docs.podman.io/en/latest/markdown/podman-build.1.html) or any other container tool that understands Dockerfiles.
 
-Run:
+Run all tests:
 ```
-.test/run {container hash/tag}
+.test/run.sh <container hash/tag>
 ```
 
-This will run through all current tests and the new tests you have created. The key aspect is that the script should error returning a non-zero exit code if the test fails.
+Run a single test by name (without the `test_` prefix):
+```
+.test/run.sh <image> <test_name>
+```
+
+List all available tests:
+```
+.test/run.sh <image> --list
+```
+
+Use `-v` / `--verbose` for full trace output.
+
+The key aspect is that the script should error returning a non-zero exit code if the test fails.
+
+#### Adding a New Test
+
+The test suite lives under `.test/` with the following structure:
+
+| Path | Purpose |
+|------|---------|
+| `run.sh` | Test runner; defines `TEST_ORDER` (the list and execution order of all tests) |
+| `lib.sh` | Shared helper functions sourced by the runner |
+| `tests/*.sh` | Test files containing `test_*` functions, grouped by topic |
+| `initdb.d/` | SQL / shell scripts used by init tests |
+| `encryption/`, `encryption_conf/`, `initenc/` | Fixtures for encryption tests |
+| `tls/` | TLS configuration fixtures |
+
+To add a new test, follow these steps:
+
+1. **Create the test function** — add a `test_<name>` function in the appropriate file under `.test/tests/` (or create a new `.sh` file if your test covers a new topic). Each file is sourced by `run.sh` automatically. Include a header comment and do not make the file executable on its own:
+
+```bash
+#!/bin/bash
+# Tests for <topic>
+# Sourced by run.sh — do not execute directly
+
+test_my_new_feature() {
+	echo -e "Test: description of what is being tested\n"
+
+	runandwait -e MARIADB_ROOT_PASSWORD=secret "${image}"
+	result=$(mariadbclient -u root -psecret -e 'SELECT 1')
+	[ "$result" = "1" ] || die "expected 1, got $result"
+	killoff
+}
+```
+
+2. **Register the test** — append your test name (without the `test_` prefix) to the `TEST_ORDER` array in `.test/run.sh`:
+
+```bash
+TEST_ORDER=(
+	# ... existing tests ...
+	my_new_feature
+)
+```
+
+3. **Add supporting files** if needed — place SQL scripts, config files, or other fixtures in the appropriate `.test/` subdirectory (e.g. `initdb.d/`, `tls/`).
+
+#### Key Helper Functions (from `lib.sh`)
+
+| Function | Description |
+|----------|-------------|
+| `runandwait [-e ENV=val ...] <image> [args]` | Start a container and wait until MariaDB is accepting connections. Sets the global `$cid` variable. |
+| `killoff` | Stop and remove the current container (and any master/network). Always call this at the end of your test. |
+| `die <message>` | Print container logs for debugging, clean up, and exit with an error. Use this for assertion failures. |
+| `mariadbclient [args]` | Run the `mariadb` client inside the running container (via socket). |
+| `mariadbclient_tcp [args]` | Run the `mariadb` client inside the running container over TCP (`--protocol tcp`). |
+
+#### Tips
+
+* Tests must be self-contained: start a container, verify, then `killoff`.
+* Use `die` for failures — it dumps container logs before exiting, making debugging easy.
+* To skip a test conditionally (e.g. architecture-specific), `echo` a skip message and `return 0`.
+* If your test needs additional system dependencies, check for their existence and skip gracefully if they are not available.
 
 ### Git Commits
 
