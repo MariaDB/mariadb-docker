@@ -118,7 +118,7 @@ Run a single test by name (without the `test_` prefix):
 
 List all available tests:
 ```
-.test/run.sh <image> --list
+.test/run.sh --list <image>
 ```
 
 Use `-v` / `--verbose` for full trace output.
