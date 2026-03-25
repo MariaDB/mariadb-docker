@@ -2,12 +2,6 @@
 
 # MariaDB Docker image test runner
 #
-# Usage:
-#   ./run.sh <image>             — run all tests
-#   ./run.sh <image> <test>      — run a single test (function name without test_ prefix)
-#   ./run.sh <image> --list      — list available tests
-#   ./run.sh -v <image>          — run tests in verbose mode
-
 # Tests are defined as test_* functions in tests/*.sh files.
 # Shared utilities live in lib.sh.
 
@@ -15,23 +9,72 @@ set -eo pipefail
 
 dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
-# Parse flags
-verbose=0
-args=()
-for arg in "$@"; do
-	case "$arg" in
-		-v|--verbose) verbose=1 ;;
-		*) args+=("$arg") ;;
-	esac
-done
-set -- "${args[@]}"
+usage() {
+	cat <<-EOF
+	Usage: $0 [OPTIONS] <image> [test_name]
 
-if [ $# -eq 0 ]; then
-	echo "Usage: $0 [-v|--verbose] <image> [test_name|--list]" >&2
+	Run MariaDB Docker image tests.
+
+	Arguments:
+	  image        Container image hash or tag to test
+	  test_name    Run only this specific test (without the test_ prefix)
+
+	Options:
+	  -h, --help      Show this help message and exit
+	  -l, --list      List all available tests and exit
+	  -v, --verbose   Show full trace output for tests
+
+	Examples:
+	  $0 mariadb:latest                  Run all tests
+	  $0 -v mariadb:latest               Run all tests with verbose output
+	  $0 mariadb:latest replication      Run only the 'replication' test
+	  $0 --list mariadb:latest           List available tests
+	EOF
+}
+
+# Parse options
+verbose=0
+list_tests=0
+image=""
+test_name=""
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-h|--help)
+			usage
+			exit 0
+			;;
+		-l|--list)
+			list_tests=1
+			;;
+		-v|--verbose)
+			verbose=1
+			;;
+		-*)
+			echo "Unknown option: $1" >&2
+			usage >&2
+			exit 1
+			;;
+		*)
+			if [ -z "$image" ]; then
+				image="$1"
+			elif [ -z "$test_name" ]; then
+				test_name="$1"
+			else
+				echo "Unexpected argument: $1" >&2
+				usage >&2
+				exit 1
+			fi
+			;;
+	esac
+	shift
+done
+
+if [ -z "$image" ]; then
+	echo "Error: <image> argument is required." >&2
+	usage >&2
 	exit 1
 fi
-
-image="$1"
 
 # Build ordered test list 
 # Defines the canonical execution order. Each entry is a test_ function name
@@ -76,7 +119,7 @@ TEST_ORDER=(
 	mariadb_user_host
 )
 
-if [ "${2:-}" = "--list" ]; then
+if [ "$list_tests" -eq 1 ]; then
 	echo "Available tests:"
 	for t in "${TEST_ORDER[@]}"; do
 		echo "  $t"
@@ -161,25 +204,10 @@ run_test() {
 	fi
 }
 
-if [ -n "${2:-}" ] && [ "$2" != "all" ]; then
-	# Single test mode — also support the old fallthrough behavior:
-	# if the name matches, run from that point onward (like the original ;&)
-	found=0
-	for t in "${TEST_ORDER[@]}"; do
-		if [ "$t" = "$2" ]; then
-			found=1
-		fi
-		if [ "$found" -eq 1 ]; then
-			validate_test "$t"
-			run_test "$t"
-		fi
-	done
-
-	if [ "$found" -eq 0 ]; then
-		# Try as an exact single test
-		validate_test "$2"
-		run_test "$2"
-	fi
+if [ -n "$test_name" ] && [ "$test_name" != "all" ]; then
+	# Single test mode
+	validate_test "$test_name"
+	run_test "$test_name"
 else
 	# Run all tests
 	for t in "${TEST_ORDER[@]}"; do
