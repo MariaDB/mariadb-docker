@@ -185,6 +185,7 @@ TEST_ORDER=(
 * Use `die` for failures — it dumps container logs before exiting, making debugging easy.
 * To skip a test conditionally (e.g. architecture-specific), `echo` a skip message and `return 0`.
 * If your test needs additional system dependencies, check for their existence and skip gracefully if they are not available.
+* Use [shellcheck](https://github.com/koalaman/shellcheck) to avoid code smells.
 
 ### Git Commits
 
