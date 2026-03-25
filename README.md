@@ -146,6 +146,7 @@ To add a new test, follow these steps:
 #!/bin/bash
 # Tests for <topic>
 # Sourced by run.sh — do not execute directly
+# shellcheck disable=SC2154
 
 test_my_new_feature() {
 	echo -e "Test: description of what is being tested\n"
