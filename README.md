@@ -113,12 +113,12 @@ Run all tests:
 
 Run a single test by name (without the `test_` prefix):
 ```
-.test/run.sh <image> <test_name>
+.test/run.sh <image> <test_name...>
 ```
 
 List all available tests:
 ```
-.test/run.sh --list <image>
+.test/run.sh --list
 ```
 
 Use `-v` / `--verbose` for full trace output.

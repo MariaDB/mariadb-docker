@@ -11,13 +11,13 @@ dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 usage() {
 	cat <<-EOF
-	Usage: $0 [OPTIONS] <image> [test_name]
+	Usage: $0 [OPTIONS] <image> [test_name...]
 
 	Run MariaDB Docker image tests.
 
 	Arguments:
 	  image        Container image hash or tag to test
-	  test_name    Run only this specific test (without the test_ prefix)
+	  test_name    Run one or more specific tests (without the test_ prefix)
 
 	Options:
 	  -h, --help      Show this help message and exit
@@ -25,10 +25,11 @@ usage() {
 	  -v, --verbose   Show full trace output for tests
 
 	Examples:
-	  $0 mariadb:latest                  Run all tests
-	  $0 -v mariadb:latest               Run all tests with verbose output
-	  $0 mariadb:latest replication      Run only the 'replication' test
-	  $0 --list mariadb:latest           List available tests
+	  $0 mariadb:latest                        Run all tests
+	  $0 -v mariadb:latest                     Run all tests with verbose output
+	  $0 mariadb:latest replication            Run only the 'replication' test
+	  $0 mariadb:latest replication binlog     Run only the named tests
+	  $0 --list                                List available tests
 	EOF
 }
 
@@ -36,7 +37,7 @@ usage() {
 verbose=0
 list_tests=0
 image=""
-test_name=""
+test_names=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -58,23 +59,13 @@ while [ $# -gt 0 ]; do
 		*)
 			if [ -z "$image" ]; then
 				image="$1"
-			elif [ -z "$test_name" ]; then
-				test_name="$1"
 			else
-				echo "Unexpected argument: $1" >&2
-				usage >&2
-				exit 1
+				test_names+=("$1")
 			fi
 			;;
 	esac
 	shift
 done
-
-if [ -z "$image" ]; then
-	echo "Error: <image> argument is required." >&2
-	usage >&2
-	exit 1
-fi
 
 # Build ordered test list 
 # Defines the canonical execution order. Each entry is a test_ function name
@@ -125,6 +116,12 @@ if [ "$list_tests" -eq 1 ]; then
 		echo "  $t"
 	done
 	exit 0
+fi
+
+if [ -z "$image" ]; then
+	echo "Error: <image> argument is required." >&2
+	usage >&2
+	exit 1
 fi
 
 # shellcheck source=/dev/null
@@ -211,10 +208,11 @@ run_test() {
 	fi
 }
 
-if [ -n "$test_name" ] && [ "$test_name" != "all" ]; then
-	# Single test mode
-	validate_test "$test_name"
-	run_test "$test_name"
+if [ ${#test_names[@]} -gt 0 ]; then
+	for test_name in "${test_names[@]}"; do
+		validate_test "$test_name"
+		run_test "$test_name"
+	done
 else
 	# Run all tests
 	for t in "${TEST_ORDER[@]}"; do
