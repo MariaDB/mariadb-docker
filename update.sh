@@ -7,12 +7,15 @@ set -Eeuo pipefail
 development_version=main
 development_version_real=13.0
 
-defaultSuite='noble'
+defaultSuite='resolute'
 defaultSuiteUBI='ubi10-minimal'
 declare -A suites=(
 	[10.5]='focal'
 	[10.6]='jammy'
 	[10.11]='jammy'
+	[11.4]='noble'
+	[11.8]='noble'
+	[12.2]='noble'
 	['10.6-ubi']='ubi9-minimal'
 	['10.11-ubi']='ubi9-minimal'
 	['11.4-ubi']='ubi9-minimal'
@@ -23,6 +26,7 @@ declare -A suffix=(
 	['focal']='ubu2004'
 	['jammy']='ubu2204'
 	['noble']='ubu2404'
+	['resolute']='ubu2604'
 )
 
 #declare -A dpkgArchToBashbrew=(
