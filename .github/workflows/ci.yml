@@ -89,6 +89,13 @@ jobs:
         run: ${{ matrix.runs.test }}
       - name: Extra MariaDB Tests ${{ matrix.name }}
         run: ${{ matrix.runs.mariadbtest }}
+      - name: Upload MTR XML Report ${{ matrix.name }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: mtr-xml-${{ matrix.name }}
+          path: .test-results/*.xml
+          include-hidden-files: true
+          if-no-files-found: warn
       - name: '"docker images"'
         run: ${{ matrix.runs.images }}
       - name: login to registry
