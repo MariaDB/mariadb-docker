@@ -20,9 +20,10 @@ usage() {
 	  test_name    Run one or more specific tests (without the test_ prefix)
 
 	Options:
-	  -h, --help      Show this help message and exit
-	  -l, --list      List all available tests and exit
-	  -v, --verbose   Show full trace output for tests
+	  -h, --help       Show this help message and exit
+	  -l, --list       List all available tests and exit
+	  -v, --verbose    Show full trace output for tests
+	      --xml [path] Emit basic JUnit style XML report (default: .test/mtr-report.xml)
 
 	Examples:
 	  $0 mariadb:latest                        Run all tests
@@ -36,6 +37,9 @@ usage() {
 # Parse options
 verbose=0
 list_tests=0
+xml_enabled=0
+xml_output=""
+default_xml_output=".test/mtr-report.xml"
 image=""
 test_names=()
 
@@ -50,6 +54,17 @@ while [ $# -gt 0 ]; do
 			;;
 		-v|--verbose)
 			verbose=1
+			;;
+		--xml)
+			xml_enabled=1
+			if [ $# -gt 1 ] && [ -n "$image" ] && [[ "$2" != -* ]]; then
+				xml_output="$2"
+				shift
+			fi
+			;;
+		--xml=*)
+			xml_enabled=1
+			xml_output="${1#--xml=}"
 			;;
 		-*)
 			echo "Unknown option: $1" >&2
@@ -66,6 +81,10 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
+
+if [ "$xml_enabled" -eq 1 ] && [ -z "$xml_output" ]; then
+	xml_output="$default_xml_output"
+fi
 
 # Build ordered test list 
 # Defines the canonical execution order. Each entry is a test_ function name
@@ -127,6 +146,98 @@ fi
 # shellcheck source=/dev/null
 source "$dir/lib.sh"
 
+passed=0
+failed=0
+
+test_logfile=$(mktemp)
+xml_cases_file=""
+
+xml_escape() {
+	local text="${1-}"
+	text=${text//&/&amp;}
+	text=${text//</&lt;}
+	text=${text//>/&gt;}
+	text=${text//\"/&quot;}
+	text=${text//\'/'&apos;'}
+	printf '%s' "$text"
+}
+
+xml_add_testcase() {
+	local name="$1"
+	local status="$2"
+	local failure_text="${3-}"
+	local elapsed="${4-0.000}"
+	local classname="main"
+	local escaped_name escaped_classname escaped_combinations
+
+	[ "$xml_enabled" -ne 1 ] && return
+
+	escaped_name="$(xml_escape "$name")"
+	escaped_classname="$(xml_escape "$classname")"
+	escaped_combinations="$(xml_escape "$image")"
+
+	if [ "$status" = "MTR_RES_PASSED" ]; then
+		printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s" combinations="%s" />\n' \
+			"$escaped_classname" "$escaped_name" "$status" "$elapsed" "$escaped_combinations" >> "$xml_cases_file"
+	else
+		printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s" combinations="%s">\n' \
+			"$escaped_classname" "$escaped_name" "$status" "$elapsed" "$escaped_combinations" >> "$xml_cases_file"
+		printf '\t\t\t<failure>%s</failure>\n' "$(xml_escape "$failure_text")" >> "$xml_cases_file"
+		printf '\t\t</testcase>\n' >> "$xml_cases_file"
+	fi
+}
+
+write_xml_report() {
+	if [ "$xml_enabled" -ne 1 ]; then
+		return
+	fi
+
+	local tests total_time timestamp
+	local escaped_suite_name
+	local xml_dir
+
+	tests=$((passed + failed))
+	total_time=$(awk -v s="$xml_suite_start" -v e="${EPOCHREALTIME:-$SECONDS}" 'BEGIN{printf "%.3f", e - s}')
+	timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+	escaped_suite_name="$(xml_escape "main")"
+	xml_dir="$(dirname "$xml_output")"
+
+	mkdir -p "$xml_dir"
+
+	{
+		printf '<?xml version="1.0" encoding="UTF-8"?>\n'
+		printf '<testsuites disabled="0" errors="" failures="%s" name="" tests="%s" time="%s">\n' "$failed" "$tests" "$total_time"
+		printf '\t<testsuite disabled="" errors="" failures="%s" hostname="" id="0" name="%s" package="" skipped="" tests="%s" time="%s" timestamp="%s">\n' "$failed" "$escaped_suite_name" "$tests" "$total_time" "$timestamp"
+		if [ -n "$xml_cases_file" ] && [ -s "$xml_cases_file" ]; then
+			cat "$xml_cases_file"
+		fi
+		printf '\t</testsuite>\n'
+		printf '</testsuites>\n'
+	} > "$xml_output"
+}
+
+cleanup() {
+	local exit_code=$?
+
+	set +e
+	write_xml_report
+	rm -f "$test_logfile"
+	if [ -n "$xml_cases_file" ]; then
+		rm -f "$xml_cases_file"
+	fi
+	killoff
+	trap - EXIT
+	exit "$exit_code"
+}
+
+xml_suite_start=0
+if [ "$xml_enabled" -eq 1 ]; then
+	xml_cases_file=$(mktemp)
+	xml_suite_start=${EPOCHREALTIME:-$SECONDS}
+fi
+
+trap cleanup EXIT
+
 # Ensure test fixtures are readable by the mysql user inside containers
 chmod -R go+rX "$dir"/initdb.d "$dir"/encryption "$dir"/encryption_conf "$dir"/initenc "$dir"/tls 2>/dev/null || true
 
@@ -156,45 +267,51 @@ validate_test() {
 	fi
 }
 
-# Run a single test with status tracking
-
-passed=0
-failed=0
-
-test_logfile=$(mktemp)
-trap 'rm -f "$test_logfile"; killoff' EXIT
-
 run_test() {
 	local name="$1"
+	local failure_text=""
+	local test_start elapsed
 
 	# Used in sourced lib.sh functions (killoff, mariadb, etc.)
 	# shellcheck disable=SC2034
 	cname=""
 	# shellcheck disable=SC2034
 	cid=""
+	: > "$test_logfile"
+	test_start=${EPOCHREALTIME:-$SECONDS}
 	if [ "$verbose" -eq 1 ]; then
 		echo ""
 		echo "=> Running: $name"
 		echo ""
-		if "test_$name"; then
+		if ( set -x; "test_$name" ) 2>&1 | tee "$test_logfile"; then
+			elapsed=$(awk -v s="$test_start" -v e="${EPOCHREALTIME:-$SECONDS}" 'BEGIN{printf "%.3f", e - s}')
 			echo "PASSED: $name"
 			(( passed++ )) || :
+			xml_add_testcase "$name" "MTR_RES_PASSED" "" "$elapsed"
 		else
+			elapsed=$(awk -v s="$test_start" -v e="${EPOCHREALTIME:-$SECONDS}" 'BEGIN{printf "%.3f", e - s}')
+			failure_text="$(cat "$test_logfile")"
 			echo "FAILED: $name"
 			(( failed++ )) || :
+			xml_add_testcase "$name" "MTR_RES_FAILED" "$failure_text" "$elapsed"
 		fi
 		echo
 	else
 		printf '=> %-45s ' "$name"
 		if ( set -x; "test_$name" ) > "$test_logfile" 2>&1; then
+			elapsed=$(awk -v s="$test_start" -v e="${EPOCHREALTIME:-$SECONDS}" 'BEGIN{printf "%.3f", e - s}')
 			echo "PASSED"
 			(( passed++ )) || :
+			xml_add_testcase "$name" "MTR_RES_PASSED" "" "$elapsed"
 		else
+			elapsed=$(awk -v s="$test_start" -v e="${EPOCHREALTIME:-$SECONDS}" 'BEGIN{printf "%.3f", e - s}')
+			failure_text="$(cat "$test_logfile")"
 			echo "FAILED"
 			echo " test output "
 			cat "$test_logfile"
 			echo " end output ─"
 			(( failed++ )) || :
+			xml_add_testcase "$name" "MTR_RES_FAILED" "$failure_text" "$elapsed"
 		fi
 	fi
 }
