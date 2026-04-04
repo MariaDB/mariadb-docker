@@ -51,7 +51,7 @@ jobs:
       - id: generate-jobs
         name: Generate Jobs
         run: |
-          strategy="$(GITHUB_REPOSITORY='mariadb' "$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | .runs.mariadbtest = "./.test/run.sh " + $tag)')"
+          strategy="$(GITHUB_REPOSITORY='mariadb' "$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | .runs.mariadbtest = "./.test/run.sh --xml " + $tag)')"
           echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
           jq . <<<"$strategy" # sanity check / debugging aid
 
