@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: mtr-xml-${{ matrix.name }}
-          path: .test-results/*.xml
+          path: .test/*.xml
           include-hidden-files: true
           if-no-files-found: warn
       - name: '"docker images"'
