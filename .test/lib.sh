@@ -4,9 +4,9 @@
 
 set -eo pipefail
 
-# Variables set by run.sh (image/dir before sourcing, architecture/galera after)
+# Variables set by run.sh (image/dir before sourcing, architecture after)
 : "${image:?}" "${dir:?}"
-declare -g image dir architecture galera
+declare -g image dir architecture
 
 # Global state
 cid=""
@@ -196,10 +196,6 @@ checkReplication() {
 }
 
 galera_sst() {
-	if [ "$galera" -eq 0 ]; then
-		echo No galera
-		return 0
-	fi
 	if [ "$architecture" != amd64 ]; then
 		echo test is too slow if not run natively
 		return 0

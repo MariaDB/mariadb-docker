@@ -5,7 +5,7 @@ set -Eeuo pipefail
 #
 
 development_version=main
-development_version_real=12.4
+development_version_real=13.0
 
 defaultSuite='noble'
 defaultSuiteUBI='ubi10-minimal'
@@ -133,6 +133,7 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 				-e '/purge and re-create/{
 					n
 					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
+				-e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
 		10.11*)
@@ -144,10 +145,15 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 				-e '/purge and re-create/{
 					n
 					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
+				-e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
 		11*-ubi|12.2-ubi)
 			sed -i -e '/microdnf.*openssl/d' \
+				"$dir/Dockerfile"
+			;&
+		11.4|11.8|12.2)
+			sed -i -e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
 		*)

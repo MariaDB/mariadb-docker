@@ -254,15 +254,6 @@ done
 # shellcheck disable=SC2034
 architecture=$(docker image inspect --format '{{.Architecture}}' "$image")
 
-# shellcheck disable=SC2034
-galera=0
-v=$(docker run --rm "$image" mariadb --version)
-if [[ $v =~ Distrib\ 1[01] ]] || [[ $v =~ Distrib\ 12.2 ]]; then
-	# MDEV-38744 ends galera for 12.3+
-	# shellcheck disable=SC2034
-	galera=1
-fi
-
 # Enable xtrace only in verbose mode
 if [ "$verbose" -eq 1 ]; then
 	set -x

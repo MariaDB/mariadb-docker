@@ -81,14 +81,14 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=1:12.4.0+maria~ubu2404
+ARG MARIADB_VERSION=1:13.0.0+maria~ubu2404
 ENV MARIADB_VERSION $MARIADB_VERSION
-# release-status:Alpha
+# release-status:Preview
 # release-support-type:Unknown
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-12.4.0/repo/ubuntu/ noble main main/debug"
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-13.0.0/repo/ubuntu/ noble main main/debug"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
