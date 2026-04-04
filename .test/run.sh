@@ -180,10 +180,12 @@ xml_add_testcase() {
 		printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s" combinations="%s" />\n' \
 			"$escaped_classname" "$escaped_name" "$status" "$elapsed" "$escaped_combinations" >> "$xml_cases_file"
 	else
-		printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s" combinations="%s">\n' \
-			"$escaped_classname" "$escaped_name" "$status" "$elapsed" "$escaped_combinations" >> "$xml_cases_file"
-		printf '\t\t\t<failure>%s</failure>\n' "$(xml_escape "$failure_text")" >> "$xml_cases_file"
-		printf '\t\t</testcase>\n' >> "$xml_cases_file"
+		{
+			printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s" combinations="%s">\n' \
+				"$escaped_classname" "$escaped_name" "$status" "$elapsed" "$escaped_combinations"
+			printf '\t\t\t<failure>%s</failure>\n' "$(xml_escape "$failure_text")"
+			printf '\t\t</testcase>\n'
+		} >> "$xml_cases_file"
 	fi
 }
 
