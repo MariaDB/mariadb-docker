@@ -49,6 +49,8 @@ test_mysql_root_password_is_set() {
 	mariadbclient -u root -pexamplepass -e 'select current_user()'
 	mariadbclient -u root -pwrongpass -e 'select current_user()' || echo 'expected failure'
 
+	docker exec "$cname" sh -c 'set -x -v; . /etc/os-release; [ $VERSION_ID = "10.1" ] && [ $MARIADB_VERSION =  "13.0.1" ] && exit 1' || die "test for https://github.com/MariaDB/buildbot/pull/945"
+
 	otherusers=$(mariadbclient -u root -pexamplepass --skip-column-names -Be "select user,host from mysql.global_priv where (user,host) not in (('root', 'localhost'), ('root', '%'), ('mariadb.sys', 'localhost'), ('mysql','localhost'), ('healthcheck', '::1'), ('healthcheck', '127.0.0.1'), ('healthcheck', 'localhost'))")
 	[ "$otherusers" != '' ] && die "unexpected users $otherusers"
 
