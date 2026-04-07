@@ -23,13 +23,16 @@ usage() {
 	  -h, --help       Show this help message and exit
 	  -l, --list       List all available tests and exit
 	  -v, --verbose    Show full trace output for tests
-	      --xml [path] Emit basic JUnit style XML report (default: .test/mtr-report.xml)
+	      --xml        Emit basic JUnit style XML report (default: .test/mtr-report.xml)
+	      --xml=path   Emit XML report to a custom path
 
 	Examples:
 	  $0 mariadb:latest                        Run all tests
 	  $0 -v mariadb:latest                     Run all tests with verbose output
 	  $0 mariadb:latest replication            Run only the 'replication' test
 	  $0 mariadb:latest replication binlog     Run only the named tests
+	  $0 --xml mariadb:latest                  Run all tests and write default XML report
+	  $0 --xml=/tmp/report.xml mariadb:latest  Run all tests and write XML report to /tmp/report.xml
 	  $0 --list                                List available tests
 	EOF
 }
@@ -57,10 +60,6 @@ while [ $# -gt 0 ]; do
 			;;
 		--xml)
 			xml_enabled=1
-			if [ $# -gt 1 ] && [ -n "$image" ] && [[ "$2" != -* ]]; then
-				xml_output="$2"
-				shift
-			fi
 			;;
 		--xml=*)
 			xml_enabled=1
@@ -168,21 +167,20 @@ xml_add_testcase() {
 	local failure_text="${3-}"
 	local elapsed="${4-0.000}"
 	local classname="main"
-	local escaped_name escaped_classname escaped_combinations
+	local escaped_name escaped_classname
 
 	[ "$xml_enabled" -ne 1 ] && return
 
 	escaped_name="$(xml_escape "$name")"
 	escaped_classname="$(xml_escape "$classname")"
-	escaped_combinations="$(xml_escape "$image")"
 
 	if [ "$status" = "MTR_RES_PASSED" ]; then
-		printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s" combinations="%s" />\n' \
-			"$escaped_classname" "$escaped_name" "$status" "$elapsed" "$escaped_combinations" >> "$xml_cases_file"
+		printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s" />\n' \
+			"$escaped_classname" "$escaped_name" "$status" "$elapsed" >> "$xml_cases_file"
 	else
 		{
-			printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s" combinations="%s">\n' \
-				"$escaped_classname" "$escaped_name" "$status" "$elapsed" "$escaped_combinations"
+			printf '\t\t<testcase classname="%s" name="%s" status="%s" time="%s">\n' \
+				"$escaped_classname" "$escaped_name" "$status" "$elapsed"
 			printf '\t\t\t<failure>%s</failure>\n' "$(xml_escape "$failure_text")"
 			printf '\t\t</testcase>\n'
 		} >> "$xml_cases_file"
