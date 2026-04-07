@@ -51,7 +51,7 @@ jobs:
       - id: generate-jobs
         name: Generate Jobs
         run: |
-          strategy="$(GITHUB_REPOSITORY='mariadb' "$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | .runs.mariadbtest = "./.test/run.sh --xml " + $tag)')"
+          strategy="$(GITHUB_REPOSITORY='mariadb' "$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | .runs.mariadbtest = "./.test/run.sh " + $tag)')"
           echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
           jq . <<<"$strategy" # sanity check / debugging aid
 
@@ -89,13 +89,6 @@ jobs:
         run: ${{ matrix.runs.test }}
       - name: Extra MariaDB Tests ${{ matrix.name }}
         run: ${{ matrix.runs.mariadbtest }}
-      - name: Upload MTR XML Report ${{ matrix.name }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: mtr-xml-${{ matrix.name }}
-          path: .test/*.xml
-          include-hidden-files: true
-          if-no-files-found: warn
       - name: '"docker images"'
         run: ${{ matrix.runs.images }}
       - name: login to registry
