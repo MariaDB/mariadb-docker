@@ -2,10 +2,10 @@
   "13.0": {
     "milestone": "13.0",
     "version": "13.0.0",
-    "fullVersion": "1:13.0.0+maria~ubu2404",
+    "fullVersion": "1:13.0.0+maria~ubu2604",
     "releaseStatus": "Preview",
-    "supportType": "Unknown",
-    "base": "ubuntu:noble",
+    "supportType": "",
+    "base": "ubuntu:resolute",
     "arches": [
       "amd64",
       "arm64v8",
@@ -18,7 +18,7 @@
     "version": "13.0.0",
     "fullVersion": "13.0.0",
     "releaseStatus": "Preview",
-    "supportType": "Unknown",
+    "supportType": "",
     "base": "redhat/ubi10-minimal",
     "arches": [
       "amd64",
@@ -47,34 +47,6 @@
     "fullVersion": "12.3.1",
     "releaseStatus": "RC",
     "supportType": "",
-    "base": "redhat/ubi10-minimal",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "12.2": {
-    "milestone": "12.2",
-    "version": "12.2.2",
-    "fullVersion": "1:12.2.2+maria~ubu2404",
-    "releaseStatus": "Stable",
-    "supportType": "Rolling",
-    "base": "ubuntu:noble",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "12.2-ubi": {
-    "milestone": "12.2",
-    "version": "12.2.2",
-    "fullVersion": "12.2.2",
-    "releaseStatus": "Stable",
-    "supportType": "Rolling",
     "base": "redhat/ubi10-minimal",
     "arches": [
       "amd64",
@@ -188,34 +160,6 @@
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "redhat/ubi9-minimal",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "main": {
-    "milestone": "main",
-    "version": "13.0.0",
-    "fullVersion": "1:13.0.0+maria~ubu2604",
-    "releaseStatus": "Alpha",
-    "supportType": "Unknown",
-    "base": "ubuntu:resolute",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "main-ubi": {
-    "milestone": "main",
-    "version": "13.0.0",
-    "fullVersion": "13.0.0",
-    "releaseStatus": "Alpha",
-    "supportType": "Unknown",
-    "base": "redhat/ubi10-minimal",
     "arches": [
       "amd64",
       "arm64v8",
