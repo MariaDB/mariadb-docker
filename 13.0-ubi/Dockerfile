@@ -42,7 +42,7 @@ COPY MariaDB.repo /etc/yum.repos.d/
 # https://access.redhat.com/documentation/en-us/red_hat_software_certification/2024/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction#con-image-metadata-requirements_openshift-sw-cert-policy-container-images
 LABEL name="MariaDB Server" \
 	vendor="MariaDB Community" \
-	version="12.2.2" \
+	version="13.0.0" \
 	release="Refer to Annotations org.opencontainers.image.{revision,source}" \
 	summary="MariaDB Database" \
 	description="MariaDB Database for relational SQL"
@@ -56,14 +56,14 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="12.2.2" \
+      org.opencontainers.image.version="13.0.0" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=12.2.2
+ARG MARIADB_VERSION=13.0.0
 ENV MARIADB_VERSION=$MARIADB_VERSION
-# release-status:Stable
-# release-support-type:Rolling
+# release-status:Preview
+# release-support-type:
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # missing pwgen(epel), jemalloc(epel), gperftools-libs(epel) (as entrypoint/user extensions)
@@ -99,7 +99,9 @@ RUN set -eux ; \
 	# compatibility with RPM Galera packaging
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib64/galera/libgalera_smm.so ; \
 	# test FIPs now that openssl is installed
+	microdnf install -y openssl ; \
 	openssl list -providers | awk '/^\s*fips/{f=1} f && /status: active/{print "FIPS is active"; found=1; exit 0} END { if (!found) { print "FIPS is not active"; exit 1} }'; \
+	microdnf remove -y openssl ; \
 	microdnf clean all ; \
 	rmdir /var/lib/mysql/mysql ; \
 	chown -R mysql:mysql /var/lib/mysql /run/mariadb ; \

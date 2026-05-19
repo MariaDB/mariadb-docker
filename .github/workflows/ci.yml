@@ -2,8 +2,6 @@ name: GitHub CI
 
 on:
   pull_request:
-    branches-ignore:
-      - next
     paths-ignore:
       - examples
       - Dockerfile.template
@@ -13,8 +11,6 @@ on:
       - Containerfile.debug
       - Containerfile.debug-ubi
   push:
-    branches-ignore:
-      - next
     paths-ignore:
       - examples
       - Dockerfile.template

@@ -5,14 +5,17 @@ set -Eeuo pipefail
 #
 
 development_version=main
-development_version_real=12.4
+development_version_real=13.0
 
-defaultSuite='noble'
+defaultSuite='resolute'
 defaultSuiteUBI='ubi10-minimal'
 declare -A suites=(
 	[10.5]='focal'
 	[10.6]='jammy'
 	[10.11]='jammy'
+	[11.4]='noble'
+	[11.8]='noble'
+	[12.2]='noble'
 	['10.6-ubi']='ubi9-minimal'
 	['10.11-ubi']='ubi9-minimal'
 	['11.4-ubi']='ubi9-minimal'
@@ -23,6 +26,7 @@ declare -A suffix=(
 	['focal']='ubu2004'
 	['jammy']='ubu2204'
 	['noble']='ubu2404'
+	['resolute']='ubu2604'
 )
 
 #declare -A dpkgArchToBashbrew=(
@@ -133,6 +137,7 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 				-e '/purge and re-create/{
 					n
 					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
+				-e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
 		10.11*)
@@ -144,10 +149,19 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 				-e '/purge and re-create/{
 					n
 					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
+				-e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
 		11*-ubi|12.2-ubi)
 			sed -i -e '/microdnf.*openssl/d' \
+				"$dir/Dockerfile"
+			;&
+		11.4|11.8|12.2)
+			sed -i -e 's/-galera//' \
+				"$dir/Dockerfile"
+			;;
+		13.0*|main) # TMP main to 13.0 merge has't happened. Don't break quay.io builds
+			sed -i -e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
 		*)

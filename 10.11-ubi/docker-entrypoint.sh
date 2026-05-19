@@ -223,7 +223,7 @@ docker_create_db_directories() {
 }
 
 _mariadb_version() {
-	echo -n "10.11.16-MariaDB"
+	echo -n "10.11.17-MariaDB"
 }
 
 # initializes the database directory
@@ -279,6 +279,7 @@ docker_setup_env() {
 	# env variables related to master
 	file_env 'MARIADB_MASTER_HOST'
 	file_env 'MARIADB_MASTER_PORT' 3306
+	file_env 'MARIADB_USER_HOST' '%'
 
 	# set MARIADB_ from MYSQL_ when it is unset and then make them the same value
 	: "${MARIADB_ALLOW_EMPTY_ROOT_PASSWORD:=${MYSQL_ALLOW_EMPTY_PASSWORD:-}}"
@@ -442,17 +443,17 @@ docker_setup_db() {
 	if  [ -n "$MARIADB_PASSWORD" ] || [ -n "$MARIADB_PASSWORD_HASH" ] && [ -n "$MARIADB_USER" ]; then
 		mysql_note "Creating user ${MARIADB_USER}"
 		if [ -n "$MARIADB_PASSWORD_HASH" ]; then
-			createUser="CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY PASSWORD '$MARIADB_PASSWORD_HASH';"
+			createUser="CREATE USER '$MARIADB_USER'@'$MARIADB_USER_HOST' IDENTIFIED BY PASSWORD '$MARIADB_PASSWORD_HASH';"
 		else
 			# SQL escape the user password, \ followed by '
 			local userPasswordEscaped
 			userPasswordEscaped=$(docker_sql_escape_string_literal "${MARIADB_PASSWORD}")
-			createUser="CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$userPasswordEscaped';"
+			createUser="CREATE USER '$MARIADB_USER'@'$MARIADB_USER_HOST' IDENTIFIED BY '$userPasswordEscaped';"
 		fi
 
 		if [ -n "$MARIADB_DATABASE" ]; then
 			mysql_note "Giving user ${MARIADB_USER} access to schema ${MARIADB_DATABASE}"
-			userGrants="GRANT ALL ON \`${MARIADB_DATABASE//_/\\_}\`.* TO '$MARIADB_USER'@'%';"
+			userGrants="GRANT ALL ON \`${MARIADB_DATABASE//_/\\_}\`.* TO '$MARIADB_USER'@'$MARIADB_USER_HOST';"
 		fi
 	fi
 
