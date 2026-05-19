@@ -46,7 +46,7 @@
     "version": "12.3.1",
     "fullVersion": "12.3.1",
     "releaseStatus": "RC",
-    "supportType": "",
+    "supportType": "Unknown",
     "base": "redhat/ubi10-minimal",
     "arches": [
       "amd64",

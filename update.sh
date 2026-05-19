@@ -161,7 +161,7 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 			sed -i -e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
-		12.3|13.0*|main) # TMP main to 13.0 merge has't happened. Don't break quay.io builds
+		12.3|12.3-ubi|13.0*|main) # TMP main to 13.0 merge has't happened. Don't break quay.io builds
 			sed -i -e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
