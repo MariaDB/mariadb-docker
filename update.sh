@@ -16,6 +16,7 @@ declare -A suites=(
 	[11.4]='noble'
 	[11.8]='noble'
 	[12.2]='noble'
+	[12.3]='noble'
 	['10.6-ubi']='ubi9-minimal'
 	['10.11-ubi']='ubi9-minimal'
 	['11.4-ubi']='ubi9-minimal'
@@ -160,7 +161,7 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 			sed -i -e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
-		13.0*|main) # TMP main to 13.0 merge has't happened. Don't break quay.io builds
+		12.3|13.0*|main) # TMP main to 13.0 merge has't happened. Don't break quay.io builds
 			sed -i -e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;

@@ -30,10 +30,10 @@
   "12.3": {
     "milestone": "12.3",
     "version": "12.3.1",
-    "fullVersion": "1:12.3.1+maria~ubu2604",
+    "fullVersion": "1:12.3.1+maria~ubu2404",
     "releaseStatus": "RC",
-    "supportType": "",
-    "base": "ubuntu:resolute",
+    "supportType": "Unknown",
+    "base": "ubuntu:noble",
     "arches": [
       "amd64",
       "arm64v8",
