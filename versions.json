@@ -55,34 +55,6 @@
       "s390x"
     ]
   },
-  "12.2": {
-    "milestone": "12.2",
-    "version": "12.2.2",
-    "fullVersion": "1:12.2.2+maria~ubu2404",
-    "releaseStatus": "Stable",
-    "supportType": "Rolling",
-    "base": "ubuntu:noble",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "12.2-ubi": {
-    "milestone": "12.2",
-    "version": "12.2.2",
-    "fullVersion": "12.2.2",
-    "releaseStatus": "Stable",
-    "supportType": "Rolling",
-    "base": "redhat/ubi10-minimal",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
   "11.8": {
     "milestone": "11.8",
     "version": "11.8.8",
