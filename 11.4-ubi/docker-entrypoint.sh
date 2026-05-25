@@ -225,7 +225,7 @@ docker_create_db_directories() {
 }
 
 _mariadb_version() {
-	echo -n "11.4.10-MariaDB"
+	echo -n "11.4.11-MariaDB"
 }
 
 # initializes the database directory
@@ -710,6 +710,13 @@ _main() {
 			docker_mariadb_upgrade "$@"
 		fi
 	fi
+	for password_var in ROOT_ REPLICATION_ ''; do
+		unset MARIADB_${password_var}PASSWORD MARIADB_${password_var}PASSWORD_HASH \
+			MYSQL_${password_var}PASSWORD \
+			MARIADB_${password_var}FILE MYSQL_${password_var}FILE
+	done
+	unset MYSQL_ROOT_HOST MYSQL_ROOT_HOST_FILE \
+		MARIADB_ROOT_HOST MARIADB_ROOT_HOST_FILE
 	exec "$@"
 }
 
