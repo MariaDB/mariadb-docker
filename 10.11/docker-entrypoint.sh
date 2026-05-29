@@ -707,14 +707,14 @@ _main() {
 		elif _check_if_upgrade_is_needed; then
 			docker_mariadb_upgrade "$@"
 		fi
+		for password_var in ROOT_ REPLICATION_ ''; do
+			unset MARIADB_${password_var}PASSWORD MARIADB_${password_var}PASSWORD_HASH \
+				MYSQL_${password_var}PASSWORD \
+				MARIADB_${password_var}FILE MYSQL_${password_var}FILE
+		done
+		unset MYSQL_ROOT_HOST MYSQL_ROOT_HOST_FILE \
+			MARIADB_ROOT_HOST MARIADB_ROOT_HOST_FILE
 	fi
-	for password_var in ROOT_ REPLICATION_ ''; do
-		unset MARIADB_${password_var}PASSWORD MARIADB_${password_var}PASSWORD_HASH \
-			MYSQL_${password_var}PASSWORD \
-			MARIADB_${password_var}FILE MYSQL_${password_var}FILE
-	done
-	unset MYSQL_ROOT_HOST MYSQL_ROOT_HOST_FILE \
-		MARIADB_ROOT_HOST MARIADB_ROOT_HOST_FILE
 	exec "$@"
 }
 
