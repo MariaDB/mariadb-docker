@@ -84,7 +84,7 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
 ARG MARIADB_VERSION=1:13.0.0+maria~ubu2604
 ENV MARIADB_VERSION $MARIADB_VERSION
 # release-status:Preview
-# release-support-type:
+# release-support-type:Rolling
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions

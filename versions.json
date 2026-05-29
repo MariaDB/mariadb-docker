@@ -4,7 +4,7 @@
     "version": "13.0.0",
     "fullVersion": "1:13.0.0+maria~ubu2604",
     "releaseStatus": "Preview",
-    "supportType": "",
+    "supportType": "Rolling",
     "base": "ubuntu:resolute",
     "arches": [
       "amd64",
@@ -18,7 +18,7 @@
     "version": "13.0.0",
     "fullVersion": "13.0.0",
     "releaseStatus": "Preview",
-    "supportType": "",
+    "supportType": "Rolling",
     "base": "redhat/ubi10-minimal",
     "arches": [
       "amd64",
@@ -32,7 +32,7 @@
     "version": "12.3.1",
     "fullVersion": "1:12.3.1+maria~ubu2404",
     "releaseStatus": "RC",
-    "supportType": "Unknown",
+    "supportType": "Long Term Support",
     "base": "ubuntu:noble",
     "arches": [
       "amd64",
@@ -46,7 +46,7 @@
     "version": "12.3.1",
     "fullVersion": "12.3.1",
     "releaseStatus": "RC",
-    "supportType": "Unknown",
+    "supportType": "Long Term Support",
     "base": "redhat/ubi10-minimal",
     "arches": [
       "amd64",
@@ -85,8 +85,8 @@
   },
   "11.8": {
     "milestone": "11.8",
-    "version": "11.8.7",
-    "fullVersion": "1:11.8.7+maria~ubu2404",
+    "version": "11.8.8",
+    "fullVersion": "1:11.8.8+maria~ubu2404",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubuntu:noble",
@@ -99,8 +99,8 @@
   },
   "11.8-ubi": {
     "milestone": "11.8",
-    "version": "11.8.7",
-    "fullVersion": "11.8.7",
+    "version": "11.8.8",
+    "fullVersion": "11.8.8",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "redhat/ubi9-minimal",
@@ -113,8 +113,8 @@
   },
   "11.4": {
     "milestone": "11.4",
-    "version": "11.4.11",
-    "fullVersion": "1:11.4.11+maria~ubu2404",
+    "version": "11.4.12",
+    "fullVersion": "1:11.4.12+maria~ubu2404",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubuntu:noble",
@@ -127,8 +127,8 @@
   },
   "11.4-ubi": {
     "milestone": "11.4",
-    "version": "11.4.11",
-    "fullVersion": "11.4.11",
+    "version": "11.4.12",
+    "fullVersion": "11.4.12",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "redhat/ubi9-minimal",
@@ -141,8 +141,8 @@
   },
   "10.11": {
     "milestone": "10.11",
-    "version": "10.11.17",
-    "fullVersion": "1:10.11.17+maria~ubu2204",
+    "version": "10.11.18",
+    "fullVersion": "1:10.11.18+maria~ubu2204",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubuntu:jammy",
@@ -155,8 +155,8 @@
   },
   "10.11-ubi": {
     "milestone": "10.11",
-    "version": "10.11.17",
-    "fullVersion": "10.11.17",
+    "version": "10.11.18",
+    "fullVersion": "10.11.18",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "redhat/ubi9-minimal",
@@ -169,8 +169,8 @@
   },
   "10.6": {
     "milestone": "10.6",
-    "version": "10.6.26",
-    "fullVersion": "1:10.6.26+maria~ubu2204",
+    "version": "10.6.27",
+    "fullVersion": "1:10.6.27+maria~ubu2204",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "ubuntu:jammy",
@@ -183,8 +183,8 @@
   },
   "10.6-ubi": {
     "milestone": "10.6",
-    "version": "10.6.26",
-    "fullVersion": "10.6.26",
+    "version": "10.6.27",
+    "fullVersion": "10.6.27",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "redhat/ubi9-minimal",
