@@ -139,7 +139,6 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
 				-e 's/-galera//' \
 				"$dir/Dockerfile"
-			sed -i -e '/MDEV-39803/{N;d;}' "$dir/Dockerfile"
 			;;
 		10.11*)
 			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
@@ -151,10 +150,10 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
 				-e 's/-galera//' \
 				"$dir/Dockerfile"
-			sed -i -e '/MDEV-39803/{N;d;}' "$dir/Dockerfile"
 			;;
 		11*-ubi|12.2-ubi)
-			sed -i -e '/MDEV-39803/{N;d;}' "$dir/Dockerfile"
+			sed -i -e '/microdnf.*openssl/d' \
+				"$dir/Dockerfile"
 			;&
 		11.4|11.8|12.2)
 			sed -i -e 's/-galera//' \

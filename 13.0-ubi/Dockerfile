@@ -94,8 +94,6 @@ RUN set -eux ; \
 	mkdir -p /etc/mysql/conf.d /etc/mysql/mariadb.conf.d/ /var/lib/mysql/mysql /run/mariadb /usr/lib64/galera ; \
 	chmod ugo+rwx,o+t /run/mariadb ; \
 	microdnf install -y MariaDB-backup-${MARIADB_VERSION}  MariaDB-server-galera-${MARIADB_VERSION} ; \
-	# MDEV-39803 RPM dependencies missing from MariaDB-server-galera package
-	microdnf install -y galera-4 rsync grep gawk iproute coreutils-single findutils tar lsof socat; \
 	# compatibility with DEB Galera packaging
 	ln -s /usr/lib64/galera-4/libgalera_smm.so /usr/lib/libgalera_smm.so ; \
 	# compatibility with RPM Galera packaging
