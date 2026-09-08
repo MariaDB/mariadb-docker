@@ -166,5 +166,33 @@
       "ppc64le",
       "s390x"
     ]
+  },
+  "13.1": {
+    "milestone": "13.1",
+    "version": "13.1.0",
+    "fullVersion": "1:13.1.0+maria~ubu2604",
+    "releaseStatus": "Preview",
+    "supportType": "Unknown",
+    "base": "ubuntu:resolute",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "13.1-ubi": {
+    "milestone": "13.1",
+    "version": "13.1.0",
+    "fullVersion": "13.1.0",
+    "releaseStatus": "Preview",
+    "supportType": "Unknown",
+    "base": "redhat/ubi10-minimal",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
   }
 }
