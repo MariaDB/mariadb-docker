@@ -88,6 +88,7 @@ jobs:
                       + " --build-arg BASE=ghcr.io/mariadb/mariadb:" + $item.name
                       + " --build-arg PLUGIN=duckdb"
                       + " -f " + $containerfile
+                      + " --push"
                     )
                   end
               )
@@ -141,7 +142,7 @@ jobs:
         run: ${{ matrix.runs.build }} --push
       - name: Build DuckDB ${{ matrix.name }}
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: ${{ matrix.runs.duckbuild }} --push
+        run: ${{ matrix.runs.duckbuild }}
       - name: Build for test ${{ matrix.name }}
         run: ${{ matrix.runs.origbuild }}
       - name: History ${{ matrix.name }}
