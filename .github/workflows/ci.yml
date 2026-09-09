@@ -141,7 +141,7 @@ jobs:
         run: ${{ matrix.runs.build }} --push
       - name: Build DuckDB ${{ matrix.name }}
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: ${{ matrix.runs.duckbuild }}
+        run: ${{ matrix.runs.duckbuild }} --push
       - name: Build for test ${{ matrix.name }}
         run: ${{ matrix.runs.origbuild }}
       - name: History ${{ matrix.name }}
