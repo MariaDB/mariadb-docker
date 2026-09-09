@@ -1,0 +1,9 @@
+ARG BASE
+FROM $BASE
+
+ARG PLUGIN
+RUN set -eux; \
+  apt-get update; \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+  mariadb-plugin-${PLUGIN}; \
+  rm -rf /var/lib/apt/lists/*

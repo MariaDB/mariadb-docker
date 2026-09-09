@@ -1,0 +1,8 @@
+ARG BASE
+FROM $BASE
+
+USER root
+ARG PLUGIN
+RUN microdnf install -y MariaDB-${PLUGIN}-engine \
+    && microdnf clean all
+USER mysql

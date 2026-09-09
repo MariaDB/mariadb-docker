@@ -57,7 +57,12 @@ jobs:
       jq -c '
         .matrix.include |= map(
           .meta.entries[0].tags[0] as $tag
+          | (if (.meta.froms[0] | startswith("redhat"))
+             then "Containerfile.plugin-ubi"
+             else "Containerfile.plugin"
+             end) as $containerfile
           | .runs.mariadbtest = "./.test/run.sh " + $tag
+          | .runs.origbuild = .runs.build
           | .runs.build |= (
               gsub("mariadb:"; "ghcr.io/mariadb/mariadb:")
               | sub(
@@ -65,6 +70,21 @@ jobs:
                   "linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x"
                 )
             )
+          | if (.name | startswith("10")) then
+              .
+            else
+              .runs.duckbuild = (
+                .runs.build
+                | gsub(
+                    "ghcr.io/mariadb/mariadb:";
+                    "ghcr.io/mariadb/duckdb:"
+                  )
+                | sub(",linux/ppc64le,linux/s390x"; "")
+                + " --build-arg BASE=ghcr.io/mariadb/mariadb:" + .name
+                + " --build-arg PLUGIN=duckdb"
+                + " -f " + $containerfile
+              )
+            end
         )
       '
     )"
@@ -111,6 +131,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build ${{ matrix.name }}
         run: ${{ matrix.runs.build }} ${{ env.DEPLOY_IMAGES == 'true' && ' --push' || ''}}
+      - name: Build Orig ${{ matrix.name }}
+        run: ${{ matrix.runs.origbuild }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
       - name: Test ${{ matrix.name }}
@@ -131,3 +153,5 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
           JOB: "${{ github.job }}"
+      - name: Build DuckDB ${{ matrix.name }}
+        run: ${{ matrix.runs.duckbuild }} ${{ env.DEPLOY_IMAGES == 'true' && ' --push' || ''}}
