@@ -63,7 +63,7 @@ jobs:
                    else "Containerfile.plugin"
                    end) as $containerfile
                 | .runs.mariadbtest = "./.test/run.sh " + $tag
-                | .runs.origbuild = .runs.build
+                | .runs.origbuild = .runs.build + " --load"
                 | .runs.build |= (
                     gsub("mariadb:"; "ghcr.io/mariadb/mariadb:")
                     | sub(
