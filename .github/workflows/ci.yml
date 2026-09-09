@@ -56,7 +56,8 @@ jobs:
               "$BASHBREW_SCRIPTS/github-actions/generate.sh" |
             jq -c '
               .matrix.include |= map(
-                .meta.entries[0].tags[0] as $tag
+                . as $item
+                | $item.meta.entries[0].tags[0] as $tag
                 | (if (.meta.froms[0] | startswith("redhat"))
                    then "Containerfile.plugin-ubi"
                    else "Containerfile.plugin"
@@ -70,7 +71,7 @@ jobs:
                         "linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x"
                       )
                   )
-                | if (.name | startswith("10")) then
+                | if ($item.name | startswith("10")) then
                     .
                   else
                     .runs.duckbuild = (
@@ -80,7 +81,7 @@ jobs:
                           "ghcr.io/mariadb/duckdb:"
                         )
                       | sub(",linux/ppc64le,linux/s390x"; "")
-                      + " --build-arg BASE=ghcr.io/mariadb/mariadb:" + .name
+                      + " --build-arg BASE=ghcr.io/mariadb/mariadb:" + $item.name
                       + " --build-arg PLUGIN=duckdb"
                       + " -f " + $containerfile
                     )
