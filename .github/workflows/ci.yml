@@ -29,7 +29,9 @@ jobs:
     name: Checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
         with:
@@ -46,14 +48,57 @@ jobs:
     outputs:
       strategy: ${{ steps.generate-jobs.outputs.strategy }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: docker-library/bashbrew@v0.1.13
       - id: generate-jobs
         name: Generate Jobs
         run: |
-          strategy="$(GITHUB_REPOSITORY='mariadb' "$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq -c '.matrix.include |= map(.meta.entries[0].tags[0] as $tag | .runs.mariadbtest = "./.test/run.sh " + $tag)')"
+          strategy="$(
+            GITHUB_REPOSITORY='mariadb' \
+              "$BASHBREW_SCRIPTS/github-actions/generate.sh" |
+            jq -c '
+              .matrix.include |= map(
+                . as $item
+                | $item.meta.entries[0].tags[0] as $tag
+                | (if (.meta.froms[0] | startswith("redhat"))
+                   then "Containerfile.plugin-ubi"
+                   else "Containerfile.plugin"
+                   end) as $containerfile
+                | .runs.mariadbtest = "./.test/run.sh " + $tag
+                | .runs.origbuild = .runs.build + " --load"
+                | .runs.build |= (
+                    gsub("mariadb:"; "ghcr.io/mariadb/mariadb:")
+                    | sub(
+                        "linux/amd64";
+                        "linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x"
+                      )
+                  )
+                | if ($item.name | startswith("10")) then
+                    .
+                  else
+                    .runs.duckbuild = (
+                      .runs.build
+                      | gsub(
+                          "ghcr.io/mariadb/mariadb:";
+                          "ghcr.io/mariadb/duckdb:"
+                        )
+                      | sub(",linux/ppc64le,linux/s390x"; "")
+                      + " --build-arg BASE=ghcr.io/mariadb/mariadb:" + $item.name
+                      + " --build-arg PLUGIN=duckdb"
+                      + " -f " + $containerfile
+                      + " --push"
+                    )
+                  end
+              )
+            '
+          )"
+      
           echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
-          jq . <<<"$strategy" # sanity check / debugging aid
+      
+          # sanity check / debugging aid
+          jq . <<<"$strategy"
 
   test:
     needs: generate-jobs
@@ -63,7 +108,9 @@ jobs:
     env:
       DEPLOY_IMAGES: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Check for registry credentials
         if: github.repository == 'MariaDB/mariadb-docker' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/fips_test')
         run: |
@@ -81,8 +128,23 @@ jobs:
         run: ${{ matrix.runs.prepare }}
       - name: Pull Dependencies
         run: ${{ matrix.runs.pull }}
-      - name: Build ${{ matrix.name }}
-        run: ${{ matrix.runs.build }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: login to registry
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build all ${{ matrix.name }}
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        run: ${{ matrix.runs.build }} --push
+      - name: Build DuckDB ${{ matrix.name }}
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        run: ${{ matrix.runs.duckbuild }}
+      - name: Build for test ${{ matrix.name }}
+        run: ${{ matrix.runs.origbuild }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
       - name: Test ${{ matrix.name }}
@@ -91,19 +153,6 @@ jobs:
         run: ${{ matrix.runs.mariadbtest }}
       - name: '"docker images"'
         run: ${{ matrix.runs.images }}
-      - name: login to registry
-        if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: tag
-        if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: docker tag mariadb:${{ matrix.name }} ghcr.io/mariadb/mariadb:${{ matrix.name }}
-      - name: push
-        if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: docker push ghcr.io/mariadb/mariadb:${{ matrix.name }}
       - name: MariaDB Operator Test (non-UBI)
         if: ${{ env.DEPLOY_IMAGES == 'true' && !contains( matrix.name, 'ubi') }}
         run: gh workflow run test-image.yml --repo mariadb-operator/mariadb-operator -f mariadb_image=ghcr.io/mariadb/mariadb:${{ matrix.name }} -f mariadb_version=${JOB%%-*}
