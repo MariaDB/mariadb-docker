@@ -130,9 +130,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build ${{ matrix.name }}
-        run: ${{ matrix.runs.build }} ${{ env.DEPLOY_IMAGES == 'true' && ' --push' || ''}}
-      - name: Build Orig ${{ matrix.name }}
+      - name: Build all ${{ matrix.name }}
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        run: ${{ matrix.runs.build }}
+      - name: Build DuckDB ${{ matrix.name }}
+        if: ${{ env.DEPLOY_IMAGES == 'true' }}
+        run: ${{ matrix.runs.duckbuild }}
+      - name: Build for test ${{ matrix.name }}
         run: ${{ matrix.runs.origbuild }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
@@ -154,5 +158,3 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.MARIADB_OPERATOR_TOKEN }}"
           JOB: "${{ github.job }}"
-      - name: Build DuckDB ${{ matrix.name }}
-        run: ${{ matrix.runs.duckbuild }} ${{ env.DEPLOY_IMAGES == 'true' && ' --push' || ''}}
