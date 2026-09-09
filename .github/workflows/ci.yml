@@ -138,7 +138,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build all ${{ matrix.name }}
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: ${{ matrix.runs.build }}
+        run: ${{ matrix.runs.build }} --push
       - name: Build DuckDB ${{ matrix.name }}
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
         run: ${{ matrix.runs.duckbuild }}
