@@ -51,48 +51,48 @@ jobs:
       - id: generate-jobs
         name: Generate Jobs
         run: |
-    strategy="$(
-      GITHUB_REPOSITORY='mariadb' \
-        "$BASHBREW_SCRIPTS/github-actions/generate.sh" |
-      jq -c '
-        .matrix.include |= map(
-          .meta.entries[0].tags[0] as $tag
-          | (if (.meta.froms[0] | startswith("redhat"))
-             then "Containerfile.plugin-ubi"
-             else "Containerfile.plugin"
-             end) as $containerfile
-          | .runs.mariadbtest = "./.test/run.sh " + $tag
-          | .runs.origbuild = .runs.build
-          | .runs.build |= (
-              gsub("mariadb:"; "ghcr.io/mariadb/mariadb:")
-              | sub(
-                  "linux/amd64";
-                  "linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x"
-                )
-            )
-          | if (.name | startswith("10")) then
-              .
-            else
-              .runs.duckbuild = (
-                .runs.build
-                | gsub(
-                    "ghcr.io/mariadb/mariadb:";
-                    "ghcr.io/mariadb/duckdb:"
+          strategy="$(
+            GITHUB_REPOSITORY='mariadb' \
+              "$BASHBREW_SCRIPTS/github-actions/generate.sh" |
+            jq -c '
+              .matrix.include |= map(
+                .meta.entries[0].tags[0] as $tag
+                | (if (.meta.froms[0] | startswith("redhat"))
+                   then "Containerfile.plugin-ubi"
+                   else "Containerfile.plugin"
+                   end) as $containerfile
+                | .runs.mariadbtest = "./.test/run.sh " + $tag
+                | .runs.origbuild = .runs.build
+                | .runs.build |= (
+                    gsub("mariadb:"; "ghcr.io/mariadb/mariadb:")
+                    | sub(
+                        "linux/amd64";
+                        "linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x"
+                      )
                   )
-                | sub(",linux/ppc64le,linux/s390x"; "")
-                + " --build-arg BASE=ghcr.io/mariadb/mariadb:" + .name
-                + " --build-arg PLUGIN=duckdb"
-                + " -f " + $containerfile
+                | if (.name | startswith("10")) then
+                    .
+                  else
+                    .runs.duckbuild = (
+                      .runs.build
+                      | gsub(
+                          "ghcr.io/mariadb/mariadb:";
+                          "ghcr.io/mariadb/duckdb:"
+                        )
+                      | sub(",linux/ppc64le,linux/s390x"; "")
+                      + " --build-arg BASE=ghcr.io/mariadb/mariadb:" + .name
+                      + " --build-arg PLUGIN=duckdb"
+                      + " -f " + $containerfile
+                    )
+                  end
               )
-            end
-        )
-      '
-    )"
-
-    echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
-
-    # sanity check / debugging aid
-    jq . <<<"$strategy"
+            '
+          )"
+      
+          echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
+      
+          # sanity check / debugging aid
+          jq . <<<"$strategy"
 
   test:
     needs: generate-jobs
