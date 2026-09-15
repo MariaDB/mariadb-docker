@@ -5,7 +5,7 @@ set -Eeuo pipefail
 #
 
 development_version=main
-development_version_real=13.0
+development_version_real=13.1
 
 defaultSuite='resolute'
 defaultSuiteUBI='ubi10-minimal'
