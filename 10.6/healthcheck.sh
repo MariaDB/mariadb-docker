@@ -332,10 +332,17 @@ while [ $# -gt 0 ]; do
 			;;
 		--datadir=*)
 			datadir=${1#*=}
+			# Re-evaluate after --datadir; the default lookup runs before arg parsing (#678)
+			if [ -f "$datadir/.my-healthcheck.cnf" ]; then
+				def['extra_file']=$datadir/.my-healthcheck.cnf
+			fi
 			;;
 		--datadir)
 			shift
 			datadir=${1}
+			if [ -f "$datadir/.my-healthcheck.cnf" ]; then
+				def['extra_file']=$datadir/.my-healthcheck.cnf
+			fi
 			;;
 		--no-defaults)
 			def=()
