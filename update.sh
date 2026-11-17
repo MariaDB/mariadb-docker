@@ -68,6 +68,7 @@ update_version()
 			fi
 		fi
 		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$dir"/MariaDB.repo
+		cp openssl-fips.conf "$dir"
 	fi
 
 	if [[ $version = 10.[234]* ]]; then
