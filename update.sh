@@ -40,8 +40,6 @@ development_version_real=13.1
 defaultSuite='resolute'
 defaultSuiteUBI='ubi10-minimal'
 declare -A suites=(
-	[10.5]='focal'
-	[10.6]='jammy'
 	[10.11]='jammy'
 	[11.4]='noble'
 	[11.8]='noble'
@@ -54,7 +52,6 @@ declare -A suites=(
 )
 
 declare -A suffix=(
-	['focal']='ubu2004'
 	['jammy']='ubu2204'
 	['noble']='ubu2404'
 	['resolute']='ubu2604'
@@ -97,7 +94,7 @@ update_version()
 				sed -i -e '/character-set/d' "$dir/docker.cnf"
 			fi
 		fi
-		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$dir"/MariaDB.repo
+		sed -e "s!%%MARIADB_VERSION%%!${fullVersion%-*}!" MariaDB-ubi.repo > "$dir"/MariaDB.repo
 		cp openssl-fips.conf "$dir"
 	fi
 
@@ -146,31 +143,6 @@ update_version()
 	fi
 	# Start using the new executable names
 	case "$version$ubi" in
-		10.6)
-			# quoted $ intentional
-			# shellcheck disable=SC2016
-			sed -i -e '/bashbrew-architectures/a\
-ARG MARIADB_MAJOR=10.6\
-ENV MARIADB_MAJOR $MARIADB_MAJOR
-' \
-				-e 's/" mysql-server/-$MARIADB_MAJOR" mysql-server/' \
-				"$dir/Dockerfile"
-			;&
-		10.6-ubi)
-			sed -i -e '/memory\.pressure/,+7d' \
-				-e 's/--mariadbd/--mysqld/' \
-				"$dir/docker-entrypoint.sh"
-			sed -i -e '/--skip-ssl/d' "$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
-			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
-				"$dir/docker-entrypoint.sh" "$dir/healthcheck.sh"
-			sed -i -e 's/ && userdel.*//' \
-				"$dir/Dockerfile"
-			sed -i -e '/purge and re-create/{
-					n
-					s/;/ \/etc\/mysql\/mariadb.conf.d\/50-mysqld_safe.cnf;/}' \
-				-e 's/-galera//' \
-				"$dir/Dockerfile"
-			;;
 		10.11*)
 			sed -i -e 's/mariadb_upgrade_info/mysql_upgrade_info/' \
 				-e '/--skip-ssl/d' \
@@ -182,11 +154,11 @@ ENV MARIADB_MAJOR $MARIADB_MAJOR
 				-e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;
-		11*-ubi|12.2-ubi)
+		11*-ubi)
 			sed -i -e '/microdnf.*openssl/d' \
 				"$dir/Dockerfile"
 			;&
-		11.4|11.8|12.2)
+		11.4|11.8)
 			sed -i -e 's/-galera//' \
 				"$dir/Dockerfile"
 			;;

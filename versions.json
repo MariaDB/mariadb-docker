@@ -1,9 +1,37 @@
 {
+  "13.2": {
+    "milestone": "13.2",
+    "version": "13.2.1",
+    "fullVersion": "1:13.2.1+maria~ubu2604",
+    "releaseStatus": "RC",
+    "supportType": "Rolling",
+    "base": "ubuntu:resolute",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "13.2-ubi": {
+    "milestone": "13.2",
+    "version": "13.2.1",
+    "fullVersion": "13.2.1",
+    "releaseStatus": "RC",
+    "supportType": "Rolling",
+    "base": "redhat/ubi10-minimal",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
   "13.1": {
     "milestone": "13.1",
-    "version": "13.1.1",
-    "fullVersion": "1:13.1.1+maria~ubu2604",
-    "releaseStatus": "RC",
+    "version": "13.1.2",
+    "fullVersion": "1:13.1.2+maria~ubu2604",
+    "releaseStatus": "Stable",
     "supportType": "Rolling",
     "base": "ubuntu:resolute",
     "arches": [
@@ -15,36 +43,8 @@
   },
   "13.1-ubi": {
     "milestone": "13.1",
-    "version": "13.1.1",
-    "fullVersion": "13.1.1",
-    "releaseStatus": "RC",
-    "supportType": "Rolling",
-    "base": "redhat/ubi10-minimal",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "13.0": {
-    "milestone": "13.0",
-    "version": "13.0.2",
-    "fullVersion": "1:13.0.2+maria~ubu2604",
-    "releaseStatus": "Stable",
-    "supportType": "Rolling",
-    "base": "ubuntu:resolute",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "13.0-ubi": {
-    "milestone": "13.0",
-    "version": "13.0.2",
-    "fullVersion": "13.0.2",
+    "version": "13.1.2",
+    "fullVersion": "13.1.2",
     "releaseStatus": "Stable",
     "supportType": "Rolling",
     "base": "redhat/ubi10-minimal",
@@ -157,34 +157,6 @@
     "milestone": "10.11",
     "version": "10.11.20",
     "fullVersion": "10.11.20",
-    "releaseStatus": "Stable",
-    "supportType": "Long Term Support",
-    "base": "redhat/ubi9-minimal",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "10.6": {
-    "milestone": "10.6",
-    "version": "10.6.28",
-    "fullVersion": "1:10.6.28+maria~ubu2204",
-    "releaseStatus": "Stable",
-    "supportType": "Long Term Support",
-    "base": "ubuntu:jammy",
-    "arches": [
-      "amd64",
-      "arm64v8",
-      "ppc64le",
-      "s390x"
-    ]
-  },
-  "10.6-ubi": {
-    "milestone": "10.6",
-    "version": "10.6.28",
-    "fullVersion": "10.6.28",
     "releaseStatus": "Stable",
     "supportType": "Long Term Support",
     "base": "redhat/ubi9-minimal",

@@ -7,7 +7,7 @@ RUN groupadd -r mysql && useradd -r -g mysql mysql --home-dir /var/lib/mysql && 
 # add gosu for easy step-down from root
 # https://github.com/tianon/gosu/releases
 # gosu key is B42F6819007F00F88E364FD4036A9C25BF357DD4
-ENV GOSU_VERSION 1.19
+ENV GOSU_VERSION 1.20
 
 ARG GPG_KEYS=177F4010FE56CA3336300305F1656F24C74CD1D8
 # pub   rsa4096 2016-03-30 [SC]
@@ -45,9 +45,7 @@ RUN set -eux; \
 	GNUPGHOME="$(mktemp -d)"; \
 	export GNUPGHOME; \
 	gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
-	for key in $GPG_KEYS; do \
-		gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
-	done; \
+	gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$GPG_KEYS"; \
 	gpg --batch --export "$GPG_KEYS" > /etc/apt/trusted.gpg.d/mariadb.gpg; \
 	if command -v gpgconf >/dev/null; then \
 		gpgconf --kill all; \
@@ -88,7 +86,7 @@ ENV MARIADB_VERSION $MARIADB_VERSION
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="http://archive.mariadb.org/mariadb-11.4.14/repo/ubuntu/ noble main main/debug"
+ARG REPOSITORY="https://archive.mariadb.org/mariadb-11.4.14/repo/ubuntu/ noble main main/debug"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
