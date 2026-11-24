@@ -75,18 +75,18 @@ LABEL org.opencontainers.image.authors="MariaDB Community" \
       org.opencontainers.image.licenses="GPL-2.0" \
       org.opencontainers.image.source="https://github.com/MariaDB/mariadb-docker" \
       org.opencontainers.image.vendor="MariaDB Community" \
-      org.opencontainers.image.version="13.1.1" \
+      org.opencontainers.image.version="13.1.2" \
       org.opencontainers.image.url="https://github.com/MariaDB/mariadb-docker"
 
 # bashbrew-architectures: amd64 arm64v8 ppc64le s390x
-ARG MARIADB_VERSION=1:13.1.1+maria~ubu2604
+ARG MARIADB_VERSION=1:13.1.2+maria~ubu2604
 ENV MARIADB_VERSION $MARIADB_VERSION
-# release-status:RC
+# release-status:Stable
 # release-support-type:Rolling
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
-ARG REPOSITORY="https://archive.mariadb.org/mariadb-13.1.1/repo/ubuntu/ resolute main main/debug"
+ARG REPOSITORY="https://archive.mariadb.org/mariadb-13.1.2/repo/ubuntu/ resolute main main/debug"
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
