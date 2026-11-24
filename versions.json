@@ -1,4 +1,32 @@
 {
+  "13.2": {
+    "milestone": "13.2",
+    "version": "13.2.1",
+    "fullVersion": "1:13.2.1+maria~ubu2604",
+    "releaseStatus": "RC",
+    "supportType": "Rolling",
+    "base": "ubuntu:resolute",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
+  "13.2-ubi": {
+    "milestone": "13.2",
+    "version": "13.2.1",
+    "fullVersion": "13.2.1",
+    "releaseStatus": "RC",
+    "supportType": "Rolling",
+    "base": "redhat/ubi10-minimal",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
+  },
   "13.1": {
     "milestone": "13.1",
     "version": "13.1.2",
