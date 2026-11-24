@@ -86,7 +86,13 @@ ENV MARIADB_VERSION $MARIADB_VERSION
 # (https://downloads.mariadb.org/rest-api/mariadb/)
 
 # Allowing overriding of REPOSITORY, a URL that includes suite and component for testing and Enterprise Versions
+<<<<<<< HEAD
 ARG REPOSITORY="https://archive.mariadb.org/mariadb-10.11.20/repo/ubuntu/ jammy main main/debug"
+||||||| 1a4c8e9
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.11.19/repo/ubuntu/ jammy main main/debug"
+=======
+ARG REPOSITORY="http://archive.mariadb.org/mariadb-10.11.20/repo/ubuntu/ jammy main main/debug"
+>>>>>>> master
 
 RUN set -e;\
 	echo "deb ${REPOSITORY}" > /etc/apt/sources.list.d/mariadb.list; \
