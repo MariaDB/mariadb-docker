@@ -64,7 +64,7 @@ update_version()
 				sed -i -e '/character-set/d' "$dir/docker.cnf"
 			fi
 		fi
-		sed -e "s!%%MARIADB_VERSION%%!${version%-*}!" MariaDB-ubi.repo > "$dir"/MariaDB.repo
+		sed -e "s!%%MARIADB_VERSION%%!${fullVersion%-*}!" MariaDB-ubi.repo > "$dir"/MariaDB.repo
 		cp openssl-fips.conf "$dir"
 	fi
 
