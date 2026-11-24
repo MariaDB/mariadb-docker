@@ -1,7 +1,7 @@
 [mariadb]
 name = MariaDB
-#baseurl = https://rpm.mariadb.org/11.4/rhel/$releasever/$basearch
-baseurl = https://archive.mariadb.org/mariadb-11.4/yum/rhel/$releasever/$basearch
+#baseurl = https://rpm.mariadb.org/11.4.14/rhel/$releasever/$basearch
+baseurl = https://archive.mariadb.org/mariadb-11.4.14/yum/rhel/$releasever/$basearch
 # In container we need to validate that this contains the right explicit key
 #gpgkey=https://archive.mariadb.org/PublicKey
 gpgcheck=1
