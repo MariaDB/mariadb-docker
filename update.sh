@@ -1,7 +1,37 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 #
-# Usage ./update.sh [version(multiple)...]
+# update.sh - generate the per-version image directories from the templates
+#
+# Combines the build recipe (Dockerfile*.template,
+# docker-entrypoint.sh, healthcheck.sh, UBI support files) with release
+# metadata from the MariaDB Downloads REST API, producing fully pinned
+# <version>/ and <version>-ubi/ directories plus versions.json.
+#
+# Official Images require reproducible builds, so versions are resolved
+# here and committed, never looked up at build time.
+#
+# From the API, per major version:
+#   - latest X.Y.Z release   -> MARIADB_VERSION, archive repo URL
+#   - release status         -> tag suffix (-rc, ...)
+#   - support type           -> lts / latest aliases
+#   (status and support type are read by generate-stackbrew-library.sh)
+#
+# Usage:
+#   ./update.sh                  regenerate main/ and every major the API lists
+#   ./update.sh 11.8 13.0-ubi    regenerate only these (directory must exist)
+#
+# Notes:
+#   - Only existing directories are generated; create X.Y/ and X.Y-ubi/
+#     to add a major. Old majors get version-specific tweaks in the
+#     case block in update_version().
+#   - main/ is the unreleased branch; its version is a label only
+#     (development_version_real), the real packages come from the
+#     REPOSITORY build-arg.
+#   - The API omits superseded/EOL majors; a no-argument run skips those
+#     directories and drops them from versions.json. Refresh them by name.
+#
+# Never edit the generated directories; edit the templates and rerun.
 #
 
 development_version=main

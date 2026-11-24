@@ -1,5 +1,35 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+#
+# generate-stackbrew-library.sh - print the library/mariadb manifest
+#
+# Docker Hub's mariadb images are built by the docker-library team from
+# library/mariadb in github.com/docker-library/official-images. This
+# script prints that file: each image's tags, architectures, git commit
+# and directory. CI (bashbrew's generate.sh) uses it too, to decide what
+# to build and test.
+#
+# Usage:
+#   ./generate-stackbrew-library.sh > mariadb   then PR it to official-images
+#
+# Notes:
+#   - Every version directory is published unless GLOBIGNORE excludes it.
+#   - An entry's GitCommit is the last commit that changed its Dockerfile
+#     or a file the Dockerfile COPYs.
+#   - Tags come from the Dockerfile's release-status and support-type.
+#     Stable (or Unknown) gets the full version, major.minor and the
+#     floating tags: major, latest (never on UBI) and lts if Long Term
+#     Support. Any other status gets only the first two, with a suffix
+#     (13.1.1-rc, 13.1-rc).
+#   - A floating tag goes to the highest version that qualifies.
+#   - Architectures are those in the Dockerfile's bashbrew-architectures
+#     line that the base image also supports. Each must have packages on
+#     archive.mariadb.org, or the script prints "<arch> missing for
+#     <version>" and exits 1, leaving a partial manifest.
+#   - Run it on a clean, committed tree: the version and FROM come from
+#     HEAD, the status, support type and architectures from the working
+#     tree. Needs bashbrew, git, curl and network access.
+#
 
 GLOBIGNORE=examples/:.*/:test/:main/:main-ubi/
 

@@ -204,6 +204,10 @@ Before investing too much time in a feature request, please discuss its use on a
 
 After a feature is written, please help get it used by improving the documentation to detail how to use the newly added feature.
 
+## Releasing
+
+Maintainers publishing new MariaDB versions: see [RELEASING.md](RELEASING.md) for how images are released and where they are built (Docker Library, GitHub CI, Buildbot).
+
 ## Improving the Documentation
 
 The [full image description on Docker Hub](https://hub.docker.com/_/mariadb/) is generated/maintained over in [the docker-library/docs repository](https://github.com/docker-library/docs), specifically in [the `mariadb` directory](https://github.com/docker-library/docs/tree/master/mariadb).
