@@ -31,16 +31,41 @@
 # file. --defaults-{file,extra-file,group-suffix} can specify a file/configuration
 # different from elsewhere.
 #
+# Unless --defaults-extra-file or --no-defaults is given, the
+# .my-healthcheck.cnf in --datadir (default /var/lib/mysql) is used as the
+# --defaults-extra-file, or the one in /var/lib/mysql if --datadir has none.
+#
 # Note * though denied error message will result in error log without
 #      any permissions. USAGE recommend to avoid this.
 
 set -eo pipefail
 
+# Resolves the --defaults-extra-file to use for the next client call.
+# An explicit --defaults-extra-file wins, even empty as set by
+# --no-defaults, otherwise use the .my-healthcheck.cnf of the current
+# datadir, falling back to /var/lib/mysql. Resolved per call, as tests run
+# while arguments are still being parsed.
+# Globals:
+#   def, datadir (read); extra_file (set)
+_resolve_extra_file()
+{
+	if [[ -v 'def[extra_file]' ]]; then
+		extra_file="${def['extra_file']}"
+	elif [[ -f "${datadir}/.my-healthcheck.cnf" ]]; then
+		extra_file="${datadir}/.my-healthcheck.cnf"
+	elif [[ -f /var/lib/mysql/.my-healthcheck.cnf ]]; then
+		extra_file=/var/lib/mysql/.my-healthcheck.cnf
+	else
+		extra_file=
+	fi
+}
+
 _process_sql()
 {
+	_resolve_extra_file
 	mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
-		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}} \
+		${extra_file:+--defaults-extra-file=${extra_file}} \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}} \
 		--skip-ssl --skip-ssl-verify-server-cert \
 		--protocol socket \
@@ -67,9 +92,10 @@ connect()
 			;;
 	esac
 	# falling back to tcp if there wasn't a connection answer.
+	_resolve_extra_file
 	s=$(mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
-		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}}  \
+		${extra_file:+--defaults-extra-file=${extra_file}}  \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}}  \
 		--skip-ssl --skip-ssl-verify-server-cert \
 		-h localhost --protocol tcp \
@@ -255,11 +281,9 @@ fi
 declare -A repl
 declare -A def
 nodefaults=
+extra_file=
 connect_s=
 datadir=/var/lib/mysql
-if [ -f $datadir/.my-healthcheck.cnf ]; then
-	def['extra_file']=$datadir/.my-healthcheck.cnf
-fi
 
 _repl_param_check()
 {
@@ -334,20 +358,14 @@ while [ $# -gt 0 ]; do
 			;;
 		--datadir=*)
 			datadir=${1#*=}
-			# Re-evaluate after --datadir; the default lookup runs before arg parsing (#678)
-			if [ -f "$datadir/.my-healthcheck.cnf" ]; then
-				def['extra_file']=$datadir/.my-healthcheck.cnf
-			fi
 			;;
 		--datadir)
 			shift
 			datadir=${1}
-			if [ -f "$datadir/.my-healthcheck.cnf" ]; then
-				def['extra_file']=$datadir/.my-healthcheck.cnf
-			fi
 			;;
 		--no-defaults)
-			def=()
+			# empty extra_file: no .my-healthcheck.cnf unless given again
+			def=(['extra_file']="")
 			nodefaults=1
 			;;
 		--defaults-file=*|--defaults-extra-file=*|--defaults-group-suffix=*)

@@ -126,6 +126,8 @@ TEST_ORDER=(
 	galera_sst_rsync
 	backup_restore
 	mariadb_user_host
+	healthcheck_default_datadir
+	healthcheck_custom_datadir
 )
 
 if [ "$list_tests" -eq 1 ]; then
