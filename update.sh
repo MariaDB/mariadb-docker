@@ -41,6 +41,7 @@ defaultSuite='resolute'
 defaultSuiteUBI='ubi10-minimal'
 declare -A suites=(
 	[10.11]='jammy'
+	['10.11-noble']='noble'
 	[11.4]='noble'
 	[11.8]='noble'
 	[12.2]='noble'
