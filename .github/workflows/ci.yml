@@ -141,8 +141,11 @@ jobs:
         if: ${{ env.DEPLOY_IMAGES == 'true' }}
         run: ${{ matrix.runs.build }} --push
       - name: Build DuckDB ${{ matrix.name }}
-        if: ${{ env.DEPLOY_IMAGES == 'true' }}
-        run: ${{ matrix.runs.duckbuild }}
+        if: ${{ env.DEPLOY_IMAGES == 'true' && matrix.runs.duckbuild != '' }}
+        run: |
+          if ! ${{ matrix.runs.duckbuild }}; then
+            echo "::warning title=DuckDB image not built::ghcr.io/mariadb/duckdb:${{ matrix.name }} failed to build; is the DuckDB plugin packaged for this release? See the step log."
+          fi
       - name: Build for test ${{ matrix.name }}
         run: ${{ matrix.runs.origbuild }}
       - name: History ${{ matrix.name }}
