@@ -1,21 +1,14 @@
 #!/bin/bash
-# Tests for healthcheck.sh option handling (datadir and defaults files)
+# Tests for healthcheck.sh datadir and defaults file options
 # Sourced by run.sh — do not execute directly
 # shellcheck disable=SC2154
 
-# Runs healthcheck.sh in the container as the mysql user. As root,
-# root@localhost unix_socket auth would hide missing credentials.
-# Globals:
-#   cid
-# Arguments:
-#   healthcheck.sh options
+# As mysql, like UBI, so only the healthcheck cnf gives credentials
 healthcheck_as_mysql() {
   docker exec --user mysql "${cid}" healthcheck.sh "$@"
 }
 
-# Asserts healthcheck.sh, run as the mysql user, fails.
-# Arguments:
-#   Reason, then healthcheck.sh options
+# Args: reason, healthcheck.sh options
 healthcheck_as_mysql_fails() {
   local reason="$1"
   shift
@@ -24,11 +17,7 @@ healthcheck_as_mysql_fails() {
   fi
 }
 
-# Copies a .my-healthcheck.cnf to a new directory with a wrong password.
-# Globals:
-#   cid
-# Arguments:
-#   Source .my-healthcheck.cnf, target directory
+# Copies cnf $1 into dir $2 with a wrong password
 make_stale_healthcheck_cnf() {
   docker exec --user mysql "${cid}" bash -c \
     "mkdir -p '$2' && sed -e 's/^password=.*/password=stale/' '$1' \
@@ -42,7 +31,7 @@ test_healthcheck_default_datadir() {
 
   healthcheck_as_mysql --connect --innodb_initialized \
     || die "healthcheck as mysql should use ${cnf}"
-  # --su-mysql needs root, which UBI images (USER mysql) don't default to
+  # gosu needs root; UBI defaults to mysql
   docker exec --user root "${cid}" healthcheck.sh --su-mysql --connect \
     --innodb_initialized || die "healthcheck --su-mysql should use ${cnf}"
 
@@ -54,7 +43,7 @@ test_healthcheck_default_datadir() {
   healthcheck_as_mysql_fails "empty --defaults-extra-file means none" \
     --defaults-extra-file --connect --innodb_initialized
 
-  # An explicit --defaults-extra-file wins over --datadir in either order
+  # Explicit --defaults-extra-file beats --datadir
   make_stale_healthcheck_cnf "${cnf}" /tmp/stale
   healthcheck_as_mysql_fails "stale cnf has a wrong password" \
     --datadir=/tmp/stale --connect --innodb_initialized
@@ -87,8 +76,7 @@ test_healthcheck_custom_datadir() {
   healthcheck_as_mysql_fails "--no-defaults isn't undone by a group suffix" \
     --no-defaults --defaults-group-suffix=_x --connect --innodb_initialized
 
-  # A stale cnf in the default location must not stick once --datadir
-  # is given, even after a test already ran with it.
+  # A later --datadir replaces the default cnf
   make_stale_healthcheck_cnf "${datadir}/.my-healthcheck.cnf" /var/lib/mysql
   healthcheck_as_mysql --connect --datadir="${datadir}" --innodb_initialized \
     || die "--datadir after a test should switch to its cnf"
