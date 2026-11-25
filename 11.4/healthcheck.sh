@@ -31,22 +31,16 @@
 # file. --defaults-{file,extra-file,group-suffix} can specify a file/configuration
 # different from elsewhere.
 #
-# Unless --defaults-extra-file or --no-defaults is given, the
-# .my-healthcheck.cnf in --datadir (default /var/lib/mysql) is used as the
-# --defaults-extra-file, or the one in /var/lib/mysql if --datadir has none.
+# Without --defaults-extra-file or --no-defaults, the .my-healthcheck.cnf
+# in --datadir, else in /var/lib/mysql, is the --defaults-extra-file.
 #
 # Note * though denied error message will result in error log without
 #      any permissions. USAGE recommend to avoid this.
 
 set -eo pipefail
 
-# Resolves the --defaults-extra-file to use for the next client call.
-# An explicit --defaults-extra-file wins, even empty as set by
-# --no-defaults, otherwise use the .my-healthcheck.cnf of the current
-# datadir, falling back to /var/lib/mysql. Resolved per call, as tests run
-# while arguments are still being parsed.
-# Globals:
-#   def, datadir (read); extra_file (set)
+# Sets extra_file per call, as tests run during argument parsing.
+# Explicit (or --no-defaults' empty) wins, else datadir's or /var/lib/mysql's.
 _resolve_extra_file()
 {
 	if [[ -v 'def[extra_file]' ]]; then
@@ -364,7 +358,7 @@ while [ $# -gt 0 ]; do
 			datadir=${1}
 			;;
 		--no-defaults)
-			# empty extra_file: no .my-healthcheck.cnf unless given again
+			# no .my-healthcheck.cnf either
 			def=(['extra_file']="")
 			nodefaults=1
 			;;
