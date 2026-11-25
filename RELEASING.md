@@ -80,4 +80,4 @@ Buildbot is MariaDB Server's CI ([MariaDB/buildbot](https://github.com/MariaDB/b
 What this means here:
 
 * **`next` must work with unreleased server code**, because it is what Buildbot builds.
-* **Buildbot has its own copy of the version → base OS mapping** (`hasDockerLibrary` in `utils.py`, mirroring `suites` in `update.sh`). When a version moves to a new base OS, update it there too.
+* **Buildbot has its own copy of the version → base OS mapping** (`hasDockerLibrary` in `utils.py`, mirroring `suites` in `update.sh`). When a version moves to a new base OS (see [BASE_IMAGE](BASE_IMAGE.md)), update it there too.
