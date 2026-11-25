@@ -257,9 +257,6 @@ declare -A def
 nodefaults=
 connect_s=
 datadir=/var/lib/mysql
-if [ -f $datadir/.my-healthcheck.cnf ]; then
-	def['extra_file']=$datadir/.my-healthcheck.cnf
-fi
 
 _repl_param_check()
 {
@@ -334,17 +331,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--datadir=*)
 			datadir=${1#*=}
-			# Re-evaluate after --datadir; the default lookup runs before arg parsing (#678)
-			if [ -f "$datadir/.my-healthcheck.cnf" ]; then
-				def['extra_file']=$datadir/.my-healthcheck.cnf
-			fi
 			;;
 		--datadir)
 			shift
 			datadir=${1}
-			if [ -f "$datadir/.my-healthcheck.cnf" ]; then
-				def['extra_file']=$datadir/.my-healthcheck.cnf
-			fi
 			;;
 		--no-defaults)
 			def=()
@@ -394,6 +384,11 @@ while [ $# -gt 0 ]; do
 	fi
 	shift
 done
+
+if [ -f "$datadir"/.my-healthcheck.cnf ] && [ -z "${def['extra_file']}" ]; then
+	def['extra_file']=$datadir/.my-healthcheck.cnf
+fi
+
 if [ "$connect_s" != "0" ]; then
 	# we didn't pass a connect test, so the current success status is suspicious
 	# return what connect thinks.
