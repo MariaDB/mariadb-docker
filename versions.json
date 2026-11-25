@@ -166,5 +166,19 @@
       "ppc64le",
       "s390x"
     ]
+  },
+  "10.11-noble": {
+    "milestone": "10.11",
+    "version": "10.11.20",
+    "fullVersion": "1:10.11.20+maria~ubu2404",
+    "releaseStatus": "Stable",
+    "supportType": "Long Term Support",
+    "base": "ubuntu:noble",
+    "arches": [
+      "amd64",
+      "arm64v8",
+      "ppc64le",
+      "s390x"
+    ]
   }
 }
