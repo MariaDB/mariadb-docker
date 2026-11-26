@@ -3,6 +3,6 @@ FROM $BASE
 
 USER root
 ARG PLUGIN
-RUN microdnf install -y MariaDB-${PLUGIN}-engine \
+RUN microdnf install -y MariaDB-plugin-${PLUGIN} \
     && microdnf clean all
 USER mysql
