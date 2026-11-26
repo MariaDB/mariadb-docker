@@ -201,6 +201,14 @@ update_version_array()
 
 	update_version
 	ubi=-ubi update_version
+
+	# Variant directories of this major (e.g. 10.11-noble)
+	local variant
+	for variant in "${version}"-*/; do
+		variant="${variant%/}"
+		[[ -d "${variant}" && "${variant}" != *-ubi ]] || continue
+		version="${variant}" update_version
+	done
 }
 
 mariaversion()
