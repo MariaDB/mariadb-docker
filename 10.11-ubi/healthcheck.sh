@@ -31,16 +31,35 @@
 # file. --defaults-{file,extra-file,group-suffix} can specify a file/configuration
 # different from elsewhere.
 #
+# Without --defaults-extra-file or --no-defaults, the .my-healthcheck.cnf
+# in --datadir, else in /var/lib/mysql, is the --defaults-extra-file.
+#
 # Note * though denied error message will result in error log without
 #      any permissions. USAGE recommend to avoid this.
 
 set -eo pipefail
 
+# Sets extra_file per call, as tests run during argument parsing.
+# Explicit (or --no-defaults' empty) wins, else datadir's or /var/lib/mysql's.
+_resolve_extra_file()
+{
+	if [[ -v 'def[extra_file]' ]]; then
+		extra_file="${def['extra_file']}"
+	elif [[ -f "${datadir}/.my-healthcheck.cnf" ]]; then
+		extra_file="${datadir}/.my-healthcheck.cnf"
+	elif [[ -f /var/lib/mysql/.my-healthcheck.cnf ]]; then
+		extra_file=/var/lib/mysql/.my-healthcheck.cnf
+	else
+		extra_file=
+	fi
+}
+
 _process_sql()
 {
+	_resolve_extra_file
 	mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
-		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}} \
+		${extra_file:+--defaults-extra-file=${extra_file}} \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}} \
 		--protocol socket \
 		-B "$@"
@@ -66,9 +85,10 @@ connect()
 			;;
 	esac
 	# falling back to tcp if there wasn't a connection answer.
+	_resolve_extra_file
 	s=$(mariadb ${nodefaults:+--no-defaults} \
 		${def['file']:+--defaults-file=${def['file']}} \
-		${def['extra_file']:+--defaults-extra-file=${def['extra_file']}}  \
+		${extra_file:+--defaults-extra-file=${extra_file}}  \
 		${def['group_suffix']:+--defaults-group-suffix=${def['group_suffix']}}  \
 		-h localhost --protocol tcp \
 		--skip-column-names --batch --skip-print-query-on-error \
@@ -253,11 +273,9 @@ fi
 declare -A repl
 declare -A def
 nodefaults=
+extra_file=
 connect_s=
 datadir=/var/lib/mysql
-if [ -f $datadir/.my-healthcheck.cnf ]; then
-	def['extra_file']=$datadir/.my-healthcheck.cnf
-fi
 
 _repl_param_check()
 {
@@ -332,20 +350,14 @@ while [ $# -gt 0 ]; do
 			;;
 		--datadir=*)
 			datadir=${1#*=}
-			# Re-evaluate after --datadir; the default lookup runs before arg parsing (#678)
-			if [ -f "$datadir/.my-healthcheck.cnf" ]; then
-				def['extra_file']=$datadir/.my-healthcheck.cnf
-			fi
 			;;
 		--datadir)
 			shift
 			datadir=${1}
-			if [ -f "$datadir/.my-healthcheck.cnf" ]; then
-				def['extra_file']=$datadir/.my-healthcheck.cnf
-			fi
 			;;
 		--no-defaults)
-			def=()
+			# no .my-healthcheck.cnf either
+			def=(['extra_file']="")
 			nodefaults=1
 			;;
 		--defaults-file=*|--defaults-extra-file=*|--defaults-group-suffix=*)
