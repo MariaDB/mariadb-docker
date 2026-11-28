@@ -108,3 +108,35 @@ test_mariadb_user_host() {
 	[ "${host}" = '%' ] || die "expected default host '%' but got '${host}'"
 	killoff
 }
+
+test_mariadb_user_root_rejected() {
+	echo -e "Test: MARIADB_USER=root (and legacy MYSQL_USER=root) is rejected before initialization\n"
+
+	local out
+	tmpvol=v$RANDOM
+	docker volume create "$tmpvol"
+
+	out=$(docker run --rm --name "mariadb-container-root-user-$RANDOM" \
+		-v "$tmpvol":/var/lib/mysql \
+		-e MARIADB_ROOT_PASSWORD=secr3t \
+		-e MARIADB_USER=root \
+		-e MARIADB_PASSWORD=rootpass \
+		"${image}" 2>&1) && die 'MARIADB_USER=root should be rejected'
+	[[ "$out" == *MARIADB_USER* ]] || die "expected an error mentioning MARIADB_USER, got: $out"
+
+	out=$(docker run --rm --name "mariadb-container-root-user-$RANDOM" \
+		-v "$tmpvol":/var/lib/mysql \
+		-e MARIADB_ROOT_PASSWORD=secr3t \
+		-e MYSQL_USER=root \
+		-e MYSQL_PASSWORD=rootpass \
+		"${image}" 2>&1) && die 'MYSQL_USER=root should be rejected'
+	[[ "$out" == *MARIADB_USER* ]] || die "expected an error mentioning MARIADB_USER, got: $out"
+
+	# the rejection must happen before the datadir is initialized
+	if docker run --rm -v "$tmpvol":/var/lib/mysql --entrypoint sh "${image}" -c '[ -d /var/lib/mysql/mysql ]'; then
+		die 'datadir was initialized despite the invalid MARIADB_USER'
+	fi
+
+	docker volume rm "$tmpvol"
+	tmpvol=
+}
