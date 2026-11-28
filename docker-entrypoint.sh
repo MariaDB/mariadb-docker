@@ -175,6 +175,9 @@ docker_verify_minimum_env() {
 	if [ -n "$MARIADB_PASSWORD" ] && [ -n "$MARIADB_PASSWORD_HASH" ]; then
 		mysql_error "Cannot specify MARIADB_PASSWORD_HASH and MARIADB_PASSWORD option."
 	fi
+	if [ "$MARIADB_USER" = 'root' ]; then
+		mysql_error $'MARIADB_USER (or MYSQL_USER) cannot be \'root\'\n\tThe root user already exists; use MARIADB_ROOT_PASSWORD, MARIADB_ROOT_PASSWORD_HASH, MARIADB_ALLOW_EMPTY_ROOT_PASSWORD or MARIADB_RANDOM_ROOT_PASSWORD to configure it'
+	fi
 	if [ -n "$MARIADB_REPLICATION_USER" ]; then
 		if [ -z "$MARIADB_MASTER_HOST" ]; then
 			# its a master, we're creating a user

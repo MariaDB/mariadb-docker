@@ -126,6 +126,7 @@ TEST_ORDER=(
 	galera_sst_rsync
 	backup_restore
 	mariadb_user_host
+	mariadb_user_root_rejected
 	healthcheck_default_datadir
 	healthcheck_custom_datadir
 )
